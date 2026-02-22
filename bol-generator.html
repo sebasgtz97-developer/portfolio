@@ -942,7 +942,9 @@ function buildBOL(){
   const tp=(v("tpName")||v("tpAddr"))?`
     <div class="bol-3p">
       <div class="clabel" style="margin-bottom:3px">Third Party Freight Charges Bill To</div>
-      <b>Name:</b> ${v("tpName")}&nbsp;&nbsp;<b>Address:</b> ${v("tpAddr")}&nbsp;&nbsp;<b>City:</b> ${v("tpCity")}
+      <div><b>Name:</b> ${v("tpName")}</div>
+      <div><b>Address:</b> ${v("tpAddr")}</div>
+      <div><b>City:</b> ${v("tpCity")}</div>
     </div>`:"";
 
   // ── Table header & totals ─────────────────────────────────────────────────
@@ -1145,12 +1147,16 @@ function generatePDF(){
   // ── Third Party block (Tresmontes only) ────────────────────────────────────
   const tpName=v("tpName"),tpAddr=v("tpAddr"),tpCity=v("tpCity");
   if(tpName||tpAddr){
-    bd(); doc.rect(ML,y,CW,22,"S");
+    const tpHasCity = tpCity && tpCity !== tpAddr;
+    const tpH = tpHasCity ? 42 : 32;
+    bd(); doc.rect(ML,y,CW,tpH,"S");
     doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(...C_TX3);
     doc.text("THIRD PARTY FREIGHT CHARGES BILL TO", ML+4, y+8);
     doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
-    doc.text("Name: "+tpName+"   Address: "+tpAddr+"   City: "+tpCity, ML+4, y+17);
-    y+=25;
+    if(tpName) doc.text("Name: "+tpName, ML+4, y+18);
+    if(tpAddr) doc.text("Address: "+tpAddr, ML+4, y+27);
+    if(tpHasCity) doc.text("City: "+tpCity, ML+4, y+36);
+    y+=tpH+4;
   }
 
   // ── Confirmation number (Thursday) ─────────────────────────────────────────
@@ -1882,9 +1888,13 @@ function parseTresmontesPDF(allLines){
     const totM = l.match(/^Total\s+(\d[\d,]+)\s+CJ\s+[\d.]+\s+([\d,.]+)/i);
     if(totM){ r.totalBoxes=totM[1].replace(/,/g,""); r.totalWeightKg=totM[2].replace(/,/g,""); }
 
-    // FROM: shipper
+    // FROM: shipper — strip trailing date fragments (e.g. "Fecha: 02.17.2026")
     const fromM = l.match(/^FROM\s*:\s*(.+)/i);
-    if(fromM) r.shipperName = fromM[1].trim();
+    if(fromM){
+      let name = fromM[1].trim();
+      name = name.replace(/\s+(?:Fecha|Date)\s*:?\s*[\d\.\/\-]+/gi, '').trim();
+      r.shipperName = name;
+    }
 
     // PO numbers: "Florida FLO09789 (F)"
     const floM = l.match(/Florida\s+(FLO[\d]+\s*\([^)]+\))/i) || l.match(/(?:Florida|PO|Order)\s+(FLO\w+)/i);
@@ -1894,17 +1904,25 @@ function parseTresmontesPDF(allLines){
     const nuvoM = l.match(/(NUVO[\w\-]+)/i);
     if(nuvoM && !r.shipmentRef) r.shipmentRef = nuvoM[1].replace(/:$/,"");
 
-    // Ship to / consignee
-    const toM = l.match(/^(?:TO|SHIP\s*TO)\s*:\s*(.+)/i);
+    // Ship to / consignee — accept TO, SHIP TO, CONSIGNEE, CONSIGNATARIO, DESTINATARIO, DESTINO
+    const toM = l.match(/^(?:TO\b|SHIP\s*TO|CONSIGNEE|CONSIGNATARIO|DESTINATARIO|DESTINO)\s*[:\-]\s*(.+)/i);
     if(toM && !r.consigneeName) r.consigneeName = toM[1].trim();
 
+    // Consignee address
+    const toAddrM = l.match(/^(?:SHIP\s*TO\s*ADDRESS|CONSIGNEE\s*ADDRESS|DIRECCI[OÓ]N\s*(?:DESTINO|ENTREGA))\s*[:\-]\s*(.+)/i);
+    if(toAddrM && !r.consigneeAddr) r.consigneeAddr = toAddrM[1].trim();
+
     // Carrier
-    const carM = l.match(/(?:carrier|transportista)\s*[:\-]\s*(.+)/i);
+    const carM = l.match(/(?:carrier|transportista|transporter|operador)\s*[:\-]\s*(.+)/i);
     if(carM && !r.carrierName) r.carrierName = carM[1].trim();
 
     // Trailer
-    const trM = l.match(/(?:trailer|caja)\s*(?:no\.?|#)?\s*[:\-]?\s*([A-Z0-9]{3,20})\b/i);
+    const trM = l.match(/(?:trailer|caja|no\.\s*caja)\s*(?:no\.?|#)?\s*[:\-]?\s*([A-Z0-9]{3,20})\b/i);
     if(trM && !r.trailerNo) r.trailerNo = trM[1].trim();
+
+    // Product description
+    const descM = l.match(/(?:descripci[oó]n|description|producto|product|mercanc[ií]a)\s*[:\-]\s*(.{4,80})/i);
+    if(descM && !r.description) r.description = descM[1].trim();
   }
 
   // Tresmontes known address
@@ -1913,7 +1931,7 @@ function parseTresmontesPDF(allLines){
   }
 
   r.displayName = getBrand(r.shipperName);
-  r.description = "Boxes";
+  if(!r.description) r.description = "Boxes";
   if(!r.totalBoxes) r._warnings.push("⚠️ Total boxes not found in PDF — check if scanned image");
   return r;
 }
