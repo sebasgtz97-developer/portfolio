@@ -10,9 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <style>
-    /* ============================================================
-       COLOR TOKENS — light & dark
-    ============================================================ */
     :root {
       --bg:             #ffffff;
       --bg-subtle:      #f5f5f7;
@@ -39,11 +36,7 @@
       }
     }
 
-    /* ============================================================
-       BASE RESET
-    ============================================================ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
 
     body {
@@ -56,35 +49,23 @@
       overflow-x: hidden;
     }
 
-    /* ============================================================
-       BACKGROUND AMBIENT ORB
-       A soft, slowly drifting gradient blob in the background.
-       Gives depth without being distracting.
-    ============================================================ */
     .bg-orb {
       position: fixed;
-      top: -20vh;
-      right: -10vw;
-      width: 70vw;
-      height: 70vw;
-      max-width: 800px;
-      max-height: 800px;
+      top: -20vh; right: -10vw;
+      width: 70vw; height: 70vw;
+      max-width: 800px; max-height: 800px;
       border-radius: 50%;
       background: radial-gradient(circle at center, var(--orb-color) 0%, transparent 70%);
       pointer-events: none;
       z-index: 0;
-      /* Slow, breathing drift animation */
       animation: orbDrift 18s ease-in-out infinite alternate;
     }
 
     .bg-orb-2 {
       position: fixed;
-      bottom: -15vh;
-      left: -10vw;
-      width: 50vw;
-      height: 50vw;
-      max-width: 600px;
-      max-height: 600px;
+      bottom: -15vh; left: -10vw;
+      width: 50vw; height: 50vw;
+      max-width: 600px; max-height: 600px;
       border-radius: 50%;
       background: radial-gradient(circle at center, var(--orb-color) 0%, transparent 70%);
       pointer-events: none;
@@ -98,9 +79,6 @@
       100% { transform: translate(-2vw, 2vh) scale(0.97); }
     }
 
-    /* ============================================================
-       NAVIGATION
-    ============================================================ */
     nav {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -114,7 +92,6 @@
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
       border-bottom: 1px solid var(--border);
-      /* Nav slides down on load */
       animation: navSlideDown 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
     }
 
@@ -140,19 +117,15 @@
       font-size: 0.8rem;
       color: var(--text-muted);
       text-decoration: none;
-      /* Smooth color transition on hover */
       transition: color 0.2s ease;
       position: relative;
     }
 
-    /* Underline that grows from left on hover */
     .nav-links a::after {
       content: '';
       position: absolute;
-      bottom: -3px;
-      left: 0;
-      width: 0;
-      height: 1px;
+      bottom: -3px; left: 0;
+      width: 0; height: 1px;
       background: var(--accent);
       transition: width 0.25s ease;
     }
@@ -160,9 +133,7 @@
     .nav-links a:hover { color: var(--text-primary); }
     .nav-links a:hover::after { width: 100%; }
 
-    /* ============================================================
-       HERO SECTION
-    ============================================================ */
+    /* ---- HERO ---- */
     #hero {
       position: relative;
       z-index: 1;
@@ -172,10 +143,9 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 8rem 2rem 6rem;
+      padding: 8rem 2rem 8rem;
     }
 
-    /* Each hero element fades up — staggered with animation-delay */
     .hero-eyebrow {
       font-size: 0.75rem;
       font-weight: 500;
@@ -183,7 +153,6 @@
       letter-spacing: 0.16em;
       text-transform: uppercase;
       margin-bottom: 1.5rem;
-      /* Animation: starts invisible + 12px below, rises into place */
       opacity: 0;
       transform: translateY(12px);
       animation: fadeUp 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
@@ -191,7 +160,7 @@
 
     .hero-name {
       font-family: 'Instrument Serif', Georgia, serif;
-      font-size: clamp(3.5rem, 9vw, 7.5rem);
+      font-size: clamp(3.2rem, 9vw, 7.5rem);
       font-weight: 400;
       line-height: 1.0;
       letter-spacing: -0.02em;
@@ -227,14 +196,10 @@
       opacity: 0;
       transform: translateY(12px);
       animation: fadeUp 0.9s cubic-bezier(0.4, 0, 0.2, 1) 1.0s forwards;
+      margin-bottom: 4rem;
     }
 
-    /* Scroll indicator — the little bouncing chevron at the bottom */
     .scroll-hint {
-      position: absolute;
-      bottom: 2.5rem;
-      left: 50%;
-      transform: translateX(-50%);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -262,19 +227,11 @@
       50%       { opacity: 1;   transform: scaleY(1.15); }
     }
 
-    /* ============================================================
-       SHARED ANIMATION KEYFRAMES
-    ============================================================ */
     @keyframes fadeUp {
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ============================================================
-       SCROLL-REVEAL UTILITY
-       Any element with class .reveal starts hidden.
-       JavaScript adds .visible when it enters the viewport,
-       triggering the transition below.
-    ============================================================ */
+    /* ---- SCROLL REVEAL ---- */
     .reveal {
       opacity: 0;
       transform: translateY(30px);
@@ -282,12 +239,8 @@
                   transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
 
-    /* Stagger children inside a reveal container */
     .reveal-stagger > * {
       opacity: 0;
       transform: translateY(24px);
@@ -295,14 +248,12 @@
                   transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .reveal-stagger.visible > *:nth-child(1) { opacity: 1; transform: none; transition-delay: 0s;    }
-    .reveal-stagger.visible > *:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.1s;  }
-    .reveal-stagger.visible > *:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.2s;  }
-    .reveal-stagger.visible > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.3s;  }
+    .reveal-stagger.visible > *:nth-child(1) { opacity: 1; transform: none; transition-delay: 0s;   }
+    .reveal-stagger.visible > *:nth-child(2) { opacity: 1; transform: none; transition-delay: 0.1s; }
+    .reveal-stagger.visible > *:nth-child(3) { opacity: 1; transform: none; transition-delay: 0.2s; }
+    .reveal-stagger.visible > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.3s; }
 
-    /* ============================================================
-       BUTTONS
-    ============================================================ */
+    /* ---- BUTTONS ---- */
     .btn-primary {
       display: inline-block;
       padding: 0.72rem 1.6rem;
@@ -312,7 +263,6 @@
       font-weight: 500;
       text-decoration: none;
       border-radius: 980px;
-      /* Lift on hover */
       transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     }
 
@@ -341,9 +291,7 @@
       transform: translateY(-2px);
     }
 
-    /* ============================================================
-       DIVIDER
-    ============================================================ */
+    /* ---- DIVIDER ---- */
     .divider {
       width: 100%;
       max-width: 980px;
@@ -352,9 +300,7 @@
       background: var(--border);
     }
 
-    /* ============================================================
-       STATS STRIP
-    ============================================================ */
+    /* ---- STATS ---- */
     #stats {
       position: relative;
       z-index: 1;
@@ -373,12 +319,10 @@
       padding: 2rem 1.5rem;
       text-align: center;
       border-right: 1px solid var(--border);
-      /* Hover: lift the card */
       transition: transform 0.3s ease;
     }
 
     .stat-item:last-child { border-right: none; }
-
     .stat-item:hover { transform: translateY(-4px); }
 
     .stat-value {
@@ -388,13 +332,21 @@
       color: var(--text-primary);
       line-height: 1;
       margin-bottom: 0.6rem;
-      /* Counter animates up when visible — handled in JS */
       transition: color 0.3s ease;
+      /* Prevent iOS emoji substitution on special characters */
+      font-variant-emoji: text;
     }
 
     .stat-item:hover .stat-value { color: var(--accent); }
-
     .stat-value .hi { color: var(--accent); }
+
+    /* SVG arrow inside stat — no emoji risk */
+    .stat-arrow {
+      display: inline-block;
+      vertical-align: middle;
+      position: relative;
+      top: -4px;
+    }
 
     .stat-label {
       font-size: 0.72rem;
@@ -403,54 +355,7 @@
       line-height: 1.5;
     }
 
-    /* ============================================================
-       SECTION LAYOUT — shared wrapper for About, Projects, etc.
-    ============================================================ */
-    .section {
-      position: relative;
-      z-index: 1;
-      padding: 8rem 2rem;
-      max-width: 980px;
-      margin: 0 auto;
-    }
-
-    .section-label {
-      font-size: 0.72rem;
-      font-weight: 500;
-      color: var(--accent);
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      margin-bottom: 1rem;
-    }
-
-    .section-title {
-      font-family: 'Instrument Serif', Georgia, serif;
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: 400;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-      color: var(--text-primary);
-      margin-bottom: 1.5rem;
-    }
-
-    .section-body {
-      font-size: 1.05rem;
-      font-weight: 300;
-      color: var(--text-muted);
-      max-width: 620px;
-      line-height: 1.75;
-    }
-
-    .section-body strong {
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    /* ============================================================
-       PLACEHOLDER SECTIONS
-       Sections we'll build out in future sessions.
-       They look intentional rather than broken.
-    ============================================================ */
+    /* ---- PLACEHOLDERS ---- */
     .section-stub {
       position: relative;
       z-index: 1;
@@ -484,14 +389,12 @@
       opacity: 0.18;
     }
 
-    /* ============================================================
-       MOBILE
-    ============================================================ */
+    /* ---- MOBILE ---- */
     @media (max-width: 720px) {
       nav { padding: 0 1.25rem; }
       .nav-links { display: none; }
 
-      #hero { padding: 7rem 1.5rem 6rem; }
+      #hero { padding: 6rem 1.5rem 5rem; }
 
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .stat-item { border-right: 1px solid var(--border); }
@@ -500,17 +403,15 @@
       .stat-item:nth-child(2) { border-bottom: 1px solid var(--border); }
       .stat-item:nth-child(4) { border-right: none; }
 
-      .section, .section-stub { padding: 5rem 1.5rem; }
+      .section-stub { padding: 5rem 1.5rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- AMBIENT BACKGROUND ORBS -->
   <div class="bg-orb"></div>
   <div class="bg-orb-2"></div>
 
-  <!-- NAVIGATION -->
   <nav>
     <div class="nav-logo">Sebastián Gutiérrez</div>
     <ul class="nav-links">
@@ -520,39 +421,25 @@
     </ul>
   </nav>
 
-
-  <!-- ============================================================
-       HERO
-  ============================================================ -->
   <section id="hero">
     <p class="hero-eyebrow">Director of Operations · Nuvocargo</p>
-
     <h1 class="hero-name">Sebastián<br>Gutiérrez</h1>
-
     <p class="hero-tagline">
       I run cross-border logistics at scale —<br>
       and <strong>build the tools</strong> that make operations faster.
     </p>
-
     <div class="hero-cta">
       <a href="#projects" class="btn-primary">See my work</a>
       <a href="#contact" class="btn-ghost">Get in touch</a>
     </div>
-
-    <!-- Scroll indicator -->
     <div class="scroll-hint">
       <span>Scroll</span>
       <div class="scroll-arrow"></div>
     </div>
   </section>
 
-
-  <!-- ============================================================
-       STATS
-  ============================================================ -->
   <div class="divider"></div>
   <section id="stats">
-    <!-- reveal-stagger: each child animates in one after another -->
     <div class="stats-grid reveal-stagger">
 
       <div class="stat-item">
@@ -566,7 +453,16 @@
       </div>
 
       <div class="stat-item">
-        <div class="stat-value">US<span class="hi">↔</span>MX</div>
+        <!-- SVG arrow replaces the ↔ character — renders identically everywhere, no emoji risk -->
+        <div class="stat-value">
+          US
+          <span class="hi">
+            <svg class="stat-arrow" width="28" height="18" viewBox="0 0 28 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 9H27M27 9L20 2M27 9L20 16M1 9L8 2M1 9L8 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          MX
+        </div>
         <div class="stat-label">Cross-border<br>specialist</div>
       </div>
 
@@ -579,10 +475,6 @@
   </section>
   <div class="divider"></div>
 
-
-  <!-- ============================================================
-       ABOUT — placeholder, we'll fill this in next session
-  ============================================================ -->
   <div class="section-stub reveal" id="about">
     <span class="stub-coming">Coming next</span>
     <h2 class="stub-title">About</h2>
@@ -590,10 +482,6 @@
 
   <div class="divider"></div>
 
-
-  <!-- ============================================================
-       PROJECTS — placeholder
-  ============================================================ -->
   <div class="section-stub reveal" id="projects">
     <span class="stub-coming">Coming next</span>
     <h2 class="stub-title">Projects & Tools</h2>
@@ -601,62 +489,32 @@
 
   <div class="divider"></div>
 
-
-  <!-- ============================================================
-       CONTACT — placeholder
-  ============================================================ -->
   <div class="section-stub reveal" id="contact">
     <span class="stub-coming">Coming next</span>
     <h2 class="stub-title">Contact</h2>
   </div>
 
-
-  <!-- ============================================================
-       JAVASCRIPT
-       Two things:
-       1. Scroll-reveal: watches elements and adds .visible when
-          they enter the viewport.
-       2. Nav shrink: slightly reduces nav opacity on scroll.
-  ============================================================ -->
   <script>
-    // ---- SCROLL REVEAL ----
-    // IntersectionObserver watches elements and fires a callback
-    // when they enter/exit the visible area of the screen.
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Element is now visible — add .visible to trigger CSS transition
             entry.target.classList.add('visible');
-            // Once revealed, stop watching it (no need to re-trigger)
             observer.unobserve(entry.target);
           }
         });
       },
-      {
-        threshold: 0.15,      // trigger when 15% of the element is visible
-        rootMargin: '0px 0px -60px 0px'  // trigger slightly before it fully enters
-      }
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
     );
 
-    // Watch every element with .reveal or .reveal-stagger
     document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => {
       observer.observe(el);
     });
 
-
-    // ---- NAV BACKGROUND INTENSITY ON SCROLL ----
-    // As you scroll down, the nav background becomes slightly more opaque.
     const nav = document.querySelector('nav');
-
     window.addEventListener('scroll', () => {
-      if (window.scrollY > 40) {
-        nav.style.borderBottomColor = 'var(--border)';
-      } else {
-        nav.style.borderBottomColor = 'transparent';
-      }
-    }, { passive: true }); // passive: true = performance optimization
+      nav.style.borderBottomColor = window.scrollY > 40 ? 'var(--border)' : 'transparent';
+    }, { passive: true });
   </script>
 
 </body>
