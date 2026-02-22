@@ -333,14 +333,12 @@
       line-height: 1;
       margin-bottom: 0.6rem;
       transition: color 0.3s ease;
-      /* Prevent iOS emoji substitution on special characters */
       font-variant-emoji: text;
     }
 
     .stat-item:hover .stat-value { color: var(--accent); }
     .stat-value .hi { color: var(--accent); }
 
-    /* SVG arrow inside stat — no emoji risk */
     .stat-arrow {
       display: inline-block;
       vertical-align: middle;
@@ -389,6 +387,172 @@
       opacity: 0.18;
     }
 
+    /* ---- PROJECTS SECTION ---- */
+    #projects {
+      position: relative;
+      z-index: 1;
+      padding: 7rem 2rem;
+    }
+
+    .projects-inner {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .projects-header {
+      margin-bottom: 3rem;
+    }
+
+    .projects-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .projects-title {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    /* ---- PROJECT CARDS GRID ---- */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .project-card {
+      background: var(--bg);
+      padding: 2rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transition: background 0.25s ease;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .project-card:hover {
+      background: var(--bg-subtle);
+    }
+
+    /* The "coming soon" cards are dimmed */
+    .project-card.placeholder {
+      opacity: 0.45;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-tag {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* Live badge */
+    .card-badge {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid;
+    }
+
+    .card-badge.live {
+      color: #34c759;
+      border-color: rgba(52, 199, 89, 0.35);
+      background: rgba(52, 199, 89, 0.07);
+    }
+
+    .card-badge.soon {
+      color: var(--text-muted);
+      border-color: var(--border);
+    }
+
+    .card-title {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      line-height: 1.2;
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      flex: 1; /* pushes the tech tags + link to the bottom */
+      margin-bottom: 1.5rem;
+    }
+
+    /* Tech stack pills */
+    .card-tech {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-tech span {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    /* "Open tool" link at the bottom of the card */
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--accent);
+      text-decoration: none;
+      transition: gap 0.2s ease;
+    }
+
+    .card-link:hover {
+      gap: 0.55rem; /* arrow nudges right on hover */
+    }
+
+    .card-link svg {
+      transition: transform 0.2s ease;
+    }
+
+    .project-card:hover .card-link svg {
+      transform: translateX(3px);
+    }
+
     /* ---- MOBILE ---- */
     @media (max-width: 720px) {
       nav { padding: 0 1.25rem; }
@@ -404,6 +568,9 @@
       .stat-item:nth-child(4) { border-right: none; }
 
       .section-stub { padding: 5rem 1.5rem; }
+
+      #projects { padding: 5rem 1.5rem; }
+      .projects-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -421,6 +588,9 @@
     </ul>
   </nav>
 
+  <!-- ============================================================
+       HERO
+  ============================================================ -->
   <section id="hero">
     <p class="hero-eyebrow">Director of Operations · Nuvocargo</p>
     <h1 class="hero-name">Sebastián<br>Gutiérrez</h1>
@@ -439,6 +609,10 @@
   </section>
 
   <div class="divider"></div>
+
+  <!-- ============================================================
+       STATS
+  ============================================================ -->
   <section id="stats">
     <div class="stats-grid reveal-stagger">
 
@@ -453,7 +627,6 @@
       </div>
 
       <div class="stat-item">
-        <!-- SVG arrow replaces the ↔ character — renders identically everywhere, no emoji risk -->
         <div class="stat-value">
           US
           <span class="hi">
@@ -473,8 +646,12 @@
 
     </div>
   </section>
+
   <div class="divider"></div>
 
+  <!-- ============================================================
+       ABOUT — stub (coming later)
+  ============================================================ -->
   <div class="section-stub reveal" id="about">
     <span class="stub-coming">Coming next</span>
     <h2 class="stub-title">About</h2>
@@ -482,19 +659,105 @@
 
   <div class="divider"></div>
 
-  <div class="section-stub reveal" id="projects">
-    <span class="stub-coming">Coming next</span>
-    <h2 class="stub-title">Projects & Tools</h2>
-  </div>
+  <!-- ============================================================
+       PROJECTS & TOOLS
+       This replaces the old stub. Real cards now live here.
+
+       HOW IT WORKS:
+       - The featured card (BOL Generator) links to bol-generator.html
+         which sits in the same folder as this file on GitHub.
+       - The placeholder cards are dimmed and not clickable — they're
+         ready for your next tools when you build them.
+  ============================================================ -->
+  <section id="projects" class="reveal">
+    <div class="projects-inner">
+
+      <div class="projects-header">
+        <p class="projects-eyebrow">Projects & Tools</p>
+        <h2 class="projects-title">Things I've built.</h2>
+      </div>
+
+      <div class="projects-grid reveal-stagger">
+
+        <!-- ── CARD 1: BOL Generator (real, links to the tool) ── -->
+        <!--
+          href="bol-generator.html" means: "go to the file called
+          bol-generator.html in the same folder as this page."
+          target="_blank" opens it in a new browser tab.
+        -->
+        <a class="project-card" href="bol-generator.html" target="_blank" rel="noopener">
+          <div class="card-top">
+            <span class="card-tag">Internal Tool</span>
+            <span class="card-badge live">● Live</span>
+          </div>
+          <h3 class="card-title">BOL Generator</h3>
+          <p class="card-desc">
+            A browser-based Bill of Lading generator built for Nuvocargo's ops team.
+            Upload an Excel file to auto-populate shipment data and generate
+            print-ready PDFs — eliminating a painful manual process entirely.
+          </p>
+          <div class="card-tech">
+            <span>HTML</span>
+            <span>CSS</span>
+            <span>JavaScript</span>
+            <span>jsPDF</span>
+            <span>SheetJS</span>
+          </div>
+          <span class="card-link">
+            Open tool
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 7h12M7 1l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </a>
+
+        <!-- ── CARD 2: Placeholder ── -->
+        <div class="project-card placeholder">
+          <div class="card-top">
+            <span class="card-tag">Coming soon</span>
+            <span class="card-badge soon">In progress</span>
+          </div>
+          <h3 class="card-title">Operations Dashboard</h3>
+          <p class="card-desc">
+            Real-time visibility layer for cross-border shipments. Currently being scoped.
+          </p>
+          <div class="card-tech">
+            <span>TBD</span>
+          </div>
+        </div>
+
+        <!-- ── CARD 3: Placeholder ── -->
+        <div class="project-card placeholder">
+          <div class="card-top">
+            <span class="card-tag">Coming soon</span>
+            <span class="card-badge soon">Planned</span>
+          </div>
+          <h3 class="card-title">Your next project</h3>
+          <p class="card-desc">
+            This slot is reserved. More tools to come.
+          </p>
+          <div class="card-tech">
+            <span>TBD</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
 
   <div class="divider"></div>
 
+  <!-- ============================================================
+       CONTACT — stub (coming later)
+  ============================================================ -->
   <div class="section-stub reveal" id="contact">
     <span class="stub-coming">Coming next</span>
     <h2 class="stub-title">Contact</h2>
   </div>
 
   <script>
+    // Scroll reveal — watches elements with .reveal or .reveal-stagger
+    // and adds .visible when they enter the viewport
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -511,6 +774,7 @@
       observer.observe(el);
     });
 
+    // Makes the nav border appear only after you start scrolling
     const nav = document.querySelector('nav');
     window.addEventListener('scroll', () => {
       nav.style.borderBottomColor = window.scrollY > 40 ? 'var(--border)' : 'transparent';
