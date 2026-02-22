@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuvocargo — BOL Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--teal:#24433D;--lime:#C8E64C;--w:#fff;--g50:#f9f9f7;--g100:#f0f0ee;--g200:#e0e0dc;--g400:#9a9a94;--g600:#555551;--g800:#1e1e1c;--bd:#bbb}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#e8ece8;color:var(--g800);min-height:100vh}
+
+header{background:var(--teal);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.hlogo{height:36px;width:auto;object-fit:contain;border-radius:2px}
+.hright{display:flex;align-items:center;gap:10px}
+.btn-gen{background:var(--lime);color:#1a3a1a;border:none;padding:9px 22px;border-radius:5px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;letter-spacing:.01em}
+.btn-gen:hover{background:#b8d63e;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.btn-sec{background:transparent;color:rgba(255,255,255,.75);border:1.5px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:5px;font-weight:500;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+.btn-sec:hover{color:white;border-color:rgba(255,255,255,.7)}
+
+.app{display:grid;grid-template-columns:460px 1fr;height:calc(100vh - 60px)}
+
+/* FORM */
+.fp{background:white;overflow-y:auto;border-right:1px solid var(--g200)}
+.upsec{padding:18px 22px;background:linear-gradient(135deg,#eef5f3,#e4f0ec);border-bottom:2px solid var(--teal)}
+.upsec h3{font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.upzone{border:2px dashed #8ab5ac;border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:white;position:relative}
+.upzone:hover,.upzone.dragover{border-color:var(--teal);background:#f0f7f5}
+.upzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upicon{font-size:24px;margin-bottom:5px}
+.upzone p{font-size:12px;color:var(--g600);line-height:1.4}
+.upzone p strong{color:var(--teal)}
+.upstatus{margin-top:8px;padding:8px 10px;border-radius:5px;font-size:11px;font-weight:500;display:none}
+.upstatus.ok{background:#e8f5e9;color:#2e7d32;display:block}
+.upstatus.loading{background:#fff8e1;color:#e65100;display:block}
+.upstatus.err{background:#fde8e8;color:#c62828;display:block}
+.chips{margin-top:8px;display:none;flex-wrap:wrap;gap:5px}
+.chips.show{display:flex}
+.chip{background:var(--teal);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:500}
+
+.fsec{padding:14px 22px;border-bottom:1px solid var(--g100)}
+.fsec h4{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.fsec h4::after{content:"";flex:1;height:1px;background:var(--g200)}
+.fr{display:grid;gap:8px;margin-bottom:8px}
+.fr.c2{grid-template-columns:1fr 1fr}
+.fr.c3{grid-template-columns:1fr 1fr 1fr}
+.fg{display:flex;flex-direction:column;gap:3px}
+label{font-size:10px;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.04em}
+input[type=text],input[type=date],textarea,select{border:1.5px solid var(--g200);border-radius:5px;padding:7px 9px;font-size:12px;font-family:'Inter',sans-serif;color:var(--g800);background:white;transition:border-color .15s;width:100%}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--teal)}
+textarea{resize:vertical;min-height:52px}
+.autofill{border-color:#8ab5ac!important;background:#f5fbf9!important}
+.ctbl{width:100%;border-collapse:collapse;font-size:11px}
+.ctbl th{background:var(--teal);color:white;padding:6px 5px;text-align:left;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.ctbl td{padding:3px 3px;border-bottom:1px solid var(--g100)}
+.ctbl input,.ctbl select{border:1px solid var(--g200);border-radius:3px;padding:4px 5px;font-size:11px;width:100%}
+.del-r{background:none;border:none;color:#e05252;cursor:pointer;font-size:15px;padding:3px;line-height:1}
+.btnadd{margin-top:6px;background:none;border:1.5px solid var(--teal);color:var(--teal);padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.btnadd:hover{background:var(--teal);color:white}
+
+/* PREVIEW */
+.pp{overflow-y:auto;background:#dde0dd;padding:28px;display:flex;flex-direction:column;align-items:center}
+.pvlabel{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+
+/* BOL DOCUMENT */
+.bol{background:white;width:100%;max-width:780px;box-shadow:0 4px 28px rgba(0,0,0,.15);font-family:Arial,sans-serif;font-size:10px;color:#111}
+.bol-hdr{display:flex;justify-content:flex-end;padding:10px 16px 4px}
+.bol-logo{height:30px}
+.bol-title-wrap{margin:0 8px;border:2px solid #111;text-align:center;padding:7px}
+.bol-title{font-size:15px;font-weight:900;letter-spacing:.06em}
+.bol-body{padding:0 8px 8px}
+
+/* grid helper */
+.bg{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid #111;margin-top:5px}
+.bc{padding:6px 8px;border-right:1.5px solid #111;border-bottom:1.5px solid #111}
+.bc.r{border-right:none}
+.bc.full{grid-column:1/-1;border-right:none}
+.bc.nb{border-bottom:none}
+.clabel{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#111;margin-bottom:1px}
+.cval{font-size:10px;color:#111;min-height:13px}
+.cval.b{font-weight:700}
+.cval.lg{font-size:12px;font-weight:700}
+
+/* cargo table */
+.ct-hdr{display:grid;grid-template-columns:110px 50px 80px 1fr;background:#1A4A44;border-left:1.5px solid #111;border-right:1.5px solid #111}
+.ct-hdr div{padding:5px 7px;color:white;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-right:1px solid rgba(255,255,255,.3)}
+.ct-hdr div:last-child{border-right:none}
+.ct-row{display:grid;grid-template-columns:110px 50px 80px 1fr;border-left:1.5px solid #111;border-right:1.5px solid #111;border-bottom:1px solid #e0e0e0;font-size:9px}
+.ct-row div{padding:4px 7px;border-right:1px solid #e8e8e8}
+.ct-row div:last-child{border-right:none}
+
+/* carrier info */
+.ci-title{text-align:center;background:#e0e0e0;padding:4px;font-size:9px;font-weight:700;text-transform:uppercase;border-left:1.5px solid #111;border-right:1.5px solid #111;border-top:1.5px solid #111}
+.ci-hdr{display:grid;grid-template-columns:55px 55px 80px 40px 1fr 55px;border-left:1.5px solid #111;border-right:1.5px solid #111;background:#f0f0f0;font-size:7px;font-weight:700;text-transform:uppercase}
+.ci-hdr div{padding:3px 5px;border-right:1px solid #ccc;text-align:center}
+.ci-hdr div:last-child{border-right:none}
+.ci-row{display:grid;grid-template-columns:55px 55px 80px 40px 1fr 55px;border-left:1.5px solid #111;border-right:1.5px solid #111;border-bottom:1px solid #e8e8e8;font-size:9px;text-align:center}
+.ci-row div{padding:4px 5px;border-right:1px solid #e8e8e8}
+.ci-row div:last-child{border-right:none}
+.ci-total{display:grid;grid-template-columns:55px 55px 80px 40px 1fr 55px;border:1.5px solid #111;background:#f5f5f5;font-size:9px;font-weight:700;text-align:center}
+.ci-total div{padding:4px 5px;border-right:1px solid #ccc}
+.ci-total div:last-child{border-right:none}
+
+.bol-instr{border:1.5px solid #111;padding:5px 8px;margin-top:5px;min-height:48px}
+.bol-sig{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid #111;margin-top:5px}
+.bol-sigcell{padding:8px 10px}
+.bol-sigcell:first-child{border-right:1.5px solid #111}
+.sigline{border-top:1px solid #111;margin-top:22px;font-size:8px;color:#666;padding-top:2px}
+.bol-liab{text-align:center;padding:4px 8px;font-size:7.5px;font-weight:700;border:1.5px solid #111;border-top:none}
+.bol-footnote{font-size:6.5px;color:#555;padding:5px 8px;border:1.5px solid #111;border-top:none;line-height:1.4}
+.bol-3p{border:1.5px solid #111;padding:7px 8px;margin-top:5px;font-size:9px;line-height:1.7}
+
+@media(max-width:900px){.app{grid-template-columns:1fr;height:auto}.pp{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAyAFkDASIAAhEBAxEB/8QAGgABAAMBAQEAAAAAAAAAAAAAAAEGBwUDBP/EACkQAAEEAQMDAwQDAAAAAAAAAAEAAgMRBAUSIQYTMRQiQUJRYXEVIzL/xAAXAQEBAQEAAAAAAAAAAAAAAAAAAQIE/8QAFxEBAQEBAAAAAAAAAAAAAAAAABESAf/aAAwDAQACEQMRAD8AztERacQiIgIiICIiAiIgIiICKHf5P6Whyay1+vZWG/PidprtB2GLuN7TpRitr8F+8fuxSLzlZ6iv+h9mTM6M1D1eIzGwoHRZLpZ2NMcgfIaLSb5Dm0apc3TNSxndN42XPNE3P0KV3po31umbILYAPnZINx/BUXKpUaJo0PJ+37QAkgAWT4A+VeMGd5HS8mnZcUWFAwfyW+VrWiXuEyumaT7g5lVYNjgL5NOmw3xdTR6Q5uPmTyNOn7niN5x+44vYxxIpxbs4sEgEIkVOjZFGx5FeFCvHT/qoZxn5mqv9TFn48eRCMyNlRAD+yRxsvaB7dovm7Xhmag7TNA1qDByYoJJNbe0Nhc3d2TG8e2vpPAscfCLlT6O3dRrxdcKKNXRq6v4taROdSg0rIyNMjdJ6jQ4ovTw5MYZjt2NL5BHe+6B+kcucbI8+MOTjN6gwsluRCOlW4DGSwmRuzb2afGWXZkMl/F2QbrlDLPUQeAirIiIgUPsERECgTdC0IsUeQiIIoccDjwhAIquKpSiDrzdQzy5EmYMbHZnyw9mTKZu3EFmwkC9ocW8EgffwuPQu6FqUQoiIgIiICIiAiIgIiICIiAiIg//Z" class="hlogo" alt="nuvocargo">
+  <div class="hright">
+    <button class="btn-sec" onclick="clearForm()">Clear Form</button>
+    <button class="btn-gen" onclick="generatePDF()">&#11015; Download PDF</button>
+  </div>
+</header>
+
+<div class="app">
+<div class="fp">
+
+  <!-- UPLOAD -->
+  <div class="upsec">
+    <h3>&#128196; Auto-fill from Packing List / Invoice</h3>
+    <div class="upzone" id="upzone">
+      <input type="file" id="docfile" accept=".pdf,.xlsx,.xls,.csv" multiple onchange="handleUpload(event)">
+      <div class="upicon">&#128203;</div>
+      <p>Drop or click to upload <strong>one or more Packing Lists / Invoices</strong></p>
+      <p style="font-size:10px;color:#aaa;margin-top:3px">Supports PDF &bull; Excel (.xlsx/.xls) &bull; CSV &bull; <strong>Multiple files OK</strong></p>
+    </div>
+    <div id="fileList" style="margin-top:8px;display:none;font-size:10px;color:#555"></div>
+    <div class="upstatus" id="upstatus"></div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <!-- SHIPMENT INFO -->
+  <div class="fsec">
+    <h4>Shipment Info</h4>
+    <div class="fr c2">
+      <div class="fg"><label>Shipment ID</label><input type="text" id="shipmentId" placeholder="SH-00000"></div>
+      <div class="fg"><label>Date</label><input type="date" id="shipDate"></div>
+    </div>
+    <div class="fr c3">
+      <div class="fg"><label>Carrier</label>
+        <input type="text" id="carrierName" placeholder="Select or type carrier name..." list="carrierList" autocomplete="off">
+        <datalist id="carrierList">
+            <option value="3T CARRIER LLC">3T CARRIER LLC</option>
+            <option value="4MDT TRANSPORTATION INC">4MDT TRANSPORTATION INC</option>
+            <option value="5INCO TRADING LLC">5INCO TRADING LLC</option>
+            <option value="Aralog Logistics">Aralog Logistics</option>
+            <option value="AVERITT EXPRESS INC dba AVERITT">AVERITT EXPRESS INC dba AVERITT</option>
+            <option value="BEST BAY TRUCKING CORPORATION">BEST BAY TRUCKING CORPORATION</option>
+            <option value="Best Rush Service LLC">Best Rush Service LLC</option>
+            <option value="BLACK EAGLE TRUCKING INC">BLACK EAGLE TRUCKING INC</option>
+            <option value="BOLT TRANSPORT SOLUTIONS LLC">BOLT TRANSPORT SOLUTIONS LLC</option>
+            <option value="COSIO BROS TRANSPORTATION CORP">COSIO BROS TRANSPORTATION CORP</option>
+            <option value="Daniel Cárdenas Martínez">Daniel Cárdenas Martínez</option>
+            <option value="DAVID GONZALEZ dba HEGO LOGISTICS">DAVID GONZALEZ dba HEGO LOGISTICS</option>
+            <option value="EDER I NAVARRO MARTINEZ & JUAN M BELTRAN RAMIREZ dba NB TRUCKING">EDER I NAVARRO MARTINEZ & JUAN M BELTRAN RAMIREZ dba NB TRUCKING</option>
+            <option value="FJ CARRIER LOGISTICS LLC">FJ CARRIER LOGISTICS LLC</option>
+            <option value="INDIANA TRANSPORT LLC">INDIANA TRANSPORT LLC</option>
+            <option value="INTERFLETES-ESCOBEDO TRUCKING LLC">INTERFLETES-ESCOBEDO TRUCKING LLC</option>
+            <option value="LOGISTICAL EXCELLENCE LLC dba LOGISTICAL EXCELLENCE">LOGISTICAL EXCELLENCE LLC dba LOGISTICAL EXCELLENCE</option>
+            <option value="MARROQUIN TRANSPORT LLC">MARROQUIN TRANSPORT LLC</option>
+            <option value="MC1 EXPRESS LLC">MC1 EXPRESS LLC</option>
+            <option value="MOTHERSHIP TECHNOLOGIES INC">MOTHERSHIP TECHNOLOGIES INC</option>
+            <option value="OAK TRUCK LINES LLC">OAK TRUCK LINES LLC</option>
+            <option value="OMEGA EXIM INC dba MOVE">OMEGA EXIM INC dba MOVE</option>
+            <option value="RIOREV LOGISTICS, LLC.">RIOREV LOGISTICS, LLC.</option>
+            <option value="SAFEWAY MOVING SYSTEM INC dba SAFEWAY LOGISTICS">SAFEWAY MOVING SYSTEM INC dba SAFEWAY LOGISTICS</option>
+            <option value="SMART ROAD TRANSPORT INC">SMART ROAD TRANSPORT INC</option>
+            <option value="SPOT FREIGHT INC">SPOT FREIGHT INC</option>
+            <option value="Sun 3PL, INC.">Sun 3PL, INC.</option>
+            <option value="TERRIER TRANSPORTATION INC">TERRIER TRANSPORTATION INC</option>
+            <option value="TEXAS INTERNATIONAL ENTERPRISES INC">TEXAS INTERNATIONAL ENTERPRISES INC</option>
+            <option value="TEXPORT TRUCKING LLC">TEXPORT TRUCKING LLC</option>
+            <option value="THR LLC">THR LLC</option>
+            <option value="TM TRANSPORTATION SERVICES LLC">TM TRANSPORTATION SERVICES LLC</option>
+            <option value="TRADEX LOGISTICS INC">TRADEX LOGISTICS INC</option>
+            <option value="TRANSMAQUILA INC">TRANSMAQUILA INC</option>
+            <option value="VALUE TRUCK OF AZ LLC">VALUE TRUCK OF AZ LLC</option>
+            <option value="VM GLOBAL TRANSPORT LLC dba MUVA INTERNACIONAL SA DE CV">VM GLOBAL TRANSPORT LLC dba MUVA INTERNACIONAL SA DE CV</option>
+            <option value="XO M LOGISTIC LLC">XO M LOGISTIC LLC</option>
+            <option value="Zaro Transportation, LLC.">Zaro Transportation, LLC.</option>
+        </datalist>
+      </div>
+      <div class="fg"><label>Trailer No.</label><input type="text" id="trailerNo" placeholder="e.g. AL15179"></div>
+      <div class="fg"><label>Seal No.</label><input type="text" id="sealNo"></div>
+    </div>
+    <div class="fr c2">
+      <div class="fg"><label>Delivery Date</label><input type="date" id="deliveryDate"></div>
+      <div class="fg"><label>Delivery Time</label><input type="text" id="deliveryTime" placeholder="e.g. 15:00 hrs"></div>
+    </div>
+  </div>
+
+  <!-- SHIPPER -->
+  <div class="fsec">
+    <h4>Ship From (Shipper)</h4>
+    <div class="fr"><div class="fg"><label>Company Name</label><input type="text" id="shipperName" placeholder="Shipper company name"></div></div>
+    <div class="fr"><div class="fg"><label>Address</label><textarea id="shipperAddr" rows="2" placeholder="Street, City, State, Zip"></textarea></div></div>
+  </div>
+
+  <!-- CONSIGNEE -->
+  <div class="fsec">
+    <h4>Ship To (Consignee)</h4>
+    <div class="fr"><div class="fg"><label>Company Name</label><input type="text" id="consigneeName" placeholder="Consignee company name"></div></div>
+    <div class="fr"><div class="fg"><label>Address</label><textarea id="consigneeAddr" rows="2" placeholder="Street, City, State, Zip"></textarea></div></div>
+  </div>
+
+  <!-- THIRD PARTY -->
+  <div class="fsec">
+    <h4>Third Party Freight Bill To</h4>
+    <div class="fr"><div class="fg"><label>Name</label><input type="text" id="tpName" placeholder="Company / Person"></div></div>
+    <div class="fr c2">
+      <div class="fg"><label>Address</label><input type="text" id="tpAddr" placeholder="Street address"></div>
+      <div class="fg"><label>City</label><input type="text" id="tpCity" placeholder="City"></div>
+    </div>
+  </div>
+
+  <!-- CARGO -->
+  <div class="fsec">
+    <h4>Cargo Lines</h4>
+    <div style="overflow-x:auto">
+      <table class="ctbl">
+        <thead>
+          <tr>
+            <th>Order No.</th>
+            <th>Pkgs</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Weight</th>
+            <th>Unit</th>
+            <th>Class</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cargoBody"></tbody>
+      </table>
+    </div>
+    <button class="btnadd" onclick="addRow()">+ Add Line</button>
+    <div class="fr c2" style="margin-top:10px">
+      <div class="fg"><label>Commodity (for carrier section)</label><input type="text" id="commodity" placeholder="e.g. Saborizante en Polvo 12/14.1oz" oninput="render()"></div>
+      <div class="fg"><label>Freight Class</label><input type="text" id="freightClass" value="60" placeholder="60" oninput="render()"></div>
+    </div>
+  </div>
+
+  <!-- INSTRUCTIONS -->
+  <div class="fsec">
+    <h4>Special Instructions</h4>
+    <div class="fg"><textarea id="specInstr" rows="3" placeholder="Consignee special instructions..."></textarea></div>
+  </div>
+
+  <!-- DECLARED VALUE -->
+  <div class="fsec">
+    <h4>Declared Value</h4>
+    <div class="fr c2">
+      <div class="fg"><label>Amount ($)</label><input type="text" id="declValue" placeholder="0.00"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div class="pp">
+  <div class="pvlabel">Live Preview</div>
+  <div id="bolPreview" class="bol"></div>
+</div>
+</div>
+
+<script>
+const LOGO = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgNzAiPjx0ZXh0IHg9IjIiIHk9IjU0IiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSI1MCIgZmlsbD0iIzFBNEE0NCIgbGV0dGVyLXNwYWNpbmc9IjIiPm51dm8gY2FyZ288L3RleHQ+PC9zdmc+";
+// PDF.js worker - set immediately before any document load
+window.addEventListener('DOMContentLoaded', function(){
+  if(typeof pdfjsLib !== 'undefined'){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+});
+// Also set it now in case DOM is already loaded
+if(typeof pdfjsLib !== 'undefined'){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+let rc=0;
+function v(id){return (document.getElementById(id)||{}).value||"";}
+function fmt(n,d=2){return n?parseFloat(n).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,","):"";}
+function toKg(w,u){const n=parseFloat(w)||0;return u==="LBS"?n*0.453592:n;}
+function toLbs(w,u){const n=parseFloat(w)||0;return u==="KG"?n*2.20462:n;}
+function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");return d.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});}
+function fmtDs(s){if(!s)return"";const[y,m,d]=s.split("-");return m+"/"+d+"/"+y;}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  const t=new Date();
+  document.getElementById("shipDate").value=t.toISOString().split("T")[0];
+  document.getElementById("shipmentId").value="SH-"+(Math.floor(Math.random()*90000)+10000);
+  addRow();addRow();
+  document.querySelectorAll("input,textarea,select").forEach(e=>e.addEventListener("input",render));
+  render();
+  const z=document.getElementById("upzone");
+  z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("dragover");});
+  z.addEventListener("dragleave",()=>z.classList.remove("dragover"));
+  z.addEventListener("drop",e=>{e.preventDefault();z.classList.remove("dragover");doUploadMulti(e.dataTransfer.files);});
+});
+
+function addRow(d={}){
+  rc++;
+  const id="r"+rc;
+  const tr=document.createElement("tr");
+  tr.id=id;
+  tr.innerHTML=`<td><input type="text" value="${d.order||''}" oninput="render()" placeholder="Order #"></td>
+    <td><input type="text" value="${d.pkgs||''}" style="width:50px" oninput="render()" placeholder="0"></td>
+    <td><input type="text" value="${d.type||'CJ'}" style="width:42px" oninput="render()"></td>
+    <td><input type="text" value="${d.desc||''}" oninput="render()" placeholder="Description"></td>
+    <td><input type="text" value="${d.weight||''}" style="width:60px" oninput="render()" placeholder="0"></td>
+    <td><select oninput="render()" style="width:55px"><option value="KG"${d.unit==='KG'?' selected':''}>KG</option><option value="LBS"${d.unit==='LBS'?' selected':''}>LBS</option></select></td>
+    <td><input type="text" value="${d.cls||'60'}" style="width:38px" oninput="render()"></td>
+    <td><button class="del-r" onclick="document.getElementById('${id}').remove();render()">&#215;</button></td>`;
+  document.getElementById("cargoBody").appendChild(tr);
+  render();
+}
+
+function getRows(){
+  return [...document.querySelectorAll("#cargoBody tr")].map(tr=>{
+    const i=tr.querySelectorAll("input,select");
+    return{order:i[0]?.value||"",pkgs:i[1]?.value||"",type:i[2]?.value||"",desc:i[3]?.value||"",weight:i[4]?.value||"",unit:i[5]?.value||"KG",cls:i[6]?.value||""};
+  });
+}
+
+function render(){
+  document.getElementById("bolPreview").innerHTML=buildBOL();
+}
+
+function buildBOL(){
+  const rows=getRows();
+  let tPkgs=0,tKg=0;
+  rows.forEach(r=>{tPkgs+=parseInt(r.pkgs)||0;tKg+=toKg(r.weight,r.unit);});
+
+  const rowsHTML=rows.map(r=>`
+    <div class="ct-row">
+      <div>${r.order}</div>
+      <div style="text-align:center">${r.pkgs}</div>
+      <div style="text-align:right">${fmt(toKg(r.weight,r.unit))}</div>
+      <div>${r.desc}</div>
+    </div>`).join("");
+
+  const commodity=v("commodity")||"Boxes";
+  const freightCls=v("freightClass")||"60";
+  const ciRows=rows.map(r=>`
+    <div class="ci-row">
+      <div>${r.pkgs}</div><div>${r.type}</div>
+      <div>${fmt(toKg(r.weight,r.unit))}</div>
+      <div></div><div style="text-align:left;padding-left:6px">${commodity}</div>
+      <div>${freightCls}</div>
+    </div>`).join("");
+
+  const tp=(v("tpName")||v("tpAddr"))?`
+    <div class="bol-3p">
+      <div class="clabel" style="margin-bottom:3px">Third Party Freight Charges Bill To</div>
+      <b>Name:</b> ${v("tpName")}&nbsp;&nbsp;<b>Address:</b> ${v("tpAddr")}&nbsp;&nbsp;<b>City:</b> ${v("tpCity")}
+    </div>`:"";
+
+  return `
+  <div class="bol-hdr"><img src="${LOGO}" class="bol-logo" alt="nuvocargo"></div>
+  <div class="bol-body">
+    <div class="bol-title-wrap"><div class="bol-title">STRAIGHT BILL OF LADING</div></div>
+
+    <div class="bg">
+      <div class="bc" style="grid-row:span 3">
+        <div class="clabel">Ship From:</div>
+        <div class="cval b" style="margin-top:3px">${v("shipperName")}</div>
+        <div class="cval" style="margin-top:5px;font-size:9px;color:#444;line-height:1.4">${v("shipperAddr").replace(/\n/g,"<br>")}</div>
+      </div>
+      <div class="bc r"><span class="clabel">Date:</span> <span class="cval" style="display:inline;margin-left:6px">${fmtDate(v("shipDate"))}</span></div>
+      <div class="bc r"><span class="clabel">Shipment Identification No:</span> <span class="cval lg" style="float:right">${v("shipmentId")}</span></div>
+      <div class="bc r"><span class="clabel">Carrier Name:</span> <span class="cval" style="display:inline;margin-left:6px">${v("carrierName")}</span></div>
+      <div class="bc r"><span class="clabel">Trailer No:</span> <span class="cval" style="display:inline;margin-left:6px">${v("trailerNo")}</span></div>
+      <div class="bc r nb"><span class="clabel">Seal Number:</span> <span class="cval" style="display:inline;margin-left:6px">${v("sealNo")}</span></div>
+    </div>
+
+    <div class="bg">
+      <div class="bc" style="grid-row:span 2">
+        <div class="clabel">Ship To:</div>
+        <div class="cval b" style="margin-top:3px">${v("consigneeName")}</div>
+        <div class="cval" style="margin-top:5px;font-size:9px;color:#444;line-height:1.4">${v("consigneeAddr").replace(/\n/g,"<br>")}</div>
+      </div>
+      <div class="bc r"><span class="clabel" style="font-weight:800">Delivery Date:</span> <span class="cval" style="display:inline;margin-left:6px">${fmtDs(v("deliveryDate"))}</span></div>
+      <div class="bc r nb"><span class="clabel" style="font-weight:800">Delivery Time:</span> <span class="cval" style="display:inline;margin-left:6px">${v("deliveryTime")}</span></div>
+    </div>
+
+    ${tp}
+
+    <div class="ct-hdr" style="margin-top:5px">
+      <div>Customer Order No.</div><div>Pkgs</div><div>Weight KG</div><div>Description</div>
+    </div>
+    ${rowsHTML}
+    <div class="ct-row" style="background:#f5f5f5;font-weight:700;border-bottom:1.5px solid #111">
+      <div></div><div style="text-align:center">${fmt(tPkgs,0)}</div><div style="text-align:right">${fmt(tKg)}</div><div></div>
+    </div>
+
+    <div class="ci-title">Carrier Information</div>
+    <div class="ci-hdr">
+      <div>QTY</div><div>TYPE</div><div>Weight KG</div><div>H.M</div><div>Commodity</div><div>Class</div>
+    </div>
+    ${ciRows}
+    <div class="ci-total">
+      <div>${fmt(tPkgs,0)}</div><div></div><div>${fmt(tKg)}</div><div></div><div></div><div></div>
+    </div>
+
+    <div class="bol-instr">
+      <div class="clabel" style="margin-bottom:3px">Consignee Special Instructions:</div>
+      <div style="min-height:36px;font-size:9px">${v("specInstr")}</div>
+    </div>
+
+    <div class="bol-sig">
+      <div class="bol-sigcell">
+        <div style="font-size:7.5px;color:#555;line-height:1.5">NOTE &ndash; Where the rate is dependant on value, shippers are required to state specifically in writing the agreed or declared value of the property.<br><br>The agreed or declared value of the property is hereby specifically stated by the shipper to be not exceeding<br>$ ${v("declValue")||""}</div>
+        <div style="margin-top:10px">
+          <div class="clabel" style="font-size:9px;font-weight:800">CARRIER SIGNATURE / PICKUP DATE</div>
+          <div class="sigline">Date:</div>
+        </div>
+      </div>
+      <div class="bol-sigcell">
+        <div class="clabel" style="font-size:9px;font-weight:800">CONSIGNEE SIGNATURE</div>
+        <div style="font-size:7.5px;color:#555;margin-top:2px;font-style:italic">Property described above is received in good order, except noted.</div>
+        <div class="sigline">Date:</div>
+      </div>
+    </div>
+
+    <div class="bol-liab">NOTE: Liability Limitation for loss or damage in this shipment may be applicable. See 49 U.S.C. - 14706(c)(1)(A) and (B).</div>
+    <div class="bol-footnote">RECEIVED, subject to the classifications and lawfully filed tariffs in effect on the date of the issue of this Bill of Lading, the property described above in apparent good order, except as noted (contents and conditions of contents of packages unknown), marked consigned and destined as indicated above which said carrier agrees to carry to its usual place of delivery at said destination, if on its route, otherwise to deliver to another carrier on the route to its destination. It is mutually agreed as to each carrier of all or any of said property, over all or any portion of said route to destination and as to each party at any time interested in all or any of said property, that every service to be performed hereunder shall be subject to the bill of lading terms and conditions in the governing classification on the date of shipment. Shipper hereby certifies that he is familiar with all the bill of lading terms and conditions in the governing classification and the said terms and conditions are hereby agreed to by the shipper and accepted for himself and his assigns.</div>
+  </div>`;
+}
+
+// ========= PDF =========
+function generatePDF(){
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:"portrait",unit:"pt",format:"letter"});
+  const rows=getRows();
+  let tPkgs=0,tKg=0;
+  rows.forEach(r=>{tPkgs+=parseInt(r.pkgs)||0;tKg+=toKg(r.weight,r.unit);});
+  const PW=612,ML=28,MR=28,CW=612-ML-MR;
+  let y=18;
+  doc.setDrawColor(0,0,0);doc.setLineWidth(0.6);
+
+  // Logo
+  try{doc.addImage(LOGO,"PNG",PW-MR-118,y,108,20);}catch(e){}
+  y+=26;
+
+  // Title
+  doc.rect(ML,y,CW,22,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(14);doc.setTextColor(0,0,0);
+  doc.text("STRAIGHT BILL OF LADING",ML+CW/2,y+15,{align:"center"});
+  y+=22+2;
+
+  // Ship From / right info
+  const LW=CW*0.55,RW=CW*0.45;
+
+  // Row: Ship From label | Date | ShipID
+  const rh=13;
+  doc.rect(ML,y,LW,rh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(8);
+  doc.text("Ship From:",ML+3,y+9);
+  doc.rect(ML+LW,y,RW*0.5,rh,"S");
+  doc.text("Date:",ML+LW+3,y+9);
+  doc.setFont("helvetica","normal");
+  doc.text(fmtDate(v("shipDate")),ML+LW+26,y+9);
+  doc.rect(ML+LW+RW*0.5,y,RW*0.5,rh,"S");
+  doc.setFont("helvetica","bold");doc.text("Shipment ID No:",ML+LW+RW*0.5+3,y+9);
+  doc.setFontSize(9);doc.text(v("shipmentId"),ML+CW-3,y+9,{align:"right"});
+  y+=rh;
+
+  // Shipper name | Carrier | Trailer
+  const snh=15;
+  doc.rect(ML,y,LW,snh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(9);
+  doc.text(v("shipperName"),ML+3,y+snh/2+3.5);
+  doc.rect(ML+LW,y,RW*0.5,snh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text("Carrier Name:",ML+LW+3,y+5);
+  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text(v("carrierName"),ML+LW+3,y+12);
+  doc.rect(ML+LW+RW*0.5,y,RW*0.5,snh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text("Trailer No:",ML+LW+RW*0.5+3,y+5);
+  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text(v("trailerNo"),ML+LW+RW*0.5+3,y+12);
+  y+=snh;
+
+  // Shipper address | Seal | Delivery Date | Delivery Time
+  const saH=28;
+  const salines=doc.splitTextToSize(v("shipperAddr"),LW-8);
+  doc.rect(ML,y,LW,saH,"S");
+  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(50,50,50);
+  doc.text(salines.slice(0,3),ML+3,y+9);
+  const hh=saH/2;
+  doc.rect(ML+LW,y,RW*0.5,hh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(0,0,0);doc.text("Seal Number:",ML+LW+3,y+hh/2+2);
+  doc.setFont("helvetica","normal");doc.text(v("sealNo"),ML+LW+3,y+hh/2+8);
+  doc.rect(ML+LW+RW*0.5,y,RW*0.5,hh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text("Delivery Date:",ML+LW+RW*0.5+3,y+hh/2+2);
+  doc.setFont("helvetica","normal");doc.text(fmtDs(v("deliveryDate")),ML+LW+RW*0.5+3,y+hh/2+8);
+  doc.rect(ML+LW,y+hh,RW*0.5,hh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text("Delivery Time:",ML+LW+3,y+hh+hh/2+2);
+  doc.setFont("helvetica","normal");doc.text(v("deliveryTime"),ML+LW+3,y+hh+hh/2+8);
+  doc.rect(ML+LW+RW*0.5,y+hh,RW*0.5,hh,"S");
+  y+=saH;
+
+  // Ship To
+  doc.rect(ML,y,LW,rh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text("Ship To:",ML+3,y+9);
+  y+=rh;
+  doc.rect(ML,y,LW,rh,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(9);doc.text(v("consigneeName"),ML+3,y+9);
+  y+=rh;
+  const calines=doc.splitTextToSize(v("consigneeAddr"),LW-8);
+  doc.rect(ML,y,LW,saH,"S");
+  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(50,50,50);
+  doc.text(calines.slice(0,3),ML+3,y+9);
+  y+=saH;
+
+  // Third party
+  if(v("tpName")||v("tpAddr")){
+    const tpH=30;
+    doc.rect(ML,y,CW,tpH,"S");
+    doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
+    doc.text("Third Party Freight Charges Bill To",ML+3,y+9);
+    doc.setFont("helvetica","normal");doc.setFontSize(7.5);doc.setTextColor(50,50,50);
+    doc.text("Name: "+v("tpName")+"    Address: "+v("tpAddr")+"    City: "+v("tpCity"),ML+3,y+20);
+    y+=tpH;
+  }
+  y+=4;
+
+  // Cargo table header
+  const cCols=[110,50,80,CW-240];
+  const cHdrs=["Customer Order No.","Pkgs","Weight KG","Description"];
+  let cx=ML;
+  doc.setFillColor(26,74,68);
+  cHdrs.forEach((h,i)=>{
+    doc.rect(cx,y,cCols[i],14,"F");doc.rect(cx,y,cCols[i],14,"S");
+    doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(255,255,255);
+    doc.text(h,cx+3,y+9.5);cx+=cCols[i];
+  });
+  y+=14;
+
+  rows.forEach(r=>{
+    const vals=[r.order,r.pkgs,fmt(toKg(r.weight,r.unit)),r.desc];
+    cx=ML;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(0,0,0);
+    vals.forEach((val,i)=>{
+      doc.rect(cx,y,cCols[i],12,"S");
+      doc.text(String(val),cx+3,y+8.5);cx+=cCols[i];
+    });y+=12;
+  });
+  // Total row
+  doc.setFillColor(240,240,240);
+  cx=ML;
+  [String(tPkgs),"",fmt(tKg),""].forEach((val,i)=>{
+    doc.rect(cx,y,cCols[i],12,"F");doc.rect(cx,y,cCols[i],12,"S");
+    doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
+    doc.text(val,cx+3,y+8.5);cx+=cCols[i];
+  });y+=12+4;
+
+  // Carrier info
+  doc.setFillColor(220,220,220);
+  doc.rect(ML,y,CW,13,"F");doc.rect(ML,y,CW,13,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
+  doc.text("Carrier Information",ML+CW/2,y+9,{align:"center"});y+=13;
+
+  const ciC=[55,55,80,40,CW-280,55];
+  const ciH=["QTY","TYPE","Weight KG","H.M","Commodity","Class"];
+  doc.setFillColor(240,240,240);
+  cx=ML;ciH.forEach((h,i)=>{
+    doc.rect(cx,y,ciC[i],12,"F");doc.rect(cx,y,ciC[i],12,"S");
+    doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text(h,cx+ciC[i]/2,y+8.5,{align:"center"});cx+=ciC[i];
+  });y+=12;
+
+  const pdfCommodity=v("commodity")||"Boxes";
+  const pdfFreightCls=v("freightClass")||"60";
+  rows.forEach(r=>{
+    const vals=[r.pkgs,r.type,fmt(toKg(r.weight,r.unit)),"",pdfCommodity,pdfFreightCls];
+    cx=ML;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(0,0,0);
+    vals.forEach((val,i)=>{
+      doc.rect(cx,y,ciC[i],12,"S");
+      // Left-align commodity text since it can be long
+      if(i===4) doc.text(String(val),cx+4,y+8.5,{align:"left"});
+      else doc.text(String(val),cx+ciC[i]/2,y+8.5,{align:"center"});
+      cx+=ciC[i];
+    });y+=12;
+  });
+  doc.setFillColor(240,240,240);cx=ML;
+  [fmt(tPkgs,0),"",fmt(tKg),"","",""].forEach((val,i)=>{
+    doc.rect(cx,y,ciC[i],12,"F");doc.rect(cx,y,ciC[i],12,"S");
+    doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
+    doc.text(val,cx+ciC[i]/2,y+8.5,{align:"center"});cx+=ciC[i];
+  });y+=12+4;
+
+  // Special instructions
+  doc.rect(ML,y,CW,46,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
+  doc.text("Consignee Special Instructions:",ML+3,y+9);
+  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(50,50,50);
+  const silines=doc.splitTextToSize(v("specInstr"),CW-8);
+  doc.text(silines.slice(0,3),ML+3,y+19);
+  y+=46+4;
+
+  // Signatures
+  const sigH=65;
+  doc.rect(ML,y,CW/2,sigH,"S");doc.rect(ML+CW/2,y,CW/2,sigH,"S");
+  doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(80,80,80);
+  const noteT="NOTE - Where the rate is dependant on value, shippers are required to state specifically in writing the agreed or declared value of the property.\n\nThe agreed or declared value of the property is hereby specifically stated by the shipper to be not exceeding\n$ "+(v("declValue")||"");
+  const notelines=doc.splitTextToSize(noteT,CW/2-8);
+  doc.text(notelines,ML+3,y+8);
+  doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
+  doc.text("CARRIER SIGNATURE / PICKUP DATE",ML+3,y+sigH-14);
+  doc.line(ML+3,y+sigH-6,ML+CW/2-3,y+sigH-6);
+  doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(100,100,100);
+  doc.text("Date:",ML+3,y+sigH-2);
+  doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(0,0,0);
+  doc.text("CONSIGNEE SIGNATURE",ML+CW/2+3,y+12);
+  doc.setFont("helvetica","italic");doc.setFontSize(7.5);doc.setTextColor(80,80,80);
+  doc.text("Property described above is received in good order, except noted.",ML+CW/2+3,y+21);
+  doc.line(ML+CW/2+3,y+sigH-6,ML+CW-3,y+sigH-6);
+  doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(100,100,100);
+  doc.text("Date:",ML+CW/2+3,y+sigH-2);
+  y+=sigH;
+
+  doc.rect(ML,y,CW,13,"S");
+  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(0,0,0);
+  doc.text("NOTE: Liability Limitation for loss or damage in this shipment may be applicable. See 49 U.S.C. - 14706(c)(1)(A) and (B).",ML+CW/2,y+9,{align:"center"});
+  y+=13;
+
+  const ftlines=doc.splitTextToSize("RECEIVED, subject to the classifications and lawfully filed tariffs in effect on the date of the issue of this Bill of Lading, the property described above in apparent good order, except as noted (contents and conditions of contents of packages unknown), marked consigned and destined as indicated above which said carrier agrees to carry to its usual place of delivery at said destination, if on its route, otherwise to deliver to another carrier on the route to its destination. It is mutually agreed as to each carrier of all or any of said property, over all or any portion of said route to destination and as to each party at any time interested in all or any of said property, that every service to be performed hereunder shall be subject to the bill of lading terms and conditions in the governing classification on the date of shipment. Shipper hereby certifies that he is familiar with all the bill of lading terms and conditions in the governing classification and the said terms and conditions are hereby agreed to by the shipper and accepted for himself and his assigns.",CW-8);
+  const ftH=Math.max(26,ftlines.length*6+8);
+  doc.rect(ML,y,CW,ftH,"S");
+  doc.setFont("helvetica","normal");doc.setFontSize(5.5);doc.setTextColor(80,80,80);
+  doc.text(ftlines,ML+3,y+7);
+
+  doc.save("Nuvocargo-BOL-"+(v("shipmentId")||"BOL")+".pdf");
+}
+
+// ========= UPLOAD =========
+function handleUpload(e){ doUploadMulti(e.target.files); }
+
+async function doUploadMulti(files){
+  if(!files||!files.length) return;
+  const st=document.getElementById("upstatus");
+  const ch=document.getElementById("chips");
+  const fl=document.getElementById("fileList");
+  const fileArr=[...files];
+
+  st.className="upstatus loading";
+  st.textContent="⏳ Parsing "+fileArr.length+" file(s)...";
+  ch.innerHTML="";ch.className="chips";
+  fl.style.display="none";
+
+  try{
+    // Parse all files in parallel
+    const results = await Promise.all(fileArr.map(async file => {
+      const ext=file.name.split(".").pop().toLowerCase();
+      if(ext==="pdf") return await parsePDF(file);
+      else if(["xlsx","xls"].includes(ext)) return await parseExcel(file);
+      else if(ext==="csv") return await parseCSV(file);
+      else return {};
+    }));
+
+    // Show file list
+    fl.style.display="block";
+    fl.innerHTML="<b>Files loaded:</b><br>"+fileArr.map((f,i)=>{
+      const r=results[i];
+      const po=r.poNumber||r.orderNos?.[0]||"";
+      const pkgs=r.totalPkgs||"?";
+      const kg=r.totalWeightKg||"?";
+      return `📄 ${f.name}${po?" — "+po:""}${pkgs!="?"?" | "+pkgs+" pkgs":""}${kg!="?"?" | "+kg+" KG":""}`;
+    }).join("<br>");
+
+    // Consolidate: merge all results intelligently
+    const merged = consolidateResults(results, fileArr);
+    fillFormMulti(merged, results);
+
+    const totalCargo=merged.cargoRows?.length||0;
+    st.className="upstatus ok";
+    st.textContent="✅ Merged "+fileArr.length+" file(s) → "+totalCargo+" order line(s) auto-filled";
+    if(totalCargo>0){
+      ch.className="chips show";
+      const tags=["Shipper","Consignee","Orders","Weight","Packages"].filter((_,i)=>[merged.shipperName,merged.consigneeName,totalCargo>0,merged.totalWeightKg,merged.totalPkgs][i]);
+      ch.innerHTML=tags.map(t=>`<span class="chip">${t}</span>`).join("");
+    }
+  }catch(err){
+    st.className="upstatus err";st.textContent="❌ "+err.message;
+    console.error(err);
+  }
+  render();
+}
+
+// Merge multiple packing list results into one consolidated BOL data object
+function consolidateResults(results, files){
+  const merged={cargoRows:[]};
+  
+  results.forEach((r, idx) => {
+    // Take first non-empty value for header fields
+    if(!merged.shipperName && r.shipperName) merged.shipperName=r.shipperName;
+    if(!merged.shipperAddr && r.shipperAddr) merged.shipperAddr=r.shipperAddr;
+    if(!merged.consigneeName && r.consigneeName) merged.consigneeName=r.consigneeName;
+    if(!merged.consigneeAddr && r.consigneeAddr) merged.consigneeAddr=r.consigneeAddr;
+    if(!merged.shipDate && r.shipDate) merged.shipDate=r.shipDate;
+    if(!merged.carrierName && r.carrierName) merged.carrierName=r.carrierName;
+
+    // Each packing list becomes ONE summary cargo row (like the BOL format)
+    // using the PO/Florida number, total pkgs, and total weight
+    const poNum = r.poNumber || r.orderNos?.[0] || files[idx].name.replace(/\.[^.]+$/,"");
+    // Prefer the explicit Total row values; fall back to summing SKU rows only if missing
+    const pkgs = r.totalPkgs
+      || (r.cargoRows ? String(r.cargoRows.reduce((s,x)=>s+(parseInt(x.pkgs)||0),0)) : "");
+    const weightKg = r.totalWeightKg
+      || (r.cargoRows ? String(r.cargoRows.reduce((s,x)=>s+(parseFloat(x.weight)||0),0).toFixed(2)) : "");
+
+    if(poNum||pkgs){
+      merged.cargoRows.push({
+        order: poNum,
+        pkgs: pkgs,
+        type: "CJ",
+        desc: "Boxes",
+        weight: weightKg,
+        unit: "KG",
+        cls: r.cargoRows?.[0]?.cls || "60"
+      });
+    }
+  });
+
+  // Sum totals
+  merged.totalPkgs = String(merged.cargoRows.reduce((s,r)=>s+(parseInt(r.pkgs)||0),0));
+  merged.totalWeightKg = String(merged.cargoRows.reduce((s,r)=>s+(parseFloat(r.weight)||0),0).toFixed(2));
+  
+  return merged;
+}
+
+function fillFormMulti(merged, allResults){
+  const set=(id,val)=>{
+    const el=document.getElementById(id);
+    if(el&&val&&String(val).trim()){el.value=String(val).trim();el.classList.add("autofill");}
+  };
+  set("shipperName", merged.shipperName);
+  set("consigneeName", merged.consigneeName);
+  set("consigneeAddr", merged.consigneeAddr);
+  set("carrierName", merged.carrierName);
+  if(merged.shipDate) set("shipDate", merged.shipDate);
+
+  // Tresmontes rule: always use the correct warehouse address + Third Party billing
+  if(merged.shipperName && /tresmontes/i.test(merged.shipperName)){
+    set("shipperAddr", "Av. Guadalajara 105, km11+034.11. Parque Industrial Centro Logistico Jalisco.");
+    set("tpName",  "Tresmontes Lucchetti Mexico SA de CV");
+    set("tpAddr",  "Blvd Manuel Avila Camacho No. 88 Piso 4");
+    set("tpCity",  "Blvd Manuel Avila Camacho No. 88 Piso 4");
+  } else {
+    set("shipperAddr", merged.shipperAddr);
+  }
+
+  // Set commodity from first result that has cargo items
+  const firstWithCargo = allResults.find(r=>r.cargoRows?.length);
+  if(firstWithCargo?.cargoRows?.[0]?.desc){
+    const descEl=document.getElementById("commodity");
+    if(descEl&&!descEl.value) descEl.value=firstWithCargo.cargoRows[0].desc;
+  }
+
+  // Set cargo rows — one row per packing list (summary format)
+  document.getElementById("cargoBody").innerHTML="";rc=0;
+  if(merged.cargoRows.length){
+    merged.cargoRows.forEach(r=>addRow(r));
+  } else {
+    addRow();addRow();
+  }
+}
+
+// Legacy single-file function (still called internally)
+async function doUpload(file){ doUploadMulti([file]); }
+
+async function parsePDF(file){
+  if(typeof pdfjsLib !== 'undefined'){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: ab}).promise;
+  let allLines = [];
+
+  for(let i = 1; i <= pdf.numPages; i++){
+    const pg = await pdf.getPage(i);
+    const c = await pg.getTextContent();
+    // Group text items by Y position to reconstruct real lines
+    const byY = {};
+    for(const item of c.items){
+      if(!item.str || !item.str.trim()) continue;
+      const y = Math.round(item.transform[5] / 2) * 2;
+      if(!byY[y]) byY[y] = [];
+      byY[y].push({x: item.transform[4], str: item.str});
+    }
+    // Sort top-to-bottom (PDF y is bottom-to-top so sort descending)
+    const ys = Object.keys(byY).map(Number).sort((a,b) => b - a);
+    for(const y of ys){
+      const sorted = byY[y].sort((a,b) => a.x - b.x);
+      allLines.push(sorted.map(it => it.str).join(" "));
+    }
+    allLines.push("");
+  }
+
+  const text = allLines.join("\n");
+  const ex = extractFields(text);
+  const cargoResult = extractCargoPDF(allLines);
+  // Use Total row values as the authoritative package/weight counts
+  if(cargoResult.totalPkgs)    ex.totalPkgs    = cargoResult.totalPkgs;
+  if(cargoResult.totalWeightKg) ex.totalWeightKg = cargoResult.totalWeightKg;
+  if(cargoResult.rows.length)  ex.cargoRows    = cargoResult.rows;
+  return ex;
+}
+
+function extractCargoPDF(lines){
+  const rows = [];
+  const result = { rows, totalPkgs: null, totalWeightKg: null };
+  let hi = -1;
+  for(let i = 0; i < lines.length; i++){
+    const l = lines[i].toLowerCase();
+    if((l.includes('article') || l.includes('quantity') || l.includes('qty')) &&
+       (l.includes('description') || l.includes('weight') || l.includes('um'))){
+      hi = i; break;
+    }
+  }
+  if(hi < 0) return result;
+
+  for(let i = hi + 1; i < lines.length; i++){
+    const l = lines[i].trim();
+    if(!l) continue;
+
+    // ── Capture the Total row: "Total 1215 CJ 14.58 2624.40 3231.90"
+    // Structure: Total <qty> CJ <m3_vol> <net_weight_kg> <gross_weight_kg>
+    const totM = l.match(/^Total\s+(\d[\d,]+)\s+CJ\s+[\d.]+\s+([\d,.]+)\s+[\d,.]+/i);
+    if(totM){
+      result.totalPkgs    = totM[1].replace(/,/g,'');
+      result.totalWeightKg = totM[2].replace(/,/g,'');
+      continue;
+    }
+
+    if(/^(page|subtotal|packing list|from|to:|grupo)/i.test(l)) continue;
+
+    // ── Tresmontes data row: "10 1071871 810 CJ ZUKO ATOLE STRAWB... 9.72 1749.60 2154.60 February 2029"
+    const m = l.match(/^\d+\s+(\d{4,})\s+(\d+)\s+(CJ|PZ|KG|LT|BT|UN|BOX|EA)\s+(.+?)\s+[\d.]+\s+([\d,.]+)\s+[\d,.]+/i);
+    if(m){
+      rows.push({
+        order: m[1],
+        pkgs: m[2],
+        type: m[3].toUpperCase(),
+        desc: m[4].trim(),
+        weight: m[5].replace(/,/g,''),
+        unit: 'KG',
+        cls: '60'
+      });
+    }
+  }
+  return result;
+}
+
+async function parseExcel(file){
+  const ab=await file.arrayBuffer();
+  const wb=XLSX.read(ab,{type:"array"});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+  const text=data.map(r=>r.join(" | ")).join("\n");
+  const ex=extractFields(text);
+  const cargo=extractCargoExcel(data);
+  if(cargo.length) ex.cargoRows=cargo;
+  return ex;
+}
+
+async function parseCSV(file){
+  const text=await file.text();
+  return extractFields(text);
+}
+
+function extractFields(text){
+  const r={};
+  const lines=text.split(/\n/).map(l=>l.trim()).filter(l=>l.length>0);
+  const flat=lines.join(" | ");
+
+  // tryMatch: try regex array against flat text (or custom src), return first group
+  const tryMatch=(patterns,src)=>{
+    const s=src||flat;
+    for(const p of patterns){
+      const m=s.match(p);
+      if(m&&m[1]){const v=m[1].replace(/\|+/g,"").trim();if(v.length>1)return v;}
+    }
+    return null;
+  };
+
+  // --- Shipper (EN + ES + Tresmontes "FROM :" format) ---
+  r.shipperName=tryMatch([
+    /FROM\s*:\s*([^\n|]{5,70})/i,
+    /(?:shipper|exporter|seller|ship\s*from|consignor|remitente|expedidor|vendedor|fabricante|manufacturer|exported\s+by)\s*[:\-]?\s*([A-Z][^\n|]{4,70})/i,
+  ]);
+
+  // --- Consignee ---
+  r.consigneeName=tryMatch([
+    /(?:consignee|ship\s*to|importer|buyer|comprador|importador|destinatario|sold\s+to|bill\s+to)\s*[:\-]?\s*([A-Z][^\n|]{4,70})/i,
+  ]);
+  // Tresmontes "To:" followed by address lines — try to get company from context
+  if(!r.consigneeName){
+    const toIdx = lines.findIndex(l => /^To:\s*$/i.test(l) || /^To:\s+\S/i.test(l));
+    if(toIdx >= 0 && lines[toIdx+1]) r.consigneeName = lines[toIdx+1].trim();
+  }
+
+  // --- Addresses (multiline, try line-by-line after label) ---
+  for(let i=0;i<lines.length;i++){
+    if(/(?:shipper|exporter|remitente|ship\s*from)/i.test(lines[i])&&!r.shipperAddr&&lines[i+1]){
+      r.shipperAddr=lines.slice(i+1,i+4).join(", ");
+    }
+    if(/(?:consignee|ship\s*to|importador|destinatario)/i.test(lines[i])&&!r.consigneeAddr&&lines[i+1]){
+      r.consigneeAddr=lines.slice(i+1,i+4).join(", ");
+    }
+  }
+
+  // --- Carrier ---
+  r.carrierName=tryMatch([
+    /(?:carrier|transportista|transporter|trucking|naviera|freight\s*forwarder|agente\s+de\s+carga)\s*[:\-]\s*([A-Z0-9][^\n|]{2,50})/i,
+  ]);
+
+  // --- Trailer ---
+  r.trailerNo=tryMatch([
+    /(?:trailer\s*(?:no\.?|#|number)?|caja\s*(?:no\.?|#)?|contenedor\s*(?:no\.?|#)?)\s*[:\-]?\s*([A-Z0-9]{3,20})\b/i,
+  ]);
+
+  // --- Description of goods ---
+  r.description=tryMatch([
+    /(?:description\s+of\s+(?:goods|articles?)|mercanc[ií]a|descripci[oó]n|commodity|product\s+description|concepto)\s*[:\-]\s*([^\n|]{5,100})/i,
+    /(?:goods|articles?|merchandise)\s*[:\-]\s*([^\n|]{5,100})/i,
+  ]);
+
+  // --- Weight KG: handle comma-as-thousand-sep (1,215.50) AND period-as-thousand-sep (1.215,50) ---
+  const wPatterns=[
+    /(?:(?:gross|total|net)\s*)?(?:peso\s*(?:bruto|neto|total)?|weight\s*(?:kg|kgs|total)?)\s*[:\-]?\s*([\d,\.]+)/i,
+    /([\d,\.]+)\s*(?:kg|kgs)\b/i,
+  ];
+  for(const wp of wPatterns){
+    const wm=flat.match(wp);
+    if(wm){
+      let wstr=wm[1];
+      // Normalize: if has both comma and dot, strip comma (US format 1,215.50)
+      if(wstr.includes(",")&&wstr.includes(".")) wstr=wstr.replace(/,/g,"");
+      else wstr=wstr.replace(/,/g,".");
+      const wnum=parseFloat(wstr);
+      if(!isNaN(wnum)&&wnum>0){r.totalWeightKg=String(wnum);break;}
+    }
+  }
+
+  // --- Packages / pieces ---
+  const pm=flat.match(/(?:total\s*)?(?:piezas?|pieces?|pkgs?|packages?|boxes|cartons?|cajas?\s*(?:totales?)?|bultos?|units?|unidades?)\s*[:\-]?\s*(\d[\d,]*)\b/i);
+  if(pm) r.totalPkgs=pm[1].replace(/,/g,"");
+
+  // --- Invoice / order numbers (also Factura: TVE-00002586 format) ---
+  const im=flat.match(/(?:invoice\s*(?:no\.?|#|number)?|factura\s*(?:no\.?|#)?)\s*[:\-]?\s*([A-Z0-9][\w\-]{1,20})/i);
+  if(im) r.invoiceNo=im[1];
+  // Florida / PO number (Tresmontes uses "Florida FLO09789 (F)" format)
+  const floM=flat.match(/Florida\s+(FLO[\d]+\s*\([^)]+\))/i) || flat.match(/Florida\s+(FLO\w+)/i);
+  if(floM){ r.poNumber=floM[1].trim(); if(!r.orderNos) r.orderNos=[r.poNumber]; }
+
+  const oms=[...flat.matchAll(/(?:(?:customer\s+)?order|po\b|purchase\s+order|pedido|folio)\s*(?:no\.?|#|num\.?)?\s*[:\-]?\s*([A-Z0-9][\w\-]{2,20})/gi)];
+  if(oms.length) r.orderNos=[...new Set(oms.map(m=>m[1]))];
+
+  // --- Date ---
+  const datePats=[/(\d{4}-\d{2}-\d{2})/,/(\d{2}\/\d{2}\/\d{4})/,/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/];
+  for(const dp of datePats){
+    const dm=flat.match(dp);
+    if(dm){try{let ds=dm[1];if(ds.includes("/")&&ds.split("/").pop().length===4){const p=ds.split("/");ds=p[2]+"-"+p[0].padStart(2,"0")+"-"+p[1].padStart(2,"0");}const d=new Date(ds);if(!isNaN(d)&&d.getFullYear()>2000){r.shipDate=d.toISOString().split("T")[0];break;}}catch(e){}}
+  }
+
+  Object.keys(r).forEach(k=>{if(r[k]===null||r[k]===undefined||r[k]==="")delete r[k];});
+  return r;
+}
+
+function extractCargoExcel(data){
+  const rows=[];
+  const isOrderCol=h=>/order|po\b|folio|pedido|invoice|factura|referencia|ref\b|no\.|nro/i.test(h);
+  const isQtyCol=h=>/qty|quantity|pcs|piezas|cajas|boxes|bultos|pkgs|packages|pieces|units|cant(?:idad)?/i.test(h);
+  const isWeightCol=h=>/weight|peso|kg\b|kgs?\b|kilos/i.test(h);
+  const isDescCol=h=>/desc|product|articulo|article|item|sabor|flavor|mercan|goods|concept|presentacion/i.test(h);
+  const isTypeCol=h=>/type|tipo|packaging|empaque|kind/i.test(h);
+
+  // Scan first 35 rows for header
+  let hi=-1;
+  for(let i=0;i<Math.min(data.length,35);i++){
+    const row=data[i].map(c=>String(c));
+    let score=0;
+    row.forEach(c=>{
+      if(isOrderCol(c)) score+=2;
+      if(isQtyCol(c)) score+=2;
+      if(isWeightCol(c)) score+=1;
+      if(isDescCol(c)) score+=1;
+    });
+    if(score>=3){hi=i;break;}
+  }
+
+  if(hi>=0){
+    const hdrs=data[hi].map(c=>String(c));
+    const oi=hdrs.findIndex(isOrderCol);
+    const qi=hdrs.findIndex(isQtyCol);
+    const wi=hdrs.findIndex(isWeightCol);
+    const di=hdrs.findIndex(isDescCol);
+    const ti=hdrs.findIndex(isTypeCol);
+
+    for(let i=hi+1;i<data.length;i++){
+      const row=data[i];
+      const rowStr=row.map(c=>String(c)).join("|");
+      if(rowStr.replace(/[|\s.,0]/g,"")==="") continue; // blank
+      if(/^\s*(?:total|subtotal|gran\s*total|suma|sum)\b/i.test(rowStr)) continue; // total row
+
+      const ov=oi>=0?String(row[oi]||"").trim():"";
+      const qraw=qi>=0?String(row[qi]||"").replace(/,/g,"").trim():"";
+      const wraw=wi>=0?String(row[wi]||"").replace(/,/g,"").trim():"";
+      const dv=di>=0?String(row[di]||"").trim():"";
+      const tv=ti>=0?String(row[ti]||"").trim():"CJ";
+
+      const qNum=parseFloat(qraw);
+      if(!ov&&(isNaN(qNum)||qNum<=0)) continue;
+
+      rows.push({
+        order:ov,
+        pkgs:isNaN(qNum)?"":String(Math.round(qNum)),
+        type:tv||"CJ",
+        desc:dv,
+        weight:isNaN(parseFloat(wraw))?"":wraw,
+        unit:"KG",
+        cls:"60"
+      });
+    }
+  } else {
+    // Heuristic fallback: col[0]=code, col[1]=number
+    for(let i=1;i<data.length;i++){
+      const row=data[i];
+      if(row.length<2) continue;
+      const fc=String(row[0]).trim();
+      if(!fc||/total|subtotal/i.test(fc)) continue;
+      const q=parseFloat(String(row[1]).replace(/,/g,""));
+      if(!isNaN(q)&&q>0&&fc.length>=2){
+        const w=parseFloat(String(row[2]||"").replace(/,/g,""));
+        rows.push({order:fc,pkgs:String(Math.round(q)),type:"CJ",desc:String(row[3]||row[4]||"").trim(),weight:isNaN(w)?"":String(w),unit:"KG",cls:"60"});
+      }
+    }
+  }
+  return rows;
+}
+
+function fillForm(ex){
+  const set=(id,val)=>{
+    const el=document.getElementById(id);
+    if(el&&val&&String(val).trim()){el.value=String(val).trim();el.classList.add("autofill");}
+  };
+  set("shipperName",ex.shipperName);
+  // Tresmontes rule: always override with correct warehouse address + 3P billing
+  if(ex.shipperName && /tresmontes/i.test(ex.shipperName)){
+    set("shipperAddr","Av. Guadalajara 105, km11+034.11. Parque Industrial Centro Logistico Jalisco.");
+    set("tpName","Tresmontes Lucchetti Mexico SA de CV");
+    set("tpAddr","Blvd Manuel Avila Camacho No. 88 Piso 4");
+    set("tpCity","Blvd Manuel Avila Camacho No. 88 Piso 4");
+  } else {
+    set("shipperAddr",ex.shipperAddr);
+  }
+  set("consigneeName",ex.consigneeName);
+  set("consigneeAddr",ex.consigneeAddr);
+  set("carrierName",ex.carrierName);
+  set("trailerNo",ex.trailerNo);
+  if(ex.shipDate) set("shipDate",ex.shipDate);
+  if(ex.invoiceNo) set("shipmentId","SH-"+ex.invoiceNo);
+  if(ex.description) set("specInstr",ex.description);
+
+  if(ex.cargoRows&&ex.cargoRows.length){
+    document.getElementById("cargoBody").innerHTML="";rc=0;
+    ex.cargoRows.forEach(r=>addRow(r));
+  } else if(ex.totalPkgs||ex.totalWeightKg||ex.orderNos){
+    document.getElementById("cargoBody").innerHTML="";rc=0;
+    addRow({
+      order:ex.orderNos?ex.orderNos[0]:"",
+      pkgs:ex.totalPkgs||"",
+      type:"CJ",
+      desc:ex.description||"",
+      weight:ex.totalWeightKg||"",
+      unit:"KG",
+      cls:"60"
+    });
+  }
+}
+
+function clearForm(){
+  if(!confirm("Clear all fields?")) return;
+  document.querySelectorAll("#cargoBody tr").forEach(r=>r.remove());
+  rc=0;
+  document.querySelectorAll("input[type=text],textarea").forEach(e=>{e.value="";e.classList.remove("autofill");});
+  const t=new Date();
+  document.getElementById("shipDate").value=t.toISOString().split("T")[0];
+  document.getElementById("shipmentId").value="SH-"+(Math.floor(Math.random()*90000)+10000);
+  document.getElementById("deliveryDate").value="";
+  document.getElementById("upstatus").className="upstatus";
+  document.getElementById("chips").className="chips";
+  document.getElementById("docfile").value="";
+  addRow();addRow();render();
+}
+</script>
+</body>
+</html>
