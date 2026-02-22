@@ -9,109 +9,576 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--teal:#24433D;--lime:#C8E64C;--w:#fff;--g50:#f9f9f7;--g100:#f0f0ee;--g200:#e0e0dc;--g400:#9a9a94;--g600:#555551;--g800:#1e1e1c;--bd:#bbb}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#e8ece8;color:var(--g800);min-height:100vh}
+/* ── NuvoOS Design System ─────────────────────────────────────────────────────
+   Font: Inter (same as NuvoOS)
+   Colors extracted from screenshot:
+     - Page bg:      #F7F8F8  (very light warm gray)
+     - Sidebar bg:   #FFFFFF
+     - Header bg:    #FFFFFF  with bottom border #E5E7EB
+     - Border:       #E5E7EB  (thin, consistent)
+     - Text primary: #111827
+     - Text muted:   #6B7280
+     - Text xmuted:  #9CA3AF
+     - Teal accent:  #1C4A3E  (nuvo dark teal, nav active)
+     - Lime accent:  #C8E64C  (nuvo lime, CTA)
+     - Blue link:    #2563EB  (status links in table)
+     - Badge bg:     #F3F4F6  with border #E5E7EB
+   Spacing: 8px base grid, dense data layout
+────────────────────────────────────────────────────────────────────────────── */
+:root {
+  --teal:   #1C4A3E;
+  --lime:   #C8E64C;
+  --lime-h: #b5d43a;
+  --bg:     #F7F8F8;
+  --panel:  #FFFFFF;
+  --bd:     #E5E7EB;
+  --bd2:    #D1D5DB;
+  --tx1:    #111827;
+  --tx2:    #374151;
+  --tx3:    #6B7280;
+  --tx4:    #9CA3AF;
+  --blue:   #2563EB;
+  --red:    #DC2626;
+  --green:  #16A34A;
+  --amber:  #D97706;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--tx1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
 
-header{background:var(--teal);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
-.hlogo{height:36px;width:auto;object-fit:contain;border-radius:2px}
-.hright{display:flex;align-items:center;gap:10px}
-.btn-gen{background:var(--lime);color:#1a3a1a;border:none;padding:9px 22px;border-radius:5px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;letter-spacing:.01em}
-.btn-gen:hover{background:#b8d63e;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.btn-sec{background:transparent;color:rgba(255,255,255,.75);border:1.5px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:5px;font-weight:500;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
-.btn-sec:hover{color:white;border-color:rgba(255,255,255,.7)}
+/* ── Header — matches NuvoOS top nav ───────────────────────────────────────── */
+header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--bd);
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.hlogo { height: 22px; width: auto; display: block; margin-bottom: -3px; }
+.htitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx2);
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px solid var(--bd);
+  line-height: 1;
+}
+.hleft { display: flex; align-items: center; gap: 0; }
+.hright { display: flex; align-items: center; gap: 8px; }
 
-.app{display:grid;grid-template-columns:460px 1fr;height:calc(100vh - 60px)}
+/* Buttons — NuvoOS style */
+.btn-gen {
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  padding: 0 16px;
+  height: 32px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn-gen:hover { background: #163d32; }
+.btn-sec {
+  background: var(--panel);
+  color: var(--tx2);
+  border: 1px solid var(--bd);
+  padding: 0 14px;
+  height: 32px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.btn-sec:hover { background: var(--bg); border-color: var(--bd2); }
 
-/* FORM */
-.fp{background:white;overflow-y:auto;border-right:1px solid var(--g200)}
-.upsec{padding:18px 22px;background:linear-gradient(135deg,#eef5f3,#e4f0ec);border-bottom:2px solid var(--teal)}
-.upsec h3{font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
-.upzone{border:2px dashed #8ab5ac;border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:white;position:relative}
-.upzone:hover,.upzone.dragover{border-color:var(--teal);background:#f0f7f5}
-.upzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.upicon{font-size:24px;margin-bottom:5px}
-.upzone p{font-size:12px;color:var(--g600);line-height:1.4}
-.upzone p strong{color:var(--teal)}
-.upstatus{margin-top:8px;padding:8px 10px;border-radius:5px;font-size:11px;font-weight:500;display:none}
-.upstatus.ok{background:#e8f5e9;color:#2e7d32;display:block}
-.upstatus.loading{background:#fff8e1;color:#e65100;display:block}
-.upstatus.err{background:#fde8e8;color:#c62828;display:block}
-.chips{margin-top:8px;display:none;flex-wrap:wrap;gap:5px}
-.chips.show{display:flex}
-.chip{background:var(--teal);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:500}
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+.app {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  height: calc(100vh - 52px);
+}
 
-.fsec{padding:14px 22px;border-bottom:1px solid var(--g100)}
-.fsec h4{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.fsec h4::after{content:"";flex:1;height:1px;background:var(--g200)}
-.fr{display:grid;gap:8px;margin-bottom:8px}
-.fr.c2{grid-template-columns:1fr 1fr}
-.fr.c3{grid-template-columns:1fr 1fr 1fr}
-.fg{display:flex;flex-direction:column;gap:3px}
-label{font-size:10px;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.04em}
-input[type=text],input[type=date],textarea,select{border:1.5px solid var(--g200);border-radius:5px;padding:7px 9px;font-size:12px;font-family:'Inter',sans-serif;color:var(--g800);background:white;transition:border-color .15s;width:100%}
-input:focus,textarea:focus,select:focus{outline:none;border-color:var(--teal)}
-textarea{resize:vertical;min-height:52px}
-.autofill{border-color:#8ab5ac!important;background:#f5fbf9!important}
-.ctbl{width:100%;border-collapse:collapse;font-size:11px}
-.ctbl th{background:var(--teal);color:white;padding:6px 5px;text-align:left;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
-.ctbl td{padding:3px 3px;border-bottom:1px solid var(--g100)}
-.ctbl input,.ctbl select{border:1px solid var(--g200);border-radius:3px;padding:4px 5px;font-size:11px;width:100%}
-.del-r{background:none;border:none;color:#e05252;cursor:pointer;font-size:15px;padding:3px;line-height:1}
-.btnadd{margin-top:6px;background:none;border:1.5px solid var(--teal);color:var(--teal);padding:5px 12px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
-.btnadd:hover{background:var(--teal);color:white}
+/* ── Form panel ─────────────────────────────────────────────────────────────── */
+.fp {
+  background: var(--panel);
+  overflow-y: auto;
+  border-right: 1px solid var(--bd);
+}
 
-/* PREVIEW */
-.pp{overflow-y:auto;background:#dde0dd;padding:28px;display:flex;flex-direction:column;align-items:center}
-.pvlabel{font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+/* Upload zone */
+.upsec {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--bd);
+  background: var(--panel);
+}
+.upsec h3 {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 8px;
+}
+.upzone {
+  border: 1.5px dashed var(--bd2);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--bg);
+  position: relative;
+}
+.upzone:hover, .upzone.dragover {
+  border-color: var(--teal);
+  background: #eef5f3;
+}
+.upzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upicon { font-size: 20px; margin-bottom: 4px; }
+.upzone p { font-size: 12px; color: var(--tx3); line-height: 1.4; }
+.upzone p strong { color: var(--teal); font-weight: 600; }
+.upstatus {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  display: none;
+  line-height: 1.4;
+}
+.upstatus.ok      { background: #F0FDF4; color: var(--green); border: 1px solid #BBF7D0; display: block; }
+.upstatus.loading { background: #FFFBEB; color: var(--amber); border: 1px solid #FDE68A; display: block; }
+.upstatus.err     { background: #FEF2F2; color: var(--red);   border: 1px solid #FECACA; display: block; }
+.chips { margin-top: 6px; display: none; flex-wrap: wrap; gap: 4px; }
+.chips.show { display: flex; }
+.chip {
+  background: #EEF2FF;
+  color: #3730A3;
+  border: 1px solid #C7D2FE;
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 500;
+}
+#fileList { margin-top: 6px; font-size: 11px; color: var(--tx3); line-height: 1.8; display: none; }
 
-/* BOL DOCUMENT */
-.bol{background:white;width:100%;max-width:780px;box-shadow:0 4px 28px rgba(0,0,0,.15);font-family:Arial,sans-serif;font-size:10px;color:#111}
-.bol-hdr{display:flex;justify-content:flex-end;padding:10px 16px 4px}
-.bol-logo{height:30px}
-.bol-title-wrap{margin:0 8px;border:2px solid #111;text-align:center;padding:7px}
-.bol-title{font-size:15px;font-weight:900;letter-spacing:.06em}
-.bol-body{padding:0 8px 8px}
+/* Form sections */
+.fsec {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--bd);
+}
+.fsec h4 {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fsec h4::after { content: ""; flex: 1; height: 1px; background: var(--bd); }
+.fr { display: grid; gap: 8px; margin-bottom: 8px; }
+.fr.c2 { grid-template-columns: 1fr 1fr; }
+.fr.c3 { grid-template-columns: 1fr 1fr 1fr; }
+.fg { display: flex; flex-direction: column; gap: 3px; }
+label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--tx3);
+  letter-spacing: .01em;
+}
+input[type=text], input[type=date], textarea, select {
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  padding: 6px 9px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--tx1);
+  background: var(--panel);
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+  line-height: 1.4;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(28,74,62,.08);
+}
+textarea { resize: vertical; min-height: 50px; }
+.autofill {
+  border-color: #6EE7B7 !important;
+  background: #F0FDF4 !important;
+}
 
-/* grid helper */
-.bg{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid #111;margin-top:5px}
-.bc{padding:6px 8px;border-right:1.5px solid #111;border-bottom:1.5px solid #111}
-.bc.r{border-right:none}
-.bc.full{grid-column:1/-1;border-right:none}
-.bc.nb{border-bottom:none}
-.clabel{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#111;margin-bottom:1px}
-.cval{font-size:10px;color:#111;min-height:13px}
-.cval.b{font-weight:700}
-.cval.lg{font-size:12px;font-weight:700}
+/* Cargo table inside form */
+.ctbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+.ctbl th {
+  background: var(--bg);
+  color: var(--tx3);
+  padding: 6px 6px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 1px solid var(--bd);
+  white-space: nowrap;
+}
+.ctbl td { padding: 3px 3px; border-bottom: 1px solid var(--bd); }
+.ctbl input, .ctbl select {
+  border: 1px solid var(--bd);
+  border-radius: 4px;
+  padding: 4px 5px;
+  font-size: 11px;
+  width: 100%;
+  font-family: inherit;
+}
+.ctbl input:focus, .ctbl select:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+.del-r {
+  background: none;
+  border: none;
+  color: var(--tx4);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color .1s;
+}
+.del-r:hover { color: var(--red); }
+.btnadd {
+  margin-top: 6px;
+  background: none;
+  border: 1px solid var(--bd);
+  color: var(--tx2);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.btnadd:hover { background: var(--bg); border-color: var(--teal); color: var(--teal); }
 
-/* cargo table */
-.ct-hdr{display:grid;grid-template-columns:110px 50px 80px 1fr;background:#1A4A44;border-left:1.5px solid #111;border-right:1.5px solid #111}
-.ct-hdr div{padding:5px 7px;color:white;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-right:1px solid rgba(255,255,255,.3)}
-.ct-hdr div:last-child{border-right:none}
-.ct-row{display:grid;grid-template-columns:110px 50px 80px 1fr;border-left:1.5px solid #111;border-right:1.5px solid #111;border-bottom:1px solid #e0e0e0;font-size:9px}
-.ct-row div{padding:4px 7px;border-right:1px solid #e8e8e8}
-.ct-row div:last-child{border-right:none}
+/* Mode radio */
+.mode-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+}
+.mode-row label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--tx2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.mode-row > span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-right: 4px;
+}
 
-/* carrier info */
-.ci-title{text-align:center;background:#e0e0e0;padding:4px;font-size:9px;font-weight:700;text-transform:uppercase;border-left:1.5px solid #111;border-right:1.5px solid #111;border-top:1.5px solid #111}
-.ci-hdr{display:grid;grid-template-columns:55px 55px 80px 40px 1fr 55px;border-left:1.5px solid #111;border-right:1.5px solid #111;background:#f0f0f0;font-size:7px;font-weight:700;text-transform:uppercase}
-.ci-hdr div{padding:3px 5px;border-right:1px solid #ccc;text-align:center}
-.ci-hdr div:last-child{border-right:none}
-.ci-row{display:grid;grid-template-columns:55px 55px 80px 40px 1fr 55px;border-left:1.5px solid #111;border-right:1.5px solid #111;border-bottom:1px solid #e8e8e8;font-size:9px;text-align:center}
-.ci-row div{padding:4px 5px;border-right:1px solid #e8e8e8}
-.ci-row div:last-child{border-right:none}
-.ci-total{display:grid;grid-template-columns:55px 55px 80px 40px 1fr 55px;border:1.5px solid #111;background:#f5f5f5;font-size:9px;font-weight:700;text-align:center}
-.ci-total div{padding:4px 5px;border-right:1px solid #ccc}
-.ci-total div:last-child{border-right:none}
+/* ── Preview panel ───────────────────────────────────────────────────────────── */
+.pp {
+  overflow-y: auto;
+  background: #EAECEC;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.pvlabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--tx4);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 12px;
+}
 
-.bol-instr{border:1.5px solid #111;padding:5px 8px;margin-top:5px;min-height:48px}
-.bol-sig{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid #111;margin-top:5px}
-.bol-sigcell{padding:8px 10px}
-.bol-sigcell:first-child{border-right:1.5px solid #111}
-.sigline{border-top:1px solid #111;margin-top:22px;font-size:8px;color:#666;padding-top:2px}
-.bol-liab{text-align:center;padding:4px 8px;font-size:7.5px;font-weight:700;border:1.5px solid #111;border-top:none}
-.bol-footnote{font-size:6.5px;color:#555;padding:5px 8px;border:1.5px solid #111;border-top:none;line-height:1.4}
-.bol-3p{border:1.5px solid #111;padding:7px 8px;margin-top:5px;font-size:9px;line-height:1.7}
+/* ── BOL document — matches PDF output exactly ──────────────────────────────── */
+/* Token aliases for the BOL doc */
+:root {
+  --doc-bd: #DCDFE0;        /* cell borders */
+  --doc-bg: #F7F8F8;        /* label cell background */
+  --doc-bg2: #F2F4F2;       /* totals / zebra */
+  --doc-tx1: #111827;       /* primary text */
+  --doc-tx2: #374151;       /* secondary */
+  --doc-tx3: #6B7280;       /* muted labels */
+  --doc-teal: #1C4A3E;      /* nuvo teal */
+  --doc-lime: #C8E64C;      /* thursday accent */
+}
+.bol {
+  background: white;
+  width: 100%;
+  max-width: 780px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.2);
+  border-radius: 2px;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 10px;
+  color: var(--doc-tx1);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+.bol-hdr {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px 6px;
+  background: white;
+}
+.bol-logo { height: 22px; width: auto; display: block; }
+.bol-body { padding: 0 10px 12px; }
+
+/* Title */
+.bol-title-wrap {
+  margin: 0 0 0 0;
+  background: var(--doc-teal);
+  text-align: center;
+  padding: 9px 8px;
+  border-radius: 0;
+}
+.bol-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: white;
+  text-transform: uppercase;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Info grid — 2 columns, label stacked above value */
+.bg {
+  display: grid;
+  grid-template-columns: 55% 22.5% 22.5%;
+  border: 1px solid var(--doc-bd);
+  margin-top: 4px;
+}
+/* Ship-from occupies rows 1-3 left, right side gets individual cells */
+.bc {
+  padding: 5px 7px;
+  border-right: 1px solid var(--doc-bd);
+  border-bottom: 1px solid var(--doc-bd);
+}
+.bc.r { border-right: none; }
+.bc.full { grid-column: 1/-1; border-right: none; }
+.bc.nb { border-bottom: none; }
+/* Small uppercase gray label */
+.clabel {
+  font-size: 6.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--doc-tx3);
+  margin-bottom: 2px;
+  display: block;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+/* Main value text */
+.cval {
+  font-size: 9px;
+  color: var(--doc-tx1);
+  min-height: 12px;
+  line-height: 1.35;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+.cval.b  { font-weight: 700; font-size: 9.5px; }
+.cval.lg { font-size: 12px; font-weight: 700; }
+
+/* Cargo table */
+.ct-hdr {
+  display: grid;
+  grid-template-columns: 110px 50px 80px 1fr;
+  background: var(--doc-teal);
+  border-left: 1px solid var(--doc-bd);
+  border-right: 1px solid var(--doc-bd);
+  border-top: 1px solid var(--doc-bd);
+  margin-top: 4px;
+}
+.ct-hdr.thu {
+  background: var(--doc-teal);
+}
+.ct-hdr div {
+  padding: 5px 7px;
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-right: 1px solid rgba(255,255,255,.2);
+  color: white;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+.ct-hdr.thu div {
+  color: white;
+  border-right: 1px solid rgba(255,255,255,.2);
+}
+.ct-hdr div:last-child { border-right: none; }
+.ct-row {
+  display: grid;
+  grid-template-columns: 110px 50px 80px 1fr;
+  border-left: 1px solid var(--doc-bd);
+  border-right: 1px solid var(--doc-bd);
+  border-bottom: 1px solid var(--doc-bd);
+  font-size: 9px;
+  color: var(--doc-tx1);
+}
+.ct-row:nth-child(odd)  { background: white; }
+.ct-row:nth-child(even) { background: var(--doc-bg); }
+.ct-row div { padding: 4px 7px; border-right: 1px solid var(--doc-bd); }
+.ct-row div:last-child { border-right: none; }
+.ct-row.total {
+  background: var(--doc-bg2);
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--doc-tx1);
+}
+
+/* Carrier info */
+.ci-title {
+  text-align: center;
+  background: var(--doc-teal);
+  padding: 4px;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: white;
+  border-left: 1px solid var(--doc-bd);
+  border-right: 1px solid var(--doc-bd);
+  border-top: 1px solid var(--doc-bd);
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+.ci-hdr {
+  display: grid;
+  grid-template-columns: 55px 55px 80px 40px 1fr 55px;
+  border-left: 1px solid var(--doc-bd);
+  border-right: 1px solid var(--doc-bd);
+  background: var(--doc-bg);
+  font-size: 7px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--doc-tx3);
+}
+.ci-hdr div { padding: 4px 5px; border-right: 1px solid var(--doc-bd); text-align: center; }
+.ci-hdr div:last-child { border-right: none; }
+.ci-row {
+  display: grid;
+  grid-template-columns: 55px 55px 80px 40px 1fr 55px;
+  border-left: 1px solid var(--doc-bd);
+  border-right: 1px solid var(--doc-bd);
+  border-bottom: 1px solid var(--doc-bd);
+  font-size: 9px;
+  text-align: center;
+  color: var(--doc-tx1);
+}
+.ci-row:nth-child(even) { background: var(--doc-bg); }
+.ci-row div { padding: 4px 5px; border-right: 1px solid var(--doc-bd); }
+.ci-row div:last-child { border-right: none; }
+.ci-total {
+  display: grid;
+  grid-template-columns: 55px 55px 80px 40px 1fr 55px;
+  border: 1px solid var(--doc-bd);
+  background: var(--doc-bg2);
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--doc-tx1);
+}
+.ci-total div { padding: 4px 5px; border-right: 1px solid var(--doc-bd); }
+.ci-total div:last-child { border-right: none; }
+
+/* Instructions */
+.bol-instr {
+  border: 1px solid var(--doc-bd);
+  padding: 6px 8px;
+  margin-top: 4px;
+  min-height: 52px;
+}
+
+/* Signature block */
+.bol-sig {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--doc-bd);
+  margin-top: 4px;
+}
+.bol-sigcell { padding: 8px 10px; }
+.bol-sigcell:first-child { border-right: 1px solid var(--doc-bd); }
+.sigline {
+  border-top: 1px solid var(--doc-bd);
+  margin-top: 22px;
+  font-size: 7.5px;
+  color: var(--doc-tx3);
+  padding-top: 3px;
+}
+
+/* Footer */
+.bol-liab {
+  text-align: center;
+  padding: 4px 8px;
+  font-size: 7px;
+  font-weight: 700;
+  color: var(--doc-tx2);
+  background: var(--doc-bg);
+  border: 1px solid var(--doc-bd);
+  border-top: none;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: .01em;
+}
+.bol-footnote {
+  font-size: 6px;
+  color: var(--doc-tx3);
+  padding: 5px 8px;
+  border: 1px solid var(--doc-bd);
+  border-top: none;
+  line-height: 1.55;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+.bol-3p {
+  border: 1px solid var(--doc-bd);
+  padding: 6px 8px;
+  margin-top: 4px;
+  font-size: 8.5px;
+  line-height: 1.6;
+  color: var(--doc-tx2);
+}
 
 @media(max-width:900px){.app{grid-template-columns:1fr;height:auto}.pp{display:none}}
 </style>
@@ -119,10 +586,16 @@ textarea{resize:vertical;min-height:52px}
 <body>
 
 <header>
-  <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAyAFkDASIAAhEBAxEB/8QAGgABAAMBAQEAAAAAAAAAAAAAAAEGBwUDBP/EACkQAAEEAQMDAwQDAAAAAAAAAAEAAgMRBAUSIQYTMRQiQUJRYXEVIzL/xAAXAQEBAQEAAAAAAAAAAAAAAAAAAQIE/8QAFxEBAQEBAAAAAAAAAAAAAAAAABESAf/aAAwDAQACEQMRAD8AztERacQiIgIiICIiAiIgIiICKHf5P6Whyay1+vZWG/PidprtB2GLuN7TpRitr8F+8fuxSLzlZ6iv+h9mTM6M1D1eIzGwoHRZLpZ2NMcgfIaLSb5Dm0apc3TNSxndN42XPNE3P0KV3po31umbILYAPnZINx/BUXKpUaJo0PJ+37QAkgAWT4A+VeMGd5HS8mnZcUWFAwfyW+VrWiXuEyumaT7g5lVYNjgL5NOmw3xdTR6Q5uPmTyNOn7niN5x+44vYxxIpxbs4sEgEIkVOjZFGx5FeFCvHT/qoZxn5mqv9TFn48eRCMyNlRAD+yRxsvaB7dovm7Xhmag7TNA1qDByYoJJNbe0Nhc3d2TG8e2vpPAscfCLlT6O3dRrxdcKKNXRq6v4taROdSg0rIyNMjdJ6jQ4ovTw5MYZjt2NL5BHe+6B+kcucbI8+MOTjN6gwsluRCOlW4DGSwmRuzb2afGWXZkMl/F2QbrlDLPUQeAirIiIgUPsERECgTdC0IsUeQiIIoccDjwhAIquKpSiDrzdQzy5EmYMbHZnyw9mTKZu3EFmwkC9ocW8EgffwuPQu6FqUQoiIgIiICIiAiIgIiICIiAiIg//Z" class="hlogo" alt="nuvocargo">
+  <div class="hleft">
+    <img src="data:image/png;base64,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" class="hlogo" alt="nuvocargo">
+    <span class="htitle">BOL Generator</span>
+  </div>
   <div class="hright">
-    <button class="btn-sec" onclick="clearForm()">Clear Form</button>
-    <button class="btn-gen" onclick="generatePDF()">&#11015; Download PDF</button>
+    <button class="btn-sec" onclick="clearForm()">Clear form</button>
+    <button class="btn-gen" onclick="generatePDF()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download PDF
+    </button>
   </div>
 </header>
 
@@ -131,14 +604,16 @@ textarea{resize:vertical;min-height:52px}
 
   <!-- UPLOAD -->
   <div class="upsec">
-    <h3>&#128196; Auto-fill from Packing List / Invoice</h3>
+    <h3>Import packing list</h3>
     <div class="upzone" id="upzone">
       <input type="file" id="docfile" accept=".pdf,.xlsx,.xls,.csv" multiple onchange="handleUpload(event)">
-      <div class="upicon">&#128203;</div>
-      <p>Drop or click to upload <strong>one or more Packing Lists / Invoices</strong></p>
-      <p style="font-size:10px;color:#aaa;margin-top:3px">Supports PDF &bull; Excel (.xlsx/.xls) &bull; CSV &bull; <strong>Multiple files OK</strong></p>
+      <div class="upicon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <p><strong>Click to upload</strong> or drag and drop</p>
+      <p style="font-size:11px;color:#9CA3AF;margin-top:2px">PDF · Excel (.xlsx / .xls) · CSV — multiple files supported</p>
     </div>
-    <div id="fileList" style="margin-top:8px;display:none;font-size:10px;color:#555"></div>
+    <div id="fileList" style="margin-top:8px;display:none;font-size:11px;color:#6B7280;line-height:1.8"></div>
     <div class="upstatus" id="upstatus"></div>
     <div class="chips" id="chips"></div>
   </div>
@@ -232,10 +707,12 @@ textarea{resize:vertical;min-height:52px}
     <h4>Cargo Lines</h4>
     <div style="overflow-x:auto">
       <table class="ctbl">
-        <thead>
+        <thead id="cargoHead">
           <tr>
-            <th>Order No.</th>
-            <th>Pkgs</th>
+            <th>Order / PO No.</th>
+            <th id="hConsignee" style="display:none">Consignee</th>
+            <th id="hUnits" style="display:none">Units</th>
+            <th>Boxes</th>
             <th>Type</th>
             <th>Description</th>
             <th>Weight</th>
@@ -247,17 +724,35 @@ textarea{resize:vertical;min-height:52px}
         <tbody id="cargoBody"></tbody>
       </table>
     </div>
-    <button class="btnadd" onclick="addRow()">+ Add Line</button>
-    <div class="fr c2" style="margin-top:10px">
-      <div class="fg"><label>Commodity (for carrier section)</label><input type="text" id="commodity" placeholder="e.g. Saborizante en Polvo 12/14.1oz" oninput="render()"></div>
-      <div class="fg"><label>Freight Class</label><input type="text" id="freightClass" value="60" placeholder="60" oninput="render()"></div>
+    <button class="btnadd" onclick="addRow()">+ Add line</button>
+
+    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:500;color:var(--tx3)">BOL type</span>
+      <div style="display:flex;border:1px solid var(--bd);border-radius:6px;overflow:hidden;background:var(--bg)">
+        <label style="display:flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;border-right:1px solid var(--bd);text-transform:none;letter-spacing:0">
+          <input type="radio" name="bolMode" value="thursday" onchange="setBolMode('thursday')" checked style="width:auto;border:none;padding:0;background:none"> Thursday Boot Co.
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;text-transform:none;letter-spacing:0">
+          <input type="radio" name="bolMode" value="tresmontes" onchange="setBolMode('tresmontes')" style="width:auto;border:none;padding:0;background:none"> Standard
+        </label>
+      </div>
+    </div>
+
+    <div class="fr c2" style="margin-top:8px">
+      <div class="fg" id="commodityWrap"><label>Commodity</label><input type="text" id="commodity" placeholder="e.g. Saborizante en Polvo" oninput="render()"></div>
+      <div class="fg" id="freightClassWrap"><label>Freight class</label><input type="text" id="freightClass" value="60" placeholder="60" oninput="render()"></div>
+      <div class="fg" id="palletsWrap"><label>Total pallets</label><input type="text" id="totalPallets" placeholder="e.g. 24" oninput="render()"></div>
     </div>
   </div>
 
   <!-- INSTRUCTIONS -->
   <div class="fsec">
     <h4>Special Instructions</h4>
-    <div class="fg"><textarea id="specInstr" rows="3" placeholder="Consignee special instructions..."></textarea></div>
+    <div class="fr c2" style="margin-bottom:8px">
+      <div class="fg"><label>Confirmation number</label><input type="text" id="confirmNum" placeholder="e.g. ZLORWO" oninput="render()"></div>
+      <div class="fg"><label>SCAC code</label><input type="text" id="scacCode" placeholder="e.g. ARALOG" oninput="render()"></div>
+    </div>
+    <div class="fg"><textarea id="specInstr" rows="2" placeholder="Additional instructions..."></textarea></div>
   </div>
 
   <!-- DECLARED VALUE -->
@@ -271,13 +766,16 @@ textarea{resize:vertical;min-height:52px}
 
 <!-- PREVIEW -->
 <div class="pp">
-  <div class="pvlabel">Live Preview</div>
+  <div style="width:100%;max-width:780px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <span style="font-size:11px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.08em">Preview</span>
+    <span style="font-size:11px;color:var(--tx4)">Updates live as you type</span>
+  </div>
   <div id="bolPreview" class="bol"></div>
 </div>
 </div>
 
 <script>
-const LOGO = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgNzAiPjx0ZXh0IHg9IjIiIHk9IjU0IiBmb250LWZhbWlseT0iR2VvcmdpYSxzZXJpZiIgZm9udC1zaXplPSI1MCIgZmlsbD0iIzFBNEE0NCIgbGV0dGVyLXNwYWNpbmc9IjIiPm51dm8gY2FyZ288L3RleHQ+PC9zdmc+";
+const LOGO = "data:image/png;base64,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";
 // PDF.js worker - set immediately before any document load
 window.addEventListener('DOMContentLoaded', function(){
   if(typeof pdfjsLib !== 'undefined'){
@@ -301,6 +799,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   const t=new Date();
   document.getElementById("shipDate").value=t.toISOString().split("T")[0];
   document.getElementById("shipmentId").value="SH-"+(Math.floor(Math.random()*90000)+10000);
+  // Default to Thursday mode
+  const thuRadio = document.querySelector('input[name="bolMode"][value="thursday"]');
+  if(thuRadio){ thuRadio.checked = true; }
+  setBolMode("thursday");
   addRow();addRow();
   document.querySelectorAll("input,textarea,select").forEach(e=>e.addEventListener("input",render));
   render();
@@ -310,27 +812,64 @@ document.addEventListener("DOMContentLoaded",()=>{
   z.addEventListener("drop",e=>{e.preventDefault();z.classList.remove("dragover");doUploadMulti(e.dataTransfer.files);});
 });
 
+let bolMode = "thursday"; // "thursday" or "tresmontes"
+
+function setBolMode(mode){
+  bolMode = mode;
+  const isThu = mode === "thursday";
+  document.getElementById("hConsignee").style.display = isThu ? "" : "none";
+  document.getElementById("hUnits").style.display     = isThu ? "" : "none";
+  document.getElementById("commodityWrap").style.display   = isThu ? "none" : "";
+  document.getElementById("freightClassWrap").style.display = isThu ? "none" : "";
+  document.getElementById("palletsWrap").style.display      = isThu ? "" : "none";
+  // update all existing rows visibility
+  document.querySelectorAll("#cargoBody tr").forEach(tr=>{
+    const cells = tr.querySelectorAll("td");
+    if(cells.length >= 4){
+      cells[1].style.display = isThu ? "" : "none"; // consignee
+      cells[2].style.display = isThu ? "" : "none"; // units
+    }
+  });
+  render();
+}
+
 function addRow(d={}){
   rc++;
   const id="r"+rc;
+  const isThu = bolMode === "thursday";
   const tr=document.createElement("tr");
   tr.id=id;
-  tr.innerHTML=`<td><input type="text" value="${d.order||''}" oninput="render()" placeholder="Order #"></td>
-    <td><input type="text" value="${d.pkgs||''}" style="width:50px" oninput="render()" placeholder="0"></td>
-    <td><input type="text" value="${d.type||'CJ'}" style="width:42px" oninput="render()"></td>
-    <td><input type="text" value="${d.desc||''}" oninput="render()" placeholder="Description"></td>
-    <td><input type="text" value="${d.weight||''}" style="width:60px" oninput="render()" placeholder="0"></td>
-    <td><select oninput="render()" style="width:55px"><option value="KG"${d.unit==='KG'?' selected':''}>KG</option><option value="LBS"${d.unit==='LBS'?' selected':''}>LBS</option></select></td>
-    <td><input type="text" value="${d.cls||'60'}" style="width:38px" oninput="render()"></td>
-    <td><button class="del-r" onclick="document.getElementById('${id}').remove();render()">&#215;</button></td>`;
+  tr.innerHTML=
+    `<td><input type="text" value="${(d.order||'').replace(/"/g,"&quot;")}" oninput="render()" placeholder="Order #" style="min-width:110px"></td>`+
+    `<td style="display:${isThu?'':'none'}"><input type="text" value="${(d.consignee||'').replace(/"/g,"&quot;")}" oninput="render()" placeholder="Factory/Brand" style="min-width:90px"></td>`+
+    `<td style="display:${isThu?'':'none'}"><input type="text" value="${(d.units||d.pkgs||'').replace(/"/g,"&quot;")}" style="width:60px" oninput="render()" placeholder="Units"></td>`+
+    `<td><input type="text" value="${(d.boxes||d.pkgs||'').replace(/"/g,"&quot;")}" style="width:50px" oninput="render()" placeholder="Boxes"></td>`+
+    `<td><input type="text" value="${(d.type||'CJ').replace(/"/g,"&quot;")}" style="width:42px" oninput="render()"></td>`+
+    `<td><input type="text" value="${(d.desc||'').replace(/"/g,"&quot;")}" oninput="render()" placeholder="Description" style="min-width:80px"></td>`+
+    `<td><input type="text" value="${(d.weight||'').replace(/"/g,"&quot;")}" style="width:60px" oninput="render()" placeholder="0"></td>`+
+    `<td><select oninput="render()" style="width:55px"><option value="KG"${(d.unit||'KG')==='KG'?' selected':''}>KG</option><option value="LBS"${d.unit==='LBS'?' selected':''}>LBS</option></select></td>`+
+    `<td><input type="text" value="${(d.cls||'60').replace(/"/g,"&quot;")}" style="width:38px" oninput="render()"></td>`+
+    `<td><button class="del-r" onclick="document.getElementById('${id}').remove();render()">&#215;</button></td>`;
   document.getElementById("cargoBody").appendChild(tr);
   render();
 }
 
 function getRows(){
   return [...document.querySelectorAll("#cargoBody tr")].map(tr=>{
-    const i=tr.querySelectorAll("input,select");
-    return{order:i[0]?.value||"",pkgs:i[1]?.value||"",type:i[2]?.value||"",desc:i[3]?.value||"",weight:i[4]?.value||"",unit:i[5]?.value||"KG",cls:i[6]?.value||""};
+    const inp=tr.querySelectorAll("input,select");
+    // inp[0]=order, [1]=consignee, [2]=units, [3]=boxes, [4]=type, [5]=desc, [6]=weight, [7]=unit, [8]=cls
+    return{
+      order:   inp[0]?.value||"",
+      consignee: inp[1]?.value||"",
+      units:   inp[2]?.value||"",
+      boxes:   inp[3]?.value||"",
+      pkgs:    inp[3]?.value||inp[2]?.value||"",  // backward compat
+      type:    inp[4]?.value||"CJ",
+      desc:    inp[5]?.value||"",
+      weight:  inp[6]?.value||"",
+      unit:    inp[7]?.value||"KG",
+      cls:     inp[8]?.value||"60"
+    };
   });
 }
 
@@ -340,32 +879,106 @@ function render(){
 
 function buildBOL(){
   const rows=getRows();
-  let tPkgs=0,tKg=0;
-  rows.forEach(r=>{tPkgs+=parseInt(r.pkgs)||0;tKg+=toKg(r.weight,r.unit);});
+  const isThu = bolMode === "thursday";
+  let tPkgs=0, tUnits=0, tKg=0;
+  rows.forEach(r=>{
+    tPkgs  += parseInt(r.boxes||r.pkgs)||0;
+    tUnits += parseInt(r.units||r.pkgs)||0;
+    tKg    += toKg(r.weight,r.unit);
+  });
 
-  const rowsHTML=rows.map(r=>`
+  // ── Cargo table rows ──────────────────────────────────────────────────────
+  // Thursday: Pallets column = "units DESC" (e.g. "1230 Boots", "180 JACKETS")
+  function thuPalletsLabel(r){
+    const u = r.units||r.pkgs||"";
+    const d = (r.desc||"").toUpperCase();
+    if(!u) return "";
+    // Only append desc if it's not Boots (boots just show the number)
+    if(d==="BOOTS"||d==="BOOT"||d==="FOOTWEAR") return u;
+    return u + (d ? " "+d : "");
+  }
+  let rowsHTML = "";
+  if(isThu){
+    rowsHTML = rows.map(r=>`
+    <div class="ct-row" style="grid-template-columns:1.8fr 1.3fr 0.8fr 0.8fr 1.5fr">
+      <div>${r.order}</div>
+      <div>${r.consignee}</div>
+      <div style="text-align:center">${thuPalletsLabel(r)}</div>
+      <div style="text-align:center">${r.boxes||r.pkgs}</div>
+      <div>${r.desc}</div>
+    </div>`).join("");
+  } else {
+    rowsHTML = rows.map(r=>`
     <div class="ct-row">
       <div>${r.order}</div>
-      <div style="text-align:center">${r.pkgs}</div>
+      <div style="text-align:center">${r.boxes||r.pkgs}</div>
       <div style="text-align:right">${fmt(toKg(r.weight,r.unit))}</div>
       <div>${r.desc}</div>
     </div>`).join("");
+  }
 
+  // ── Carrier section (Tresmontes only) ─────────────────────────────────────
   const commodity=v("commodity")||"Boxes";
   const freightCls=v("freightClass")||"60";
   const ciRows=rows.map(r=>`
     <div class="ci-row">
-      <div>${r.pkgs}</div><div>${r.type}</div>
+      <div>${r.boxes||r.pkgs}</div><div>${r.type}</div>
       <div>${fmt(toKg(r.weight,r.unit))}</div>
       <div></div><div style="text-align:left;padding-left:6px">${commodity}</div>
       <div>${freightCls}</div>
     </div>`).join("");
 
+  const carrierSection = isThu ? "" : `
+    <div class="ci-title">Carrier Information</div>
+    <div class="ci-hdr">
+      <div>QTY</div><div>TYPE</div><div>Weight KG</div><div>H.M</div><div>Commodity</div><div>Class</div>
+    </div>
+    ${ciRows}
+    <div class="ci-total">
+      <div>${fmt(tPkgs,0)}</div><div></div><div>${fmt(tKg)}</div><div></div><div></div><div></div>
+    </div>`;
+
+  // ── Third Party section ───────────────────────────────────────────────────
   const tp=(v("tpName")||v("tpAddr"))?`
     <div class="bol-3p">
       <div class="clabel" style="margin-bottom:3px">Third Party Freight Charges Bill To</div>
       <b>Name:</b> ${v("tpName")}&nbsp;&nbsp;<b>Address:</b> ${v("tpAddr")}&nbsp;&nbsp;<b>City:</b> ${v("tpCity")}
     </div>`:"";
+
+  // ── Table header & totals ─────────────────────────────────────────────────
+  const thuTableHdr = `
+    <div class="ct-hdr" style="grid-template-columns:1.8fr 1.3fr 0.8fr 0.8fr 1.5fr;margin-top:5px">
+      <div>Customer Order No.</div><div>Consignee</div><div>Pallets</div><div>Boxes</div><div>Description</div>
+    </div>`;
+  const stdTableHdr = `
+    <div class="ct-hdr" style="margin-top:5px">
+      <div>Customer Order No.</div><div>Pkgs</div><div>Weight KG</div><div>Description</div>
+    </div>`;
+
+  const thuTotalRow = `
+    <div class="ct-row" style="background:#f5f5f5;font-weight:700;border-bottom:1.5px solid #111;grid-template-columns:1.8fr 1.3fr 0.8fr 0.8fr 1.5fr">
+      <div></div><div>Total:</div><div style="text-align:center">${fmt(tUnits,0)}</div><div style="text-align:center">${fmt(tPkgs,0)}</div><div></div>
+    </div>
+    <div class="ct-row" style="background:#f5f5f5;font-weight:700;border-bottom:1.5px solid #111;grid-template-columns:1.8fr 1.3fr 0.8fr 0.8fr 1.5fr">
+      <div></div><div>Pallets:</div><div></div><div style="text-align:center;font-weight:900">${v("totalPallets")||""}</div><div></div>
+    </div>`;
+  const stdTotalRow = `
+    <div class="ct-row" style="background:#f5f5f5;font-weight:700;border-bottom:1.5px solid #111">
+      <div></div><div style="text-align:center">${fmt(tPkgs,0)}</div><div style="text-align:right">${fmt(tKg)}</div><div></div>
+    </div>`;
+
+  // ── Special instructions (includes confirmation number for Thursday) ───────
+  const specInstrText = v("specInstr");
+  const confNum = v("confirmNum");
+  const specBlock = (confNum||specInstrText) ? `
+    <div class="bol-instr">
+      ${confNum?`<div style="text-align:center;font-size:11px;font-weight:700;padding:6px 0">Confirmation number: ${confNum}</div>`:""}
+      <div class="clabel" style="margin-bottom:3px">Shipper Special Instructions:</div>
+      <div style="min-height:36px;font-size:9px">${specInstrText}</div>
+    </div>` : `<div class="bol-instr">
+      <div class="clabel" style="margin-bottom:3px">Consignee Special Instructions:</div>
+      <div style="min-height:36px;font-size:9px"></div>
+    </div>`;
 
   return `
   <div class="bol-hdr"><img src="${LOGO}" class="bol-logo" alt="nuvocargo"></div>
@@ -397,27 +1010,13 @@ function buildBOL(){
 
     ${tp}
 
-    <div class="ct-hdr" style="margin-top:5px">
-      <div>Customer Order No.</div><div>Pkgs</div><div>Weight KG</div><div>Description</div>
-    </div>
+    ${isThu ? thuTableHdr : stdTableHdr}
     ${rowsHTML}
-    <div class="ct-row" style="background:#f5f5f5;font-weight:700;border-bottom:1.5px solid #111">
-      <div></div><div style="text-align:center">${fmt(tPkgs,0)}</div><div style="text-align:right">${fmt(tKg)}</div><div></div>
-    </div>
+    ${isThu ? thuTotalRow : stdTotalRow}
 
-    <div class="ci-title">Carrier Information</div>
-    <div class="ci-hdr">
-      <div>QTY</div><div>TYPE</div><div>Weight KG</div><div>H.M</div><div>Commodity</div><div>Class</div>
-    </div>
-    ${ciRows}
-    <div class="ci-total">
-      <div>${fmt(tPkgs,0)}</div><div></div><div>${fmt(tKg)}</div><div></div><div></div><div></div>
-    </div>
+    ${carrierSection}
 
-    <div class="bol-instr">
-      <div class="clabel" style="margin-bottom:3px">Consignee Special Instructions:</div>
-      <div style="min-height:36px;font-size:9px">${v("specInstr")}</div>
-    </div>
+    ${specBlock}
 
     <div class="bol-sig">
       <div class="bol-sigcell">
@@ -444,199 +1043,293 @@ function generatePDF(){
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:"portrait",unit:"pt",format:"letter"});
   const rows=getRows();
-  let tPkgs=0,tKg=0;
-  rows.forEach(r=>{tPkgs+=parseInt(r.pkgs)||0;tKg+=toKg(r.weight,r.unit);});
-  const PW=612,ML=28,MR=28,CW=612-ML-MR;
-  let y=18;
-  doc.setDrawColor(0,0,0);doc.setLineWidth(0.6);
+  const isThu = bolMode === "thursday";
+  let tPkgs=0, tUnits=0, tKg=0;
+  rows.forEach(r=>{tPkgs+=parseInt(r.boxes||r.pkgs)||0; tUnits+=parseInt(r.units||r.pkgs)||0; tKg+=toKg(r.weight,r.unit);});
 
-  // Logo
-  try{doc.addImage(LOGO,"PNG",PW-MR-118,y,108,20);}catch(e){}
-  y+=26;
+  // ── Design tokens (NuvoOS palette) ─────────────────────────────────────────
+  const PW=612, ML=30, MR=30, CW=612-ML-MR;
+  const C_TEAL   = [28,74,62];      // #1C4A3E  headers / labels
+  const C_LIME   = [200,230,76];    // #C8E64C  Thursday table header accent
+  const C_BD     = [220,225,222];   // #DCDDE  border gray
+  const C_BG     = [247,248,248];   // #F7F8F8 cell background for labels
+  const C_BG2    = [242,244,242];   // slightly darker zebra / totals
+  const C_TX1    = [17,24,39];      // #111827 primary text
+  const C_TX2    = [55,65,81];      // #374151 secondary text
+  const C_TX3    = [107,114,128];   // #6B7280 muted/labels
+  const C_WHITE  = [255,255,255];
 
-  // Title
-  doc.rect(ML,y,CW,22,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(14);doc.setTextColor(0,0,0);
-  doc.text("STRAIGHT BILL OF LADING",ML+CW/2,y+15,{align:"center"});
-  y+=22+2;
+  // Helpers
+  const bd = ()=>{ doc.setDrawColor(...C_BD); doc.setLineWidth(0.5); };
+  const bdStrong = ()=>{ doc.setDrawColor(...C_TX1); doc.setLineWidth(0.75); };
+  const label = (txt,x,y2,sz=6.5)=>{
+    doc.setFont("helvetica","bold"); doc.setFontSize(sz);
+    doc.setTextColor(...C_TX3); doc.text(txt.toUpperCase(),x,y2);
+  };
+  const val = (txt,x,y2,sz=8,bold=false)=>{
+    doc.setFont("helvetica", bold?"bold":"normal"); doc.setFontSize(sz);
+    doc.setTextColor(...C_TX1); doc.text(String(txt||""),x,y2);
+  };
+  const cell = (x,y2,w,h,fill=null)=>{
+    if(fill){ doc.setFillColor(...fill); doc.rect(x,y2,w,h,"FD"); }
+    else { bd(); doc.rect(x,y2,w,h,"S"); }
+  };
 
-  // Ship From / right info
-  const LW=CW*0.55,RW=CW*0.45;
+  let y=20;
+  bdStrong();
 
-  // Row: Ship From label | Date | ShipID
-  const rh=13;
-  doc.rect(ML,y,LW,rh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(8);
-  doc.text("Ship From:",ML+3,y+9);
-  doc.rect(ML+LW,y,RW*0.5,rh,"S");
-  doc.text("Date:",ML+LW+3,y+9);
-  doc.setFont("helvetica","normal");
-  doc.text(fmtDate(v("shipDate")),ML+LW+26,y+9);
-  doc.rect(ML+LW+RW*0.5,y,RW*0.5,rh,"S");
-  doc.setFont("helvetica","bold");doc.text("Shipment ID No:",ML+LW+RW*0.5+3,y+9);
-  doc.setFontSize(9);doc.text(v("shipmentId"),ML+CW-3,y+9,{align:"right"});
-  y+=rh;
+  // ── Logo ───────────────────────────────────────────────────────────────────
+  // Logo — JPEG, natural ratio ~5.7:1 → width 108pt, height ~19pt
+  try{ doc.addImage(LOGO,"JPEG",PW-MR-112,y,108,19); }catch(e){}
+  y+=28;
 
-  // Shipper name | Carrier | Trailer
-  const snh=15;
-  doc.rect(ML,y,LW,snh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(9);
-  doc.text(v("shipperName"),ML+3,y+snh/2+3.5);
-  doc.rect(ML+LW,y,RW*0.5,snh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text("Carrier Name:",ML+LW+3,y+5);
-  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text(v("carrierName"),ML+LW+3,y+12);
-  doc.rect(ML+LW+RW*0.5,y,RW*0.5,snh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text("Trailer No:",ML+LW+RW*0.5+3,y+5);
-  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.text(v("trailerNo"),ML+LW+RW*0.5+3,y+12);
-  y+=snh;
+  // ── Title bar ──────────────────────────────────────────────────────────────
+  doc.setFillColor(...C_TX1);
+  doc.rect(ML,y,CW,20,"F");
+  doc.setFont("helvetica","bold"); doc.setFontSize(11);
+  doc.setTextColor(...C_WHITE);
+  doc.text("STRAIGHT BILL OF LADING", ML+CW/2, y+13.5, {align:"center"});
+  y+=22;
 
-  // Shipper address | Seal | Delivery Date | Delivery Time
-  const saH=28;
-  const salines=doc.splitTextToSize(v("shipperAddr"),LW-8);
-  doc.rect(ML,y,LW,saH,"S");
-  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(50,50,50);
-  doc.text(salines.slice(0,3),ML+3,y+9);
-  const hh=saH/2;
-  doc.rect(ML+LW,y,RW*0.5,hh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(0,0,0);doc.text("Seal Number:",ML+LW+3,y+hh/2+2);
-  doc.setFont("helvetica","normal");doc.text(v("sealNo"),ML+LW+3,y+hh/2+8);
-  doc.rect(ML+LW+RW*0.5,y,RW*0.5,hh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text("Delivery Date:",ML+LW+RW*0.5+3,y+hh/2+2);
-  doc.setFont("helvetica","normal");doc.text(fmtDs(v("deliveryDate")),ML+LW+RW*0.5+3,y+hh/2+8);
-  doc.rect(ML+LW,y+hh,RW*0.5,hh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text("Delivery Time:",ML+LW+3,y+hh+hh/2+2);
-  doc.setFont("helvetica","normal");doc.text(v("deliveryTime"),ML+LW+3,y+hh+hh/2+8);
-  doc.rect(ML+LW+RW*0.5,y+hh,RW*0.5,hh,"S");
-  y+=saH;
+  const LW=CW*0.55, RW=CW*0.45;
 
-  // Ship To
-  doc.rect(ML,y,LW,rh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);doc.text("Ship To:",ML+3,y+9);
-  y+=rh;
-  doc.rect(ML,y,LW,rh,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(9);doc.text(v("consigneeName"),ML+3,y+9);
-  y+=rh;
-  const calines=doc.splitTextToSize(v("consigneeAddr"),LW-8);
-  doc.rect(ML,y,LW,saH,"S");
-  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(50,50,50);
-  doc.text(calines.slice(0,3),ML+3,y+9);
-  y+=saH;
+  // ── Row helper: draws a bordered cell with a small label above a value ─────
+  const infoCell=(x,y2,w,h,lbl,val2,valSz=8,valBold=false)=>{
+    bd(); doc.rect(x,y2,w,h,"S");
+    label(lbl, x+4, y2+7);
+    doc.setFont("helvetica",valBold?"bold":"normal"); doc.setFontSize(valSz);
+    doc.setTextColor(...C_TX1); doc.text(String(val2||""), x+4, y2+h-4);
+  };
 
-  // Third party
-  if(v("tpName")||v("tpAddr")){
-    const tpH=30;
-    doc.rect(ML,y,CW,tpH,"S");
-    doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
-    doc.text("Third Party Freight Charges Bill To",ML+3,y+9);
-    doc.setFont("helvetica","normal");doc.setFontSize(7.5);doc.setTextColor(50,50,50);
-    doc.text("Name: "+v("tpName")+"    Address: "+v("tpAddr")+"    City: "+v("tpCity"),ML+3,y+20);
-    y+=tpH;
+  // ── Ship From | Date | Shipment ID ─────────────────────────────────────────
+  const rh1=28;
+  infoCell(ML,      y, LW,    rh1, "Ship From", v("shipperName"), 8.5, true);
+  infoCell(ML+LW,   y, RW*0.5,rh1, "Date",      fmtDate(v("shipDate")), 8);
+  infoCell(ML+LW+RW*0.5, y, RW*0.5, rh1, "Shipment ID", v("shipmentId"), 9, true);
+  y+=rh1;
+
+  // ── Shipper addr | Carrier | Trailer ───────────────────────────────────────
+  const rh2=22;
+  bd(); doc.rect(ML,y,LW,rh2,"S");
+  doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...C_TX2);
+  const addrL=doc.splitTextToSize(v("shipperAddr"),LW-8);
+  doc.text(addrL.slice(0,2), ML+4, y+8);
+
+  infoCell(ML+LW,        y, RW*0.5, rh2, "Carrier Name", v("carrierName"), 8);
+  infoCell(ML+LW+RW*0.5, y, RW*0.5, rh2, "Trailer No",   v("trailerNo"),   8);
+  y+=rh2;
+
+  // ── SCAC | Seal | (empty) ──────────────────────────────────────────────────
+  const rh3=18;
+  bd(); doc.rect(ML,y,LW,rh3,"S"); // empty left (continuation of address area)
+  infoCell(ML+LW,        y, RW*0.5, rh3, "SCAC",        v("scacCode"), 8);
+  infoCell(ML+LW+RW*0.5, y, RW*0.5, rh3, "Seal Number", v("sealNo"),   8);
+  y+=rh3;
+
+  // ── Ship To | Delivery Date | Delivery Time ────────────────────────────────
+  const rh4=28;
+  infoCell(ML,           y, LW,     rh4, "Ship To",       v("consigneeName"), 8.5, true);
+  infoCell(ML+LW,        y, RW*0.5, rh4, "Delivery Date", fmtDs(v("deliveryDate")), 8);
+  infoCell(ML+LW+RW*0.5, y, RW*0.5, rh4, "Delivery Time", v("deliveryTime"), 8);
+  y+=rh4;
+
+  // ── Consignee address row ──────────────────────────────────────────────────
+  const rh5=18;
+  bd(); doc.rect(ML,y,LW,rh5,"S");
+  doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...C_TX3);
+  const caddrL=doc.splitTextToSize(v("consigneeAddr"),LW-8);
+  doc.text(caddrL.slice(0,2), ML+4, y+7);
+  bd(); doc.rect(ML+LW,y,RW,rh5,"S");
+  y+=rh5+3;
+
+  // ── Third Party block (Tresmontes only) ────────────────────────────────────
+  const tpName=v("tpName"),tpAddr=v("tpAddr"),tpCity=v("tpCity");
+  if(tpName||tpAddr){
+    bd(); doc.rect(ML,y,CW,22,"S");
+    doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(...C_TX3);
+    doc.text("THIRD PARTY FREIGHT CHARGES BILL TO", ML+4, y+8);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
+    doc.text("Name: "+tpName+"   Address: "+tpAddr+"   City: "+tpCity, ML+4, y+17);
+    y+=25;
   }
-  y+=4;
 
-  // Cargo table header
-  const cCols=[110,50,80,CW-240];
-  const cHdrs=["Customer Order No.","Pkgs","Weight KG","Description"];
-  let cx=ML;
-  doc.setFillColor(26,74,68);
-  cHdrs.forEach((h,i)=>{
-    doc.rect(cx,y,cCols[i],14,"F");doc.rect(cx,y,cCols[i],14,"S");
-    doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(255,255,255);
-    doc.text(h,cx+3,y+9.5);cx+=cCols[i];
-  });
-  y+=14;
+  // ── Confirmation number (Thursday) ─────────────────────────────────────────
+  const confNum=v("confirmNum");
+  if(confNum){
+    doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.setTextColor(...C_TX1);
+    doc.text("Confirmation number: "+confNum, ML+CW/2, y+11, {align:"center"});
+    y+=17;
+  }
 
-  rows.forEach(r=>{
-    const vals=[r.order,r.pkgs,fmt(toKg(r.weight,r.unit)),r.desc];
-    cx=ML;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(0,0,0);
-    vals.forEach((val,i)=>{
-      doc.rect(cx,y,cCols[i],12,"S");
-      doc.text(String(val),cx+3,y+8.5);cx+=cCols[i];
-    });y+=12;
-  });
-  // Total row
-  doc.setFillColor(240,240,240);
-  cx=ML;
-  [String(tPkgs),"",fmt(tKg),""].forEach((val,i)=>{
-    doc.rect(cx,y,cCols[i],12,"F");doc.rect(cx,y,cCols[i],12,"S");
-    doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
-    doc.text(val,cx+3,y+8.5);cx+=cCols[i];
-  });y+=12+4;
+  // ── Cargo table ─────────────────────────────────────────────────────────────
+  if(isThu){
+    // Thursday — teal header (same as standard)
+    const cCols=[CW*0.22,CW*0.18,CW*0.14,CW*0.10,CW*0.36];
+    const cHdrs=["Customer Order No.","Consignee","Pallets","Boxes","Description"];
+    let cx=ML;
+    cHdrs.forEach((h,i)=>{
+      doc.setFillColor(...C_TEAL);
+      doc.rect(cx,y,cCols[i],13,"FD");
+      doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(...C_WHITE);
+      doc.text(h, cx+cCols[i]/2, y+8.5, {align:"center"});
+      cx+=cCols[i];
+    }); y+=13;
 
-  // Carrier info
-  doc.setFillColor(220,220,220);
-  doc.rect(ML,y,CW,13,"F");doc.rect(ML,y,CW,13,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
-  doc.text("Carrier Information",ML+CW/2,y+9,{align:"center"});y+=13;
+    rows.forEach((r,ri)=>{
+      const descUp=(r.desc||"").toUpperCase();
+      const palletsVal=(descUp==="BOOTS"||descUp==="BOOT"||descUp==="FOOTWEAR")
+        ? String(r.units||r.pkgs||"")
+        : (r.units||r.pkgs||"")+(r.desc?" "+r.desc.toUpperCase():"");
+      const vals=[r.order, r.consignee, palletsVal, r.boxes||r.pkgs, r.desc];
+      cx=ML;
+      const bg = ri%2===1 ? C_BG : C_WHITE;
+      vals.forEach((val2,i)=>{
+        doc.setFillColor(...bg); bd(); doc.rect(cx,y,cCols[i],12,"FD");
+        doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
+        doc.text(String(val2||""), cx+3, y+8.5, {maxWidth:cCols[i]-5});
+        cx+=cCols[i];
+      }); y+=12;
+    });
 
-  const ciC=[55,55,80,40,CW-280,55];
-  const ciH=["QTY","TYPE","Weight KG","H.M","Commodity","Class"];
-  doc.setFillColor(240,240,240);
-  cx=ML;ciH.forEach((h,i)=>{
-    doc.rect(cx,y,ciC[i],12,"F");doc.rect(cx,y,ciC[i],12,"S");
-    doc.setFont("helvetica","bold");doc.setFontSize(7);doc.text(h,cx+ciC[i]/2,y+8.5,{align:"center"});cx+=ciC[i];
-  });y+=12;
+    // Total row
+    cx=ML;
+    ["","Total:",fmt(tUnits,0),fmt(tPkgs,0),""].forEach((val2,i)=>{
+      doc.setFillColor(...C_BG2); bd(); doc.rect(cx,y,cCols[i],12,"FD");
+      doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
+      doc.text(String(val2||""), cx+cCols[i]/2, y+8.5, {align:"center"});
+      cx+=cCols[i];
+    }); y+=12;
 
-  const pdfCommodity=v("commodity")||"Boxes";
-  const pdfFreightCls=v("freightClass")||"60";
-  rows.forEach(r=>{
-    const vals=[r.pkgs,r.type,fmt(toKg(r.weight,r.unit)),"",pdfCommodity,pdfFreightCls];
-    cx=ML;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(0,0,0);
-    vals.forEach((val,i)=>{
-      doc.rect(cx,y,ciC[i],12,"S");
-      // Left-align commodity text since it can be long
-      if(i===4) doc.text(String(val),cx+4,y+8.5,{align:"left"});
-      else doc.text(String(val),cx+ciC[i]/2,y+8.5,{align:"center"});
+    const pallets=v("totalPallets");
+    if(pallets){
+      cx=ML;
+      ["","Pallets:","",pallets,""].forEach((val2,i)=>{
+        doc.setFillColor(...C_BG2); bd(); doc.rect(cx,y,cCols[i],11,"FD");
+        doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
+        doc.text(String(val2||""), cx+cCols[i]/2, y+7.5, {align:"center"});
+        cx+=cCols[i];
+      }); y+=11;
+    }
+    y+=5;
+
+  } else {
+    // Standard / Tresmontes — dark teal header
+    const cCols=[CW*0.32,CW*0.13,CW*0.18,CW*0.37];
+    const cHdrs=["Customer Order No.","Pkgs","Weight KG","Description"];
+    let cx=ML;
+    cHdrs.forEach((h,i)=>{
+      doc.setFillColor(...C_TEAL); bd(); doc.rect(cx,y,cCols[i],13,"FD");
+      doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(...C_WHITE);
+      doc.text(h, cx+cCols[i]/2, y+9, {align:"center"});
+      cx+=cCols[i];
+    }); y+=13;
+
+    rows.forEach((r,ri)=>{
+      const vals=[r.order, r.boxes||r.pkgs, fmt(toKg(r.weight,r.unit)), r.desc];
+      cx=ML;
+      const bg=ri%2===1?C_BG:C_WHITE;
+      vals.forEach((val2,i)=>{
+        doc.setFillColor(...bg); bd(); doc.rect(cx,y,cCols[i],12,"FD");
+        doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
+        doc.text(String(val2||""), cx+3, y+8.5, {maxWidth:cCols[i]-5});
+        cx+=cCols[i];
+      }); y+=12;
+    });
+
+    cx=ML;
+    [fmt(tPkgs,0),"",fmt(tKg),""].forEach((val2,i)=>{
+      doc.setFillColor(...C_BG2); bd(); doc.rect(cx,y,cCols[i],12,"FD");
+      doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
+      doc.text(val2, cx+3, y+8.5);
+      cx+=cCols[i];
+    }); y+=16;
+
+    // Carrier info section
+    doc.setFillColor(...C_BG); bd();
+    doc.rect(ML,y,CW,13,"FD");
+    doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...C_TX2);
+    doc.text("Carrier Information", ML+CW/2, y+9, {align:"center"});
+    y+=13;
+
+    const ciC=[55,55,80,40,CW-280,55];
+    const ciH=["QTY","TYPE","Weight KG","H.M","Commodity","Class"];
+    cx=ML;
+    ciH.forEach((h,i)=>{
+      doc.setFillColor(...C_BG); bd(); doc.rect(cx,y,ciC[i],12,"FD");
+      doc.setFont("helvetica","bold"); doc.setFontSize(7); doc.setTextColor(...C_TX3);
+      doc.text(h, cx+ciC[i]/2, y+8.5, {align:"center"});
       cx+=ciC[i];
-    });y+=12;
-  });
-  doc.setFillColor(240,240,240);cx=ML;
-  [fmt(tPkgs,0),"",fmt(tKg),"","",""].forEach((val,i)=>{
-    doc.rect(cx,y,ciC[i],12,"F");doc.rect(cx,y,ciC[i],12,"S");
-    doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
-    doc.text(val,cx+ciC[i]/2,y+8.5,{align:"center"});cx+=ciC[i];
-  });y+=12+4;
+    }); y+=12;
 
-  // Special instructions
-  doc.rect(ML,y,CW,46,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
-  doc.text("Consignee Special Instructions:",ML+3,y+9);
-  doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(50,50,50);
+    const pdfCommodity=v("commodity")||"Boxes";
+    const pdfFreightCls=v("freightClass")||"60";
+    rows.forEach((r,ri)=>{
+      const vals=[r.boxes||r.pkgs,r.type,fmt(toKg(r.weight,r.unit)),"",pdfCommodity,pdfFreightCls];
+      cx=ML;
+      const bg=ri%2===1?C_BG:C_WHITE;
+      vals.forEach((val2,i)=>{
+        doc.setFillColor(...bg); bd(); doc.rect(cx,y,ciC[i],12,"FD");
+        doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
+        if(i===4) doc.text(String(val2),cx+4,y+8.5,{align:"left",maxWidth:ciC[i]-6});
+        else doc.text(String(val2),cx+ciC[i]/2,y+8.5,{align:"center"});
+        cx+=ciC[i];
+      }); y+=12;
+    });
+    cx=ML;
+    [fmt(tPkgs,0),"",fmt(tKg),"","",""].forEach((val2,i)=>{
+      doc.setFillColor(...C_BG2); bd(); doc.rect(cx,y,ciC[i],12,"FD");
+      doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(...C_TX1);
+      doc.text(val2, cx+ciC[i]/2, y+8.5, {align:"center"});
+      cx+=ciC[i];
+    }); y+=16;
+  }
+
+  // ── Special Instructions ───────────────────────────────────────────────────
+  const instrLabel = isThu ? "Shipper Special Instructions" : "Consignee Special Instructions";
+  bd(); doc.rect(ML,y,CW,46,"S");
+  label(instrLabel, ML+4, y+8, 6.5);
+  doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(...C_TX2);
   const silines=doc.splitTextToSize(v("specInstr"),CW-8);
-  doc.text(silines.slice(0,3),ML+3,y+19);
-  y+=46+4;
+  doc.text(silines.slice(0,3), ML+4, y+18);
+  y+=50;
 
-  // Signatures
-  const sigH=65;
-  doc.rect(ML,y,CW/2,sigH,"S");doc.rect(ML+CW/2,y,CW/2,sigH,"S");
-  doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(80,80,80);
+  // ── Signature block ────────────────────────────────────────────────────────
+  const sigH=66;
+  bd(); doc.rect(ML,y,CW/2,sigH,"S"); bd(); doc.rect(ML+CW/2,y,CW/2,sigH,"S");
+
+  // Left: note + carrier sig
+  doc.setFont("helvetica","normal"); doc.setFontSize(6.2); doc.setTextColor(...C_TX3);
   const noteT="NOTE - Where the rate is dependant on value, shippers are required to state specifically in writing the agreed or declared value of the property.\n\nThe agreed or declared value of the property is hereby specifically stated by the shipper to be not exceeding\n$ "+(v("declValue")||"");
-  const notelines=doc.splitTextToSize(noteT,CW/2-8);
-  doc.text(notelines,ML+3,y+8);
-  doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(0,0,0);
-  doc.text("CARRIER SIGNATURE / PICKUP DATE",ML+3,y+sigH-14);
-  doc.line(ML+3,y+sigH-6,ML+CW/2-3,y+sigH-6);
-  doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(100,100,100);
-  doc.text("Date:",ML+3,y+sigH-2);
-  doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(0,0,0);
-  doc.text("CONSIGNEE SIGNATURE",ML+CW/2+3,y+12);
-  doc.setFont("helvetica","italic");doc.setFontSize(7.5);doc.setTextColor(80,80,80);
-  doc.text("Property described above is received in good order, except noted.",ML+CW/2+3,y+21);
-  doc.line(ML+CW/2+3,y+sigH-6,ML+CW-3,y+sigH-6);
-  doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(100,100,100);
-  doc.text("Date:",ML+CW/2+3,y+sigH-2);
+  doc.text(doc.splitTextToSize(noteT,CW/2-10), ML+4, y+8);
+  doc.setFont("helvetica","bold"); doc.setFontSize(7.5); doc.setTextColor(...C_TX1);
+  doc.text("CARRIER SIGNATURE / PICKUP DATE", ML+4, y+sigH-14);
+  doc.setDrawColor(...C_BD); doc.setLineWidth(0.75);
+  doc.line(ML+4,y+sigH-6,ML+CW/2-4,y+sigH-6);
+  doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(...C_TX3);
+  doc.text("Date:", ML+4, y+sigH-1);
+
+  // Right: consignee sig
+  doc.setFont("helvetica","bold"); doc.setFontSize(8.5); doc.setTextColor(...C_TX1);
+  doc.text("CONSIGNEE SIGNATURE", ML+CW/2+4, y+12);
+  doc.setFont("helvetica","italic"); doc.setFontSize(7.5); doc.setTextColor(...C_TX3);
+  doc.text("Property described above is received in good order, except noted.", ML+CW/2+4, y+21);
+  doc.setDrawColor(...C_BD); doc.line(ML+CW/2+4,y+sigH-6,ML+CW-4,y+sigH-6);
+  doc.setFont("helvetica","normal"); doc.setFontSize(7); doc.setTextColor(...C_TX3);
+  doc.text("Date:", ML+CW/2+4, y+sigH-1);
   y+=sigH;
 
-  doc.rect(ML,y,CW,13,"S");
-  doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(0,0,0);
+  // ── Liability note ─────────────────────────────────────────────────────────
+  doc.setFillColor(...C_BG); bd(); doc.rect(ML,y,CW,13,"FD");
+  doc.setFont("helvetica","bold"); doc.setFontSize(6.5); doc.setTextColor(...C_TX2);
   doc.text("NOTE: Liability Limitation for loss or damage in this shipment may be applicable. See 49 U.S.C. - 14706(c)(1)(A) and (B).",ML+CW/2,y+9,{align:"center"});
   y+=13;
 
-  const ftlines=doc.splitTextToSize("RECEIVED, subject to the classifications and lawfully filed tariffs in effect on the date of the issue of this Bill of Lading, the property described above in apparent good order, except as noted (contents and conditions of contents of packages unknown), marked consigned and destined as indicated above which said carrier agrees to carry to its usual place of delivery at said destination, if on its route, otherwise to deliver to another carrier on the route to its destination. It is mutually agreed as to each carrier of all or any of said property, over all or any portion of said route to destination and as to each party at any time interested in all or any of said property, that every service to be performed hereunder shall be subject to the bill of lading terms and conditions in the governing classification on the date of shipment. Shipper hereby certifies that he is familiar with all the bill of lading terms and conditions in the governing classification and the said terms and conditions are hereby agreed to by the shipper and accepted for himself and his assigns.",CW-8);
-  const ftH=Math.max(26,ftlines.length*6+8);
-  doc.rect(ML,y,CW,ftH,"S");
-  doc.setFont("helvetica","normal");doc.setFontSize(5.5);doc.setTextColor(80,80,80);
-  doc.text(ftlines,ML+3,y+7);
+  // ── Footnote ───────────────────────────────────────────────────────────────
+  const ftlines=doc.splitTextToSize("RECEIVED, subject to the classifications and lawfully filed tariffs in effect on the date of the issue of this Bill of Lading, the property described above in apparent good order, except as noted (contents and conditions of contents of packages unknown), marked consigned and destined as indicated above which said carrier agrees to carry to its usual place of delivery at said destination, if on its route, otherwise to deliver to another carrier on the route to its destination. It is mutually agreed as to each carrier of all or any of said property, over all or any portion of said route to destination and as to each party at any time interested in all or any of said property, that every service to be performed hereunder shall be subject to the bill of lading terms and conditions in the governing classification on the date of shipment. Shipper hereby certifies that he is familiar with all the bill of lading terms and conditions in the governing classification and the said terms and conditions are hereby agreed to by the shipper and accepted for himself and his assigns.", CW-8);
+  const ftH=Math.max(26, ftlines.length*6+8);
+  bd(); doc.rect(ML,y,CW,ftH,"S");
+  doc.setFont("helvetica","normal"); doc.setFontSize(5.5); doc.setTextColor(...C_TX3);
+  doc.text(ftlines, ML+4, y+7);
 
   doc.save("Nuvocargo-BOL-"+(v("shipmentId")||"BOL")+".pdf");
 }
@@ -666,14 +1359,19 @@ async function doUploadMulti(files){
       else return {};
     }));
 
-    // Show file list
+    // Show file list with detection metadata
     fl.style.display="block";
     fl.innerHTML="<b>Files loaded:</b><br>"+fileArr.map((f,i)=>{
       const r=results[i];
-      const po=r.poNumber||r.orderNos?.[0]||"";
-      const pkgs=r.totalPkgs||"?";
+      const tpl = r._source || r._template || "unknown";
+      const po=r.shipmentRef||r.poNumber||"";
+      const factory=r.displayName||r.factoryName||"";
+      const boxes=r.totalBoxes||r.totalPkgs||"?";
+      const units=r.totalUnits||"";
       const kg=r.totalWeightKg||"?";
-      return `📄 ${f.name}${po?" — "+po:""}${pkgs!="?"?" | "+pkgs+" pkgs":""}${kg!="?"?" | "+kg+" KG":""}`;
+      const warn = (r._warnings&&r._warnings.length) ? ` ⚠️` : "";
+      const imgPdf = r._imagePDF ? " 🔍 (scanned — manual entry needed)" : "";
+      return `📄 <b>${f.name}</b> <span style="color:#777;font-size:10px">[${tpl}]</span>${factory?" — "+factory:""}${po?" ["+po+"]":""}${units?" | "+units+" units":""}${boxes!="?"&&!r._imagePDF?" | "+boxes+" boxes":""}${kg!="?"&&!r._imagePDF?" | "+kg+" KG":""}${warn}${imgPdf}`;
     }).join("<br>");
 
     // Consolidate: merge all results intelligently
@@ -681,12 +1379,20 @@ async function doUploadMulti(files){
     fillFormMulti(merged, results);
 
     const totalCargo=merged.cargoRows?.length||0;
+    const modeLabel = bolMode === "thursday" ? "Thursday Boot" : "Standard/Tresmontes";
+    const imagePDFs = results.filter(r=>r._imagePDF).length;
+    const templates = [...new Set(results.map(r=>r._source||r._template).filter(Boolean))].join(", ");
+    let statusMsg = `✅ ${modeLabel} mode — ${fileArr.length} file(s) → ${totalCargo} cargo line(s) auto-filled`;
+    if(templates) statusMsg += ` | Detected: ${templates}`;
+    if(imagePDFs) statusMsg += ` | ⚠️ ${imagePDFs} scanned PDF(s) require manual entry`;
     st.className="upstatus ok";
-    st.textContent="✅ Merged "+fileArr.length+" file(s) → "+totalCargo+" order line(s) auto-filled";
+    st.textContent=statusMsg;
     if(totalCargo>0){
       ch.className="chips show";
-      const tags=["Shipper","Consignee","Orders","Weight","Packages"].filter((_,i)=>[merged.shipperName,merged.consigneeName,totalCargo>0,merged.totalWeightKg,merged.totalPkgs][i]);
-      ch.innerHTML=tags.map(t=>`<span class="chip">${t}</span>`).join("");
+      const factories = merged.cargoRows.map(r=>r.consignee||r.order).filter(Boolean).slice(0,5);
+      if(factories.length){
+        ch.innerHTML=factories.map(t=>`<span class="chip">${t}</span>`).join("");
+      }
     }
   }catch(err){
     st.className="upstatus err";st.textContent="❌ "+err.message;
@@ -777,315 +1483,677 @@ function fillFormMulti(merged, allResults){
 // Legacy single-file function (still called internally)
 async function doUpload(file){ doUploadMulti([file]); }
 
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  UNIVERSAL DOCUMENT INTELLIGENCE ENGINE — v4
+//  Automatically detects and parses ANY packing list or commercial invoice:
+//    • Thursday Boot TBC PL 2025 template (EN + ES)
+//    • Tresmontes Lucchetti PDF packing lists
+//    • Generic commercial invoices (EN/ES, any layout)
+//    • Multi-row / line-item Excel packing lists
+//    • CSV exports from ERP/WMS systems
+//    • Image-based PDFs → graceful fallback with manual entry prompt
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Brand / factory alias map ─────────────────────────────────────────────────
+// Maps legal factory name fragments → commercial display name used on BOL
+const BRAND_MAP = [
+  ["angar",             "Angar"],
+  ["alba marroquin",    "Geno de Lucca"],
+  ["bordados michel",   "Michael Alle"],
+  ["moda piel",         "Modapiel"],
+  ["modapiel",          "Modapiel"],
+  ["longview manufac",  "Everest JDO"],
+  ["tresmontes",        "Tresmontes Lucchetti Mexico SA de CV"],
+  ["lucchetti",         "Tresmontes Lucchetti Mexico SA de CV"],
+];
+function getBrand(legalName){
+  if(!legalName) return legalName;
+  const l = legalName.toLowerCase();
+  for(const [k,v] of BRAND_MAP){ if(l.includes(k)) return v; }
+  return legalName.trim();
+}
+
+// ── Product type → BOL description ───────────────────────────────────────────
+const PRODUCT_MAP = {
+  "footwear":"Boots","boots":"Boots","calzado":"Boots",
+  "belts":"Belts","cinturones":"Belts",
+  "jackets and apparel":"Jackets","jackets":"Jackets","apparel":"Jackets",
+  "chamarras":"Jackets","ropa":"Jackets",
+  "bags":"Bags","bolsas":"Bags",
+  "socks":"Socks","calcetines":"Socks",
+  "shoe care":"Shoe Care",
+  "accessories":"Accessories","accesorios":"Accessories",
+};
+function getDesc(productType){
+  if(!productType) return "Boxes";
+  return PRODUCT_MAP[productType.toLowerCase().trim()] || productType;
+}
+
+// ── Utility: parse numbers robustly (handles 1,234.56 and 1.234,56) ───────────
+function parseNum(s){
+  if(s===null||s===undefined) return NaN;
+  const str = String(s).replace(/\s/g,"");
+  if(!str) return NaN;
+  // European format: 1.234,56
+  if(str.match(/^\d{1,3}(\.\d{3})+(,\d+)?$/)) return parseFloat(str.replace(/\./g,"").replace(",","."));
+  // US format: 1,234.56
+  return parseFloat(str.replace(/,/g,""));
+}
+
+// ── Utility: find first row whose cells match a label pattern ──────────────────
+function findRowByLabel(data, labelPat, startRow=0, maxRow=null){
+  const end = maxRow !== null ? Math.min(maxRow, data.length) : data.length;
+  for(let i=startRow; i<end; i++){
+    const row = data[i];
+    for(const cell of row){
+      if(labelPat.test(String(cell||""))) return {rowIdx:i, row};
+    }
+  }
+  return null;
+}
+
+// ── Template detector ─────────────────────────────────────────────────────────
+// Returns: "tbc" | "tresmontes_excel" | "generic_invoice" | "generic_pl"
+function detectExcelTemplate(data){
+  // TBC Thursday Boot template: R17 C2 = Factory Name / Nombre de la fábrica
+  const r17 = data[16] || [];
+  const r22 = data[21] || [];
+  const r17c2 = String(r17[1]||"").toLowerCase();
+  const r22c9 = String(r22[8]||"").toLowerCase();
+  if(/factory\s*name|nombre\s*de\s*la\s*f[aá]brica/.test(r17c2)) return "tbc";
+  if(/footwear|belts|jackets|bags|socks|calzado|cinturones|chamarras/.test(r22c9)) return "tbc";
+
+  // Tresmontes Excel: scan first 20 rows for "Tresmontes" or "Florida" PO pattern
+  const top20 = data.slice(0,20).map(r=>r.join(" ")).join("\n").toLowerCase();
+  if(/tresmontes|lucchetti/.test(top20)) return "tresmontes_excel";
+
+  // Commercial invoice: look for "INVOICE", "FACTURA", "COMERCIAL"
+  const top10 = data.slice(0,10).map(r=>r.join(" ")).join("\n");
+  if(/invoice|factura|commercial\s*invoice/i.test(top10)) return "commercial_invoice";
+
+  return "generic_pl";
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  PARSER 1: Thursday Boot TBC PL 2025 Template
+//  Confirmed cell map (1-indexed):
+//    R17 C3 = Legal factory name       R18 C3  = Factory address
+//    R15 C9 = TBC PO #                 R18 C17 = Shipment ref (NUVO-...)
+//    R22 C9 = Product type             R17 C28 = Ship-to name
+//    R18 C29 = Ship-to address         R22 C30 = Ship date
+//    Total rows: col 9 label, col 15 value (TOTAL PAIRS/CAJAS/WEIGHT/PESO)
+// ════════════════════════════════════════════════════════════════════════════════
+function parseTBCTemplate(data){
+  const r = { _confidence:[], _warnings:[] };
+  const get = (row, col) => {
+    const ro = data[row-1];
+    if(!ro) return null;
+    const v = ro[col-1];
+    return (v!==null && v!==undefined && String(v).trim()) ? String(v).trim() : null;
+  };
+  const getRow = (row) => data[row-1] || [];
+
+  // ── Factory / shipper ──────────────────────────────────────────────────────
+  r.factoryName = get(17,3);
+  // Fallback: scan nearby cells
+  if(!r.factoryName){
+    for(let c=2;c<=8;c++){
+      const s=get(17,c);
+      if(s && s.length>3 && !/factory|nombre|f[aá]brica/i.test(s)){r.factoryName=s;break;}
+    }
+  }
+  r.shipperName = r.factoryName;
+  r.shipperAddr = get(18,3);
+  r._confidence.push(r.factoryName ? "factory_name" : "");
+
+  // ── PO Number ─────────────────────────────────────────────────────────────
+  r.poNumber = get(15,9) || get(15,17);
+  if(!r.poNumber){
+    for(const cell of getRow(15)){
+      const s=String(cell||"").trim();
+      if(s.match(/\b[A-Z]{2,}-\d{4}|NUVO[\-\w]+|MODAPIEL|ANGAR|GENO/i) && s.length>3){r.poNumber=s;break;}
+    }
+  }
+
+  // ── Shipment reference ─────────────────────────────────────────────────────
+  let ref = get(18,17) || get(20,17);
+  // Scan rows 14-22 for NUVO-... pattern
+  if(!ref){
+    for(let i=13;i<=22;i++){
+      for(const cell of (data[i]||[])){
+        const m=String(cell||"").match(/(NUVO[\-\w]+)/i);
+        if(m){ref=m[1];break;}
+      }
+      if(ref) break;
+    }
+  }
+  if(ref) r.shipmentRef = ref.replace(/:$/,"").trim();
+
+  // ── Product type → description ─────────────────────────────────────────────
+  const productType = get(22,9) || get(22,8);
+  r.productType = productType;
+  r.description = getDesc(productType);
+
+  // ── Consignee / Ship To ────────────────────────────────────────────────────
+  const shipto = get(17,28) || get(14,28) || get(17,27);
+  if(shipto && shipto.length>5 && !/elegir|choose|dropdown|select/i.test(shipto)){
+    r.consigneeName = shipto.split("/")[0].trim();
+  }
+  r.consigneeAddr = get(18,29) || get(18,28);
+
+  // ── Ship date ──────────────────────────────────────────────────────────────
+  for(let col=28;col<=35;col++){
+    const dv = get(22,col);
+    if(!dv) continue;
+    try{
+      // Excel numeric date
+      if(!isNaN(dv) && Number(dv)>40000){
+        const d=new Date(Math.round((Number(dv)-25569)*86400*1000));
+        if(!isNaN(d)){ r.shipDate=d.toISOString().split("T")[0]; break; }
+      }
+      const d=new Date(dv);
+      if(!isNaN(d)&&d.getFullYear()>2000){r.shipDate=d.toISOString().split("T")[0];break;}
+    }catch(e){}
+  }
+
+  // ── Totals scan ────────────────────────────────────────────────────────────
+  // Strategy: scan all rows for labels in any cell, values in adjacent cells
+  for(let i=20;i<data.length;i++){
+    const row = data[i];
+    for(let c=0;c<row.length;c++){
+      const lbl = String(row[c]||"").toUpperCase().trim();
+      if(!lbl) continue;
+      // Try to find a numeric value in the next few columns
+      const getVal = (offset=1)=>{
+        for(let d=offset;d<=offset+5;d++){
+          const v=row[c+d];
+          if(v!==null&&v!==undefined&&v!==""){const n=parseNum(v);if(!isNaN(n)&&n>0)return n;}
+        }
+        return null;
+      };
+      if(/TOTAL\s*(PAIRS?|PARES?)/.test(lbl)&&!r.totalUnits){
+        const n=getVal();if(n)r.totalUnits=String(Math.round(n));
+      } else if(/TOTAL\s*(BOX|CAJA)/.test(lbl)&&!r.totalBoxes){
+        const n=getVal();if(n)r.totalBoxes=String(Math.round(n));
+      } else if(/(TOTAL\s*WEIGHT|PESO\s*TOTAL)/.test(lbl)&&!r.totalWeightKg){
+        const n=getVal();if(n)r.totalWeightKg=String(n);
+      }
+    }
+  }
+
+  // Fallback: scan col 9 (idx 8) label → col 15 (idx 14) value (original mapping)
+  if(!r.totalBoxes || !r.totalUnits){
+    for(let i=20;i<data.length;i++){
+      const row=data[i];
+      const lbl=String(row[8]||"").toUpperCase();
+      const val=row[14];
+      if(!lbl||val===null||val===undefined) continue;
+      const n=parseNum(val);
+      if(isNaN(n)) continue;
+      if(/TOTAL\s*(PAIRS?|PARES?)/.test(lbl)&&!r.totalUnits) r.totalUnits=String(Math.round(n));
+      else if(/TOTAL\s*(BOX|CAJA)/.test(lbl)&&!r.totalBoxes) r.totalBoxes=String(Math.round(n));
+      else if(/(TOTAL\s*WEIGHT|PESO\s*TOTAL)/.test(lbl)&&!r.totalWeightKg) r.totalWeightKg=String(n);
+    }
+  }
+
+  // ── Warn if key fields missing ─────────────────────────────────────────────
+  if(!r.totalBoxes)    r._warnings.push("⚠️ Could not find total boxes — please verify");
+  if(!r.totalWeightKg) r._warnings.push("⚠️ Could not find total weight");
+
+  // ── Brand display name ─────────────────────────────────────────────────────
+  r.displayName = getBrand(r.factoryName);
+
+  return r;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  PARSER 2: Generic Commercial Invoice / Packing List
+//  Works on any Excel, CSV, or extracted PDF text lines.
+//  Uses multi-strategy extraction with confidence scoring.
+// ════════════════════════════════════════════════════════════════════════════════
+function parseGenericDocument(data, sourceType="excel"){
+  const r = { _warnings:[], _confidence:[] };
+
+  // Build flat text (for regex) and structured rows (for column analysis)
+  const flat = data.map(row=> Array.isArray(row) ? row.join(" | ") : String(row)).join("\n");
+  const flatU = flat.toUpperCase();
+
+  const tryMatch=(pats, src)=>{
+    for(const p of pats){
+      const m=(src||flat).match(p);
+      if(m&&m[1]){ const v=m[1].replace(/\|+/g,"").trim(); if(v.length>1) return v; }
+    }
+    return null;
+  };
+
+  // ── Shipper / Exporter ────────────────────────────────────────────────────
+  r.shipperName = tryMatch([
+    /(?:ship\s*from|shipper|exporter|remitente|expedidor|seller|vendedor)\s*[:\-]?\s*([A-Z][^\n|]{4,80})/i,
+    /(?:Factory\s*Name|Nombre\s*de\s*la\s*f[aá]brica)\s*[\|:]+\s*([^\n|]{4,70})/i,
+    /(?:FROM|DE)\s*:\s*([A-Z][^\n|]{4,70})/i,
+  ]);
+
+  // ── Consignee / Ship To ────────────────────────────────────────────────────
+  r.consigneeName = tryMatch([
+    /(?:consignee|ship\s*to|destinatario|importador|buyer|comprador)\s*[:\-]?\s*([A-Z][^\n|]{4,80})/i,
+    /(?:TO|PARA)\s*:\s*([A-Z][^\n|]{4,70})/i,
+  ]);
+  r.consigneeAddr = tryMatch([
+    /(?:consignee\s*address|ship\s*to\s*address|direcci[oó]n\s*de\s*entrega)\s*[:\-]?\s*([^\n|]{8,120})/i,
+  ]);
+
+  // ── Carrier ────────────────────────────────────────────────────────────────
+  r.carrierName = tryMatch([
+    /(?:carrier|transportista|transporter)\s*[:\-]\s*([A-Z0-9][^\n|]{2,60})/i,
+  ]);
+  r.trailerNo = tryMatch([
+    /(?:trailer\s*(?:no\.?|#|number)?|caja\s*no\.?|container\s*no\.?)\s*[:\-]?\s*([A-Z0-9]{3,20})\b/i,
+  ]);
+
+  // ── Shipment / Order reference ─────────────────────────────────────────────
+  const refM = flat.match(/(NUVO[\-\w]+)/i)
+            || flat.match(/(?:shipment\s*ref|order\s*no|po\s*(?:number|no|#))[:\s]+([A-Z0-9][\w\-]{3,30})/i)
+            || flat.match(/(?:factura|invoice)\s*(?:no\.?|#)?\s*[:\-]?\s*([A-Z0-9][\w\-]{3,20})/i);
+  if(refM) r.shipmentRef = refM[1].trim().replace(/:$/,"");
+
+  const poM = flat.match(/(NUVO[\-\w]+)/i)
+           || flat.match(/(?:purchase\s*order|p\.?o\.?\s*(?:#|no|number)?)\s*[:\-]?\s*([A-Z0-9][\w\-]{3,30})/i)
+           || flat.match(/(?:orden\s*de\s*compra|oc|po)\s*[:\-]?\s*([A-Z0-9][\w\-]{3,20})/i);
+  if(poM) r.poNumber = poM[1].trim();
+
+  // ── Invoice number ─────────────────────────────────────────────────────────
+  const invM = flat.match(/(?:invoice\s*(?:no\.?|#|number)?|factura\s*(?:no\.?|#)?)\s*[:\-]?\s*([A-Z0-9][\w\-]{2,20})/i);
+  if(invM) r.invoiceNo = invM[1].trim();
+
+  // ── Date ──────────────────────────────────────────────────────────────────
+  const dateM = flat.match(/(?:date|fecha)\s*[:\-]?\s*(\d{1,2}[\-\/]\d{1,2}[\-\/]\d{2,4}|\d{4}[\-\/]\d{1,2}[\-\/]\d{1,2})/i);
+  if(dateM){
+    try{
+      const d=new Date(dateM[1].replace(/\//g,"-"));
+      if(!isNaN(d)&&d.getFullYear()>2000) r.shipDate=d.toISOString().split("T")[0];
+    }catch(e){}
+  }
+
+  // ── Weight ────────────────────────────────────────────────────────────────
+  // Try multiple patterns in priority order
+  const weightPats = [
+    /(?:total\s*gross\s*weight|gross\s*weight\s*total|peso\s*bruto\s*total)\s*[:\-]?\s*([\d,\.]+)\s*(?:kg|kgs?|kilos?)?/i,
+    /(?:total\s*net\s*weight|net\s*weight\s*total|peso\s*neto\s*total)\s*[:\-]?\s*([\d,\.]+)/i,
+    /(?:total\s*weight|weight\s*total|peso\s*total)\s*[:\-]?\s*([\d,\.]+)/i,
+    /(?:peso|weight)\s*(?:kg|total)?\s*[:\-]?\s*([\d,\.]+)\s*(?:kg|kgs?|kilos?)?/i,
+  ];
+  for(const p of weightPats){
+    const m=flat.match(p);
+    if(m){
+      const n=parseNum(m[1]);
+      if(!isNaN(n)&&n>0){ r.totalWeightKg=String(n); r._confidence.push("weight"); break; }
+    }
+  }
+  // Detect if weight is in LBS
+  if(flat.match(/total\s*(?:weight|peso)\s*[:\-]?\s*[\d,\.]+\s*lbs/i)) r.weightUnit="LBS";
+
+  // ── Boxes / packages ──────────────────────────────────────────────────────
+  const boxPats = [
+    /(?:total\s*(?:no\.?\s*of\s*)?(?:cartons?|boxes|cajas|packages|packages|bultos|pkgs))\s*[:\-]?\s*(\d[\d,]*)/i,
+    /(?:total\s*(?:pcs?|pieces?|piezas?))\s*[:\-]?\s*(\d[\d,]*)/i,
+    /(?:number\s*of\s*packages?|n[oú]mero\s*de\s*bultos?)\s*[:\-]?\s*(\d[\d,]*)/i,
+    /(?:ctns?|cartons?)\s*[:\-]?\s*(\d[\d,]*)/i,
+    /(\d+)\s*(?:boxes|cajas|cartons?|ctns?)\b/i,
+  ];
+  for(const p of boxPats){
+    const m=flat.match(p);
+    if(m){const n=parseInt(m[1].replace(/,/g,""));if(!isNaN(n)&&n>0){r.totalBoxes=String(n);r._confidence.push("boxes");break;}}
+  }
+
+  // ── Units / quantity ──────────────────────────────────────────────────────
+  const unitPats = [
+    /(?:total\s*(?:qty|quantity|units?|pcs?|pieces?|pares?|pairs?))\s*[:\-]?\s*(\d[\d,]*)/i,
+    /(?:cantidad\s*total|total\s*piezas?|total\s*unidades?)\s*[:\-]?\s*(\d[\d,]*)/i,
+  ];
+  for(const p of unitPats){
+    const m=flat.match(p);
+    if(m){const n=parseInt(m[1].replace(/,/g,""));if(!isNaN(n)&&n>0){r.totalUnits=String(n);break;}}
+  }
+
+  // ── Product / commodity description ───────────────────────────────────────
+  const descPats = [
+    /(?:description\s*of\s*goods?|commodity|descripci[oó]n\s*de\s*mercanc[ií]as?)\s*[:\-]?\s*([^\n|]{4,80})/i,
+    /(?:goods?|articles?|mercanc[ií]as?)\s*[:\-]?\s*([^\n|]{4,60})/i,
+  ];
+  r.description = tryMatch(descPats) || "Boxes";
+
+  // ── Address extraction (after key labels) ─────────────────────────────────
+  if(!r.consigneeAddr){
+    const am = flat.match(/(?:ship\s*to|consignee)[\s\S]{0,60}?\n([^\n]{10,120})/i);
+    if(am) r.consigneeAddr = am[1].trim();
+  }
+
+  // ── Try to detect if this is a multi-line item PL → sum up quantities ─────
+  // Look for table structure: header row with QTY/CTN/WEIGHT, then data rows
+  let headerRowIdx = -1;
+  let qtyCol=-1, boxCol=-1, weightCol=-1;
+  for(let i=0;i<Math.min(40,data.length);i++){
+    const row = data[i];
+    if(!Array.isArray(row)) continue;
+    const cells = row.map(c=>String(c||"").toUpperCase());
+    const hasQty    = cells.findIndex(c=>/^(QTY|QUANTITY|UNITS?|PCS?|PARES?)$/.test(c.trim()));
+    const hasBoxes  = cells.findIndex(c=>/^(BOXES?|CAJAS?|CARTONS?|CTNS?|PKGS?)$/.test(c.trim()));
+    const hasWeight = cells.findIndex(c=>/^(WEIGHT|PESO|G\.?W\.?|N\.?W\.?)$/.test(c.trim()));
+    if(hasBoxes>=0 || (hasQty>=0 && hasWeight>=0)){
+      headerRowIdx=i; qtyCol=hasQty; boxCol=hasBoxes; weightCol=hasWeight; break;
+    }
+  }
+  // If we found a data table, sum numeric values in those columns
+  if(headerRowIdx>=0 && !r.totalBoxes){
+    let sumBoxes=0, sumWeight=0, sumUnits=0;
+    for(let i=headerRowIdx+1;i<data.length;i++){
+      const row=data[i];
+      if(!Array.isArray(row)) continue;
+      if(row.every(c=>!c||String(c).trim()==="")) break; // blank row = end of table
+      const label=String(row[0]||"").toUpperCase();
+      if(/total|totals?/.test(label)) break;
+      if(boxCol>=0){const n=parseNum(row[boxCol]);if(!isNaN(n)&&n>0)sumBoxes+=n;}
+      if(weightCol>=0){const n=parseNum(row[weightCol]);if(!isNaN(n)&&n>0)sumWeight+=n;}
+      if(qtyCol>=0){const n=parseNum(row[qtyCol]);if(!isNaN(n)&&n>0)sumUnits+=n;}
+    }
+    if(sumBoxes>0&&!r.totalBoxes) r.totalBoxes=String(Math.round(sumBoxes));
+    if(sumWeight>0&&!r.totalWeightKg) r.totalWeightKg=String(sumWeight.toFixed(2));
+    if(sumUnits>0&&!r.totalUnits) r.totalUnits=String(Math.round(sumUnits));
+  }
+
+  if(!r.totalBoxes)    r._warnings.push("⚠️ Could not detect total boxes — please verify");
+  if(!r.totalWeightKg) r._warnings.push("⚠️ Could not detect weight — please verify");
+
+  r.displayName = getBrand(r.shipperName);
+  return r;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  PARSER 3: Tresmontes PDF packing list
+//  Applies line-by-line heuristics specific to the Tresmontes format
+// ════════════════════════════════════════════════════════════════════════════════
+function parseTresmontesPDF(allLines){
+  const r = { _warnings:[] };
+  const flat = allLines.join("\n");
+
+  for(const l of allLines){
+    // "Total 1215 CJ 14.58 2624.40 3231.90" → boxes=1215, weightKg=2624.40
+    const totM = l.match(/^Total\s+(\d[\d,]+)\s+CJ\s+[\d.]+\s+([\d,.]+)/i);
+    if(totM){ r.totalBoxes=totM[1].replace(/,/g,""); r.totalWeightKg=totM[2].replace(/,/g,""); }
+
+    // FROM: shipper
+    const fromM = l.match(/^FROM\s*:\s*(.+)/i);
+    if(fromM) r.shipperName = fromM[1].trim();
+
+    // PO numbers: "Florida FLO09789 (F)"
+    const floM = l.match(/Florida\s+(FLO[\d]+\s*\([^)]+\))/i) || l.match(/(?:Florida|PO|Order)\s+(FLO\w+)/i);
+    if(floM && !r.poNumber) r.poNumber = floM[1].trim();
+
+    // NUVO reference
+    const nuvoM = l.match(/(NUVO[\w\-]+)/i);
+    if(nuvoM && !r.shipmentRef) r.shipmentRef = nuvoM[1].replace(/:$/,"");
+
+    // Ship to / consignee
+    const toM = l.match(/^(?:TO|SHIP\s*TO)\s*:\s*(.+)/i);
+    if(toM && !r.consigneeName) r.consigneeName = toM[1].trim();
+
+    // Carrier
+    const carM = l.match(/(?:carrier|transportista)\s*[:\-]\s*(.+)/i);
+    if(carM && !r.carrierName) r.carrierName = carM[1].trim();
+
+    // Trailer
+    const trM = l.match(/(?:trailer|caja)\s*(?:no\.?|#)?\s*[:\-]?\s*([A-Z0-9]{3,20})\b/i);
+    if(trM && !r.trailerNo) r.trailerNo = trM[1].trim();
+  }
+
+  // Tresmontes known address
+  if(r.shipperName && /tresmontes/i.test(r.shipperName)){
+    r.shipperAddr = "Av. Guadalajara 105, km11+034.11. Parque Industrial Centro Logistico Jalisco.";
+  }
+
+  r.displayName = getBrand(r.shipperName);
+  r.description = "Boxes";
+  if(!r.totalBoxes) r._warnings.push("⚠️ Total boxes not found in PDF — check if scanned image");
+  return r;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  FILE DISPATCHERS
+// ════════════════════════════════════════════════════════════════════════════════
+
+async function parseExcel(file){
+  const ab = await file.arrayBuffer();
+  const wb = XLSX.read(ab, {type:"array"});
+
+  // Prefer "TBC PL 2025" sheet, then first sheet
+  const sheetName = wb.SheetNames.find(n=>/TBC\s*PL/i.test(n)) || wb.SheetNames[0];
+  const ws = wb.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+
+  const template = detectExcelTemplate(data);
+  let result;
+
+  if(template === "tbc"){
+    result = parseTBCTemplate(data);
+    result._template = "tbc";
+    result._source = "TBC PL 2025 Excel";
+  } else if(template === "commercial_invoice"){
+    result = parseGenericDocument(data, "excel_invoice");
+    result._template = "commercial_invoice";
+    result._source = "Commercial Invoice (Excel)";
+  } else {
+    result = parseGenericDocument(data, "excel_pl");
+    result._template = "generic_pl";
+    result._source = "Packing List (Excel)";
+  }
+
+  return result;
+}
+
 async function parsePDF(file){
   if(typeof pdfjsLib !== 'undefined'){
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   }
   const ab = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({data: ab}).promise;
-  let allLines = [];
+  const allLines = [];
 
-  for(let i = 1; i <= pdf.numPages; i++){
+  for(let i=1;i<=pdf.numPages;i++){
     const pg = await pdf.getPage(i);
-    const c = await pg.getTextContent();
-    // Group text items by Y position to reconstruct real lines
+    const c  = await pg.getTextContent();
     const byY = {};
     for(const item of c.items){
-      if(!item.str || !item.str.trim()) continue;
-      const y = Math.round(item.transform[5] / 2) * 2;
-      if(!byY[y]) byY[y] = [];
-      byY[y].push({x: item.transform[4], str: item.str});
+      if(!item.str||!item.str.trim()) continue;
+      const y = Math.round(item.transform[5]/2)*2;
+      if(!byY[y]) byY[y]=[];
+      byY[y].push({x:item.transform[4], str:item.str});
     }
-    // Sort top-to-bottom (PDF y is bottom-to-top so sort descending)
-    const ys = Object.keys(byY).map(Number).sort((a,b) => b - a);
-    for(const y of ys){
-      const sorted = byY[y].sort((a,b) => a.x - b.x);
-      allLines.push(sorted.map(it => it.str).join(" "));
-    }
+    const ys = Object.keys(byY).map(Number).sort((a,b)=>b-a);
+    for(const y of ys) allLines.push(byY[y].sort((a,b)=>a.x-b.x).map(it=>it.str).join(" "));
     allLines.push("");
   }
 
-  const text = allLines.join("\n");
-  const ex = extractFields(text);
-  const cargoResult = extractCargoPDF(allLines);
-  // Use Total row values as the authoritative package/weight counts
-  if(cargoResult.totalPkgs)    ex.totalPkgs    = cargoResult.totalPkgs;
-  if(cargoResult.totalWeightKg) ex.totalWeightKg = cargoResult.totalWeightKg;
-  if(cargoResult.rows.length)  ex.cargoRows    = cargoResult.rows;
-  return ex;
-}
+  const totalText = allLines.filter(l=>l.trim()).length;
 
-function extractCargoPDF(lines){
-  const rows = [];
-  const result = { rows, totalPkgs: null, totalWeightKg: null };
-  let hi = -1;
-  for(let i = 0; i < lines.length; i++){
-    const l = lines[i].toLowerCase();
-    if((l.includes('article') || l.includes('quantity') || l.includes('qty')) &&
-       (l.includes('description') || l.includes('weight') || l.includes('um'))){
-      hi = i; break;
-    }
+  // Image-based PDF: very little text extracted
+  if(totalText < 8){
+    return {
+      _template:"image_pdf",
+      _source:"Scanned/Image PDF",
+      _warnings:["⚠️ This PDF appears to be image-based (scanned). Text could not be extracted automatically. Please enter cargo details manually."],
+      _imagePDF: true,
+    };
   }
-  if(hi < 0) return result;
 
-  for(let i = hi + 1; i < lines.length; i++){
-    const l = lines[i].trim();
-    if(!l) continue;
-
-    // ── Capture the Total row: "Total 1215 CJ 14.58 2624.40 3231.90"
-    // Structure: Total <qty> CJ <m3_vol> <net_weight_kg> <gross_weight_kg>
-    const totM = l.match(/^Total\s+(\d[\d,]+)\s+CJ\s+[\d.]+\s+([\d,.]+)\s+[\d,.]+/i);
-    if(totM){
-      result.totalPkgs    = totM[1].replace(/,/g,'');
-      result.totalWeightKg = totM[2].replace(/,/g,'');
-      continue;
-    }
-
-    if(/^(page|subtotal|packing list|from|to:|grupo)/i.test(l)) continue;
-
-    // ── Tresmontes data row: "10 1071871 810 CJ ZUKO ATOLE STRAWB... 9.72 1749.60 2154.60 February 2029"
-    const m = l.match(/^\d+\s+(\d{4,})\s+(\d+)\s+(CJ|PZ|KG|LT|BT|UN|BOX|EA)\s+(.+?)\s+[\d.]+\s+([\d,.]+)\s+[\d,.]+/i);
-    if(m){
-      rows.push({
-        order: m[1],
-        pkgs: m[2],
-        type: m[3].toUpperCase(),
-        desc: m[4].trim(),
-        weight: m[5].replace(/,/g,''),
-        unit: 'KG',
-        cls: '60'
-      });
-    }
+  // Detect Tresmontes vs generic
+  const flatLines = allLines.join("\n").toLowerCase();
+  let result;
+  if(/tresmontes|lucchetti|florida\s+flo/.test(flatLines)){
+    result = parseTresmontesPDF(allLines);
+    result._template = "tresmontes_pdf";
+    result._source = "Tresmontes PDF";
+  } else {
+    // Use generic document parser on flattened lines
+    result = parseGenericDocument(allLines.map(l=>[l]), "pdf");
+    result._template = "generic_pdf";
+    result._source = "PDF Packing List / Invoice";
   }
+
   return result;
 }
 
-async function parseExcel(file){
-  const ab=await file.arrayBuffer();
-  const wb=XLSX.read(ab,{type:"array"});
-  const ws=wb.Sheets[wb.SheetNames[0]];
-  const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
-  const text=data.map(r=>r.join(" | ")).join("\n");
-  const ex=extractFields(text);
-  const cargo=extractCargoExcel(data);
-  if(cargo.length) ex.cargoRows=cargo;
-  return ex;
-}
-
 async function parseCSV(file){
-  const text=await file.text();
-  return extractFields(text);
+  const text = await file.text();
+  // Detect delimiter
+  const firstLine = text.split("\n")[0]||"";
+  const delim = firstLine.includes("\t") ? "\t" : firstLine.includes(";") ? ";" : ",";
+  const data = text.split("\n").map(l=>l.split(delim).map(c=>c.replace(/^"|"$/g,"").trim()));
+  const result = parseGenericDocument(data, "csv");
+  result._template = "csv";
+  result._source = "CSV";
+  return result;
 }
 
-function extractFields(text){
-  const r={};
-  const lines=text.split(/\n/).map(l=>l.trim()).filter(l=>l.length>0);
-  const flat=lines.join(" | ");
+// ════════════════════════════════════════════════════════════════════════════════
+//  CONSOLIDATOR: merge N file results into one BOL
+// ════════════════════════════════════════════════════════════════════════════════
+function consolidateResults(results, files){
+  const merged = { cargoRows:[], _allWarnings:[] };
 
-  // tryMatch: try regex array against flat text (or custom src), return first group
-  const tryMatch=(patterns,src)=>{
-    const s=src||flat;
-    for(const p of patterns){
-      const m=s.match(p);
-      if(m&&m[1]){const v=m[1].replace(/\|+/g,"").trim();if(v.length>1)return v;}
-    }
-    return null;
-  };
-
-  // --- Shipper (EN + ES + Tresmontes "FROM :" format) ---
-  r.shipperName=tryMatch([
-    /FROM\s*:\s*([^\n|]{5,70})/i,
-    /(?:shipper|exporter|seller|ship\s*from|consignor|remitente|expedidor|vendedor|fabricante|manufacturer|exported\s+by)\s*[:\-]?\s*([A-Z][^\n|]{4,70})/i,
-  ]);
-
-  // --- Consignee ---
-  r.consigneeName=tryMatch([
-    /(?:consignee|ship\s*to|importer|buyer|comprador|importador|destinatario|sold\s+to|bill\s+to)\s*[:\-]?\s*([A-Z][^\n|]{4,70})/i,
-  ]);
-  // Tresmontes "To:" followed by address lines — try to get company from context
-  if(!r.consigneeName){
-    const toIdx = lines.findIndex(l => /^To:\s*$/i.test(l) || /^To:\s+\S/i.test(l));
-    if(toIdx >= 0 && lines[toIdx+1]) r.consigneeName = lines[toIdx+1].trim();
-  }
-
-  // --- Addresses (multiline, try line-by-line after label) ---
-  for(let i=0;i<lines.length;i++){
-    if(/(?:shipper|exporter|remitente|ship\s*from)/i.test(lines[i])&&!r.shipperAddr&&lines[i+1]){
-      r.shipperAddr=lines.slice(i+1,i+4).join(", ");
-    }
-    if(/(?:consignee|ship\s*to|importador|destinatario)/i.test(lines[i])&&!r.consigneeAddr&&lines[i+1]){
-      r.consigneeAddr=lines.slice(i+1,i+4).join(", ");
-    }
-  }
-
-  // --- Carrier ---
-  r.carrierName=tryMatch([
-    /(?:carrier|transportista|transporter|trucking|naviera|freight\s*forwarder|agente\s+de\s+carga)\s*[:\-]\s*([A-Z0-9][^\n|]{2,50})/i,
-  ]);
-
-  // --- Trailer ---
-  r.trailerNo=tryMatch([
-    /(?:trailer\s*(?:no\.?|#|number)?|caja\s*(?:no\.?|#)?|contenedor\s*(?:no\.?|#)?)\s*[:\-]?\s*([A-Z0-9]{3,20})\b/i,
-  ]);
-
-  // --- Description of goods ---
-  r.description=tryMatch([
-    /(?:description\s+of\s+(?:goods|articles?)|mercanc[ií]a|descripci[oó]n|commodity|product\s+description|concepto)\s*[:\-]\s*([^\n|]{5,100})/i,
-    /(?:goods|articles?|merchandise)\s*[:\-]\s*([^\n|]{5,100})/i,
-  ]);
-
-  // --- Weight KG: handle comma-as-thousand-sep (1,215.50) AND period-as-thousand-sep (1.215,50) ---
-  const wPatterns=[
-    /(?:(?:gross|total|net)\s*)?(?:peso\s*(?:bruto|neto|total)?|weight\s*(?:kg|kgs|total)?)\s*[:\-]?\s*([\d,\.]+)/i,
-    /([\d,\.]+)\s*(?:kg|kgs)\b/i,
-  ];
-  for(const wp of wPatterns){
-    const wm=flat.match(wp);
-    if(wm){
-      let wstr=wm[1];
-      // Normalize: if has both comma and dot, strip comma (US format 1,215.50)
-      if(wstr.includes(",")&&wstr.includes(".")) wstr=wstr.replace(/,/g,"");
-      else wstr=wstr.replace(/,/g,".");
-      const wnum=parseFloat(wstr);
-      if(!isNaN(wnum)&&wnum>0){r.totalWeightKg=String(wnum);break;}
-    }
-  }
-
-  // --- Packages / pieces ---
-  const pm=flat.match(/(?:total\s*)?(?:piezas?|pieces?|pkgs?|packages?|boxes|cartons?|cajas?\s*(?:totales?)?|bultos?|units?|unidades?)\s*[:\-]?\s*(\d[\d,]*)\b/i);
-  if(pm) r.totalPkgs=pm[1].replace(/,/g,"");
-
-  // --- Invoice / order numbers (also Factura: TVE-00002586 format) ---
-  const im=flat.match(/(?:invoice\s*(?:no\.?|#|number)?|factura\s*(?:no\.?|#)?)\s*[:\-]?\s*([A-Z0-9][\w\-]{1,20})/i);
-  if(im) r.invoiceNo=im[1];
-  // Florida / PO number (Tresmontes uses "Florida FLO09789 (F)" format)
-  const floM=flat.match(/Florida\s+(FLO[\d]+\s*\([^)]+\))/i) || flat.match(/Florida\s+(FLO\w+)/i);
-  if(floM){ r.poNumber=floM[1].trim(); if(!r.orderNos) r.orderNos=[r.poNumber]; }
-
-  const oms=[...flat.matchAll(/(?:(?:customer\s+)?order|po\b|purchase\s+order|pedido|folio)\s*(?:no\.?|#|num\.?)?\s*[:\-]?\s*([A-Z0-9][\w\-]{2,20})/gi)];
-  if(oms.length) r.orderNos=[...new Set(oms.map(m=>m[1]))];
-
-  // --- Date ---
-  const datePats=[/(\d{4}-\d{2}-\d{2})/,/(\d{2}\/\d{2}\/\d{4})/,/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/];
-  for(const dp of datePats){
-    const dm=flat.match(dp);
-    if(dm){try{let ds=dm[1];if(ds.includes("/")&&ds.split("/").pop().length===4){const p=ds.split("/");ds=p[2]+"-"+p[0].padStart(2,"0")+"-"+p[1].padStart(2,"0");}const d=new Date(ds);if(!isNaN(d)&&d.getFullYear()>2000){r.shipDate=d.toISOString().split("T")[0];break;}}catch(e){}}
-  }
-
-  Object.keys(r).forEach(k=>{if(r[k]===null||r[k]===undefined||r[k]==="")delete r[k];});
-  return r;
-}
-
-function extractCargoExcel(data){
-  const rows=[];
-  const isOrderCol=h=>/order|po\b|folio|pedido|invoice|factura|referencia|ref\b|no\.|nro/i.test(h);
-  const isQtyCol=h=>/qty|quantity|pcs|piezas|cajas|boxes|bultos|pkgs|packages|pieces|units|cant(?:idad)?/i.test(h);
-  const isWeightCol=h=>/weight|peso|kg\b|kgs?\b|kilos/i.test(h);
-  const isDescCol=h=>/desc|product|articulo|article|item|sabor|flavor|mercan|goods|concept|presentacion/i.test(h);
-  const isTypeCol=h=>/type|tipo|packaging|empaque|kind/i.test(h);
-
-  // Scan first 35 rows for header
-  let hi=-1;
-  for(let i=0;i<Math.min(data.length,35);i++){
-    const row=data[i].map(c=>String(c));
-    let score=0;
-    row.forEach(c=>{
-      if(isOrderCol(c)) score+=2;
-      if(isQtyCol(c)) score+=2;
-      if(isWeightCol(c)) score+=1;
-      if(isDescCol(c)) score+=1;
-    });
-    if(score>=3){hi=i;break;}
-  }
-
-  if(hi>=0){
-    const hdrs=data[hi].map(c=>String(c));
-    const oi=hdrs.findIndex(isOrderCol);
-    const qi=hdrs.findIndex(isQtyCol);
-    const wi=hdrs.findIndex(isWeightCol);
-    const di=hdrs.findIndex(isDescCol);
-    const ti=hdrs.findIndex(isTypeCol);
-
-    for(let i=hi+1;i<data.length;i++){
-      const row=data[i];
-      const rowStr=row.map(c=>String(c)).join("|");
-      if(rowStr.replace(/[|\s.,0]/g,"")==="") continue; // blank
-      if(/^\s*(?:total|subtotal|gran\s*total|suma|sum)\b/i.test(rowStr)) continue; // total row
-
-      const ov=oi>=0?String(row[oi]||"").trim():"";
-      const qraw=qi>=0?String(row[qi]||"").replace(/,/g,"").trim():"";
-      const wraw=wi>=0?String(row[wi]||"").replace(/,/g,"").trim():"";
-      const dv=di>=0?String(row[di]||"").trim():"";
-      const tv=ti>=0?String(row[ti]||"").trim():"CJ";
-
-      const qNum=parseFloat(qraw);
-      if(!ov&&(isNaN(qNum)||qNum<=0)) continue;
-
-      rows.push({
-        order:ov,
-        pkgs:isNaN(qNum)?"":String(Math.round(qNum)),
-        type:tv||"CJ",
-        desc:dv,
-        weight:isNaN(parseFloat(wraw))?"":wraw,
-        unit:"KG",
-        cls:"60"
-      });
-    }
+  // Detect Thursday mode: any TBC template → Thursday mode
+  const hasTBC = results.some(r=>r._template==="tbc");
+  if(hasTBC){
+    const thuR = document.querySelector('input[name="bolMode"][value="thursday"]');
+    if(thuR){ thuR.checked=true; setBolMode("thursday"); }
   } else {
-    // Heuristic fallback: col[0]=code, col[1]=number
-    for(let i=1;i<data.length;i++){
-      const row=data[i];
-      if(row.length<2) continue;
-      const fc=String(row[0]).trim();
-      if(!fc||/total|subtotal/i.test(fc)) continue;
-      const q=parseFloat(String(row[1]).replace(/,/g,""));
-      if(!isNaN(q)&&q>0&&fc.length>=2){
-        const w=parseFloat(String(row[2]||"").replace(/,/g,""));
-        rows.push({order:fc,pkgs:String(Math.round(q)),type:"CJ",desc:String(row[3]||row[4]||"").trim(),weight:isNaN(w)?"":String(w),unit:"KG",cls:"60"});
+    // Only switch to tresmontes if NO tbc files (don't override if mixed)
+    const treR = document.querySelector('input[name="bolMode"][value="tresmontes"]');
+    if(treR){ treR.checked=true; setBolMode("tresmontes"); }
+  }
+
+  results.forEach((r, idx) => {
+    // Header fields: first non-empty wins
+    if(!merged.shipperName   && r.shipperName)   merged.shipperName   = r.shipperName;
+    if(!merged.shipperAddr   && r.shipperAddr)   merged.shipperAddr   = r.shipperAddr;
+    if(!merged.consigneeName && r.consigneeName) merged.consigneeName = r.consigneeName;
+    if(!merged.consigneeAddr && r.consigneeAddr) merged.consigneeAddr = r.consigneeAddr;
+    if(!merged.shipDate      && r.shipDate)      merged.shipDate      = r.shipDate;
+    if(!merged.carrierName   && r.carrierName)   merged.carrierName   = r.carrierName;
+    if(!merged.trailerNo     && r.trailerNo)     merged.trailerNo     = r.trailerNo;
+    if(!merged.shipmentRef   && r.shipmentRef)   merged.shipmentRef   = r.shipmentRef;
+
+    // Collect warnings
+    if(r._warnings) merged._allWarnings.push(...r._warnings.map(w=>`${files[idx].name}: ${w}`));
+
+    // Skip image PDFs from auto-fill cargo rows (but add an empty editable placeholder)
+    if(r._imagePDF){
+      // Add a blank row flagged as needing manual entry
+      merged.cargoRows.push({order:"", consignee:"⚠️ "+files[idx].name.replace(/\.[^.]+$/,"")+" — enter manually", units:"", boxes:"", pkgs:"", type:"CJ", desc:"", weight:"", unit:"KG", cls:""});
+      return;
+    }
+
+    // ── Build one cargo row per file ─────────────────────────────────────────
+    if(hasTBC){
+      const orderNo   = r.shipmentRef || r.poNumber || files[idx].name.replace(/\.[^.]+$/,"");
+      const consignee = r.displayName || getBrand(r.shipperName) || "";
+      const units     = r.totalUnits  || "";
+      const boxes     = r.totalBoxes  || "";
+      const desc      = r.description || "Boxes";
+      const weight    = r.totalWeightKg || "";
+      if(consignee || boxes){
+        merged.cargoRows.push({order:orderNo,consignee,units,boxes,pkgs:boxes,type:"CJ",desc,weight,unit:"KG",cls:""});
+      }
+    } else {
+      const poNum  = r.poNumber || r.orderNos?.[0] || r.shipmentRef || files[idx].name.replace(/\.[^.]+$/,"");
+      const boxes  = r.totalBoxes || r.totalPkgs || "";
+      const weight = r.totalWeightKg || "";
+      const desc   = r.description || "Boxes";
+      if(poNum || boxes){
+        merged.cargoRows.push({order:poNum,pkgs:boxes,boxes,type:"CJ",desc,weight,unit:r.weightUnit||"KG",cls:"60"});
       }
     }
-  }
-  return rows;
+  });
+
+  return merged;
 }
 
-function fillForm(ex){
+// ── Fill form from consolidated result ───────────────────────────────────────
+function fillFormMulti(merged, allResults){
   const set=(id,val)=>{
     const el=document.getElementById(id);
     if(el&&val&&String(val).trim()){el.value=String(val).trim();el.classList.add("autofill");}
   };
+
+  set("consigneeName", merged.consigneeName);
+  set("consigneeAddr", merged.consigneeAddr);
+  set("carrierName",   merged.carrierName);
+  set("trailerNo",     merged.trailerNo);
+  if(merged.shipDate) set("shipDate", merged.shipDate);
+
+  // Tresmontes: always use verified warehouse address + 3P billing
+  if(merged.shipperName && /tresmontes|lucchetti/i.test(merged.shipperName)){
+    set("shipperName", merged.shipperName);
+    set("shipperAddr", "Av. Guadalajara 105, km11+034.11. Parque Industrial Centro Logistico Jalisco.");
+    set("tpName", "Tresmontes Lucchetti Mexico SA de CV");
+    set("tpAddr", "Blvd Manuel Avila Camacho No. 88 Piso 4");
+    set("tpCity", "Blvd Manuel Avila Camacho No. 88 Piso 4");
+  } else if(merged.shipperName){
+    set("shipperName", merged.shipperName);
+    set("shipperAddr", merged.shipperAddr);
+  }
+
+  // Thursday: consignee is destination warehouse — clean up
+  if(bolMode==="thursday" && merged.consigneeName){
+    set("consigneeName", merged.consigneeName.split("/")[0].trim());
+  }
+
+  // Commodity: use description from first cargo row that has one
+  const firstDesc = merged.cargoRows.find(r=>r.desc&&r.desc!=="Boxes");
+  if(firstDesc){
+    const ce=document.getElementById("commodity");
+    if(ce&&!ce.value) ce.value=firstDesc.desc;
+  }
+
+  // Set cargo rows
+  document.getElementById("cargoBody").innerHTML=""; rc=0;
+  if(merged.cargoRows.length){
+    merged.cargoRows.forEach(row=>addRow(row));
+  } else {
+    addRow(); addRow();
+  }
+
+  // Show warnings as inline advisory (don't block)
+  const ws = merged._allWarnings;
+  if(ws&&ws.length){
+    const st=document.getElementById("upstatus");
+    const existing = st.textContent;
+    setTimeout(()=>{
+      st.textContent = existing + " | " + ws.join(" | ");
+    },100);
+  }
+}
+
+// Legacy compat
+async function doUpload(file){ doUploadMulti([file]); }
+
+function fillForm(ex){
+  const set=(id,val)=>{const el=document.getElementById(id);if(el&&val&&String(val).trim()){el.value=String(val).trim();el.classList.add("autofill");}};
   set("shipperName",ex.shipperName);
-  // Tresmontes rule: always override with correct warehouse address + 3P billing
-  if(ex.shipperName && /tresmontes/i.test(ex.shipperName)){
+  if(ex.shipperName&&/tresmontes|lucchetti/i.test(ex.shipperName)){
     set("shipperAddr","Av. Guadalajara 105, km11+034.11. Parque Industrial Centro Logistico Jalisco.");
     set("tpName","Tresmontes Lucchetti Mexico SA de CV");
     set("tpAddr","Blvd Manuel Avila Camacho No. 88 Piso 4");
     set("tpCity","Blvd Manuel Avila Camacho No. 88 Piso 4");
-  } else {
-    set("shipperAddr",ex.shipperAddr);
-  }
+  }else{set("shipperAddr",ex.shipperAddr);}
   set("consigneeName",ex.consigneeName);
   set("consigneeAddr",ex.consigneeAddr);
   set("carrierName",ex.carrierName);
   set("trailerNo",ex.trailerNo);
-  if(ex.shipDate) set("shipDate",ex.shipDate);
-  if(ex.invoiceNo) set("shipmentId","SH-"+ex.invoiceNo);
-  if(ex.description) set("specInstr",ex.description);
-
-  if(ex.cargoRows&&ex.cargoRows.length){
-    document.getElementById("cargoBody").innerHTML="";rc=0;
-    ex.cargoRows.forEach(r=>addRow(r));
-  } else if(ex.totalPkgs||ex.totalWeightKg||ex.orderNos){
-    document.getElementById("cargoBody").innerHTML="";rc=0;
-    addRow({
-      order:ex.orderNos?ex.orderNos[0]:"",
-      pkgs:ex.totalPkgs||"",
-      type:"CJ",
-      desc:ex.description||"",
-      weight:ex.totalWeightKg||"",
-      unit:"KG",
-      cls:"60"
-    });
-  }
+  if(ex.shipDate)set("shipDate",ex.shipDate);
+  if(ex.invoiceNo)set("shipmentId","SH-"+ex.invoiceNo);
+  if(ex.cargoRows&&ex.cargoRows.length){document.getElementById("cargoBody").innerHTML="";rc=0;ex.cargoRows.forEach(r=>addRow(r));}
+  else if(ex.totalPkgs||ex.totalWeightKg){document.getElementById("cargoBody").innerHTML="";rc=0;addRow({order:ex.orderNos?ex.orderNos[0]:"",pkgs:ex.totalPkgs||"",type:"CJ",desc:ex.description||"",weight:ex.totalWeightKg||"",unit:"KG",cls:"60"});}
 }
 
 function clearForm(){
