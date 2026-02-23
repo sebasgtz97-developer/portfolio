@@ -170,6 +170,11 @@ header {
 .upstatus.ok      { background: #F0FDF4; color: var(--green); border: 1px solid #BBF7D0; display: block; }
 .upstatus.loading { background: #FFFBEB; color: var(--amber); border: 1px solid #FDE68A; display: block; }
 .upstatus.err     { background: #FEF2F2; color: var(--red);   border: 1px solid #FECACA; display: block; }
+.sheet-status { display:none; font-size:10px; font-weight:500; padding:3px 8px; border-radius:5px; margin-top:4px; line-height:1.5; }
+.sheet-status.ok      { background:#F0FDF4; color:var(--green); border:1px solid #BBF7D0; display:block; }
+.sheet-status.loading { background:#FFFBEB; color:var(--amber); border:1px solid #FDE68A; display:block; }
+.sheet-status.err     { background:#FEF2F2; color:var(--red);   border:1px solid #FECACA; display:block; }
+.sheet-status.match   { background:#EFF6FF; color:#1D4ED8;      border:1px solid #BFDBFE; display:block; }
 .chips { margin-top: 6px; display: none; flex-wrap: wrap; gap: 4px; }
 .chips.show { display: flex; }
 .chip {
@@ -622,9 +627,10 @@ textarea { resize: vertical; min-height: 50px; }
   <div class="fsec">
     <h4>Shipment Info</h4>
     <div class="fr c2">
-      <div class="fg"><label>Shipment ID</label><input type="text" id="shipmentId" placeholder="SH-00000"></div>
+      <div class="fg"><label>Shipment ID</label><input type="text" id="shipmentId" placeholder="SH-00000" oninput="onShipmentIdInput(this.value)"></div>
       <div class="fg"><label>Date</label><input type="date" id="shipDate"></div>
     </div>
+    <div id="sheetStatus" class="sheet-status"></div>
     <div class="fr c3">
       <div class="fg"><label>Carrier</label>
         <input type="text" id="carrierName" placeholder="Select or type carrier name..." list="carrierList" autocomplete="off">
@@ -810,6 +816,9 @@ document.addEventListener("DOMContentLoaded",()=>{
   z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("dragover");});
   z.addEventListener("dragleave",()=>z.classList.remove("dragover"));
   z.addEventListener("drop",e=>{e.preventDefault();z.classList.remove("dragover");doUploadMulti(e.dataTransfer.files);});
+  // Load live shipment data from Google Sheets on startup
+  loadSheetData();
+  setInterval(loadSheetData, 15*60*1000);
 });
 
 let bolMode = "thursday"; // "thursday" or "tresmontes"
@@ -2187,6 +2196,137 @@ function clearForm(){
   document.getElementById("chips").className="chips";
   document.getElementById("docfile").value="";
   addRow();addRow();render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  GOOGLE SHEETS LIVE LOOKUP
+//  Fetches published CSV every 15 min. When the user types a Shipment ID the
+//  matching row auto-fills: Carrier Name, Trailer No, Delivery Date + Time.
+// ═══════════════════════════════════════════════════════════════════════════════
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
+
+let _sheetData = {};        // { "SH-XXXXX" → row object }
+let _sheetLoadedAt = null;
+let _sheetLoading  = false;
+
+async function loadSheetData(){
+  if(_sheetLoading) return;
+  _sheetLoading = true;
+  setSheetStatus("loading", "⏳ Loading live shipment data…");
+  try {
+    const resp = await fetch(SHEET_CSV_URL);
+    if(!resp.ok) throw new Error("HTTP "+resp.status);
+    const text = await resp.text();
+    const rows = _parseSheetCSV(text);
+    _sheetData = {};
+    for(const row of rows){
+      const id = (row.SHIPMENT_ID||"").trim().toUpperCase();
+      if(id) _sheetData[id] = row;
+    }
+    _sheetLoadedAt = Date.now();
+    const n = Object.keys(_sheetData).length;
+    setSheetStatus("ok", "✅ Live data ready — "+n+" shipment"+(n===1?"":"s")+" in system");
+    setTimeout(()=>setSheetStatus("",""), 4000);
+  } catch(e){
+    setSheetStatus("err", "⚠️ Could not load live data — carrier/trailer must be entered manually");
+    console.warn("Sheet load failed:", e);
+  }
+  _sheetLoading = false;
+}
+
+function _parseSheetCSV(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length) return [];
+  const headers = _splitCSVLine(lines[0]).map(h=>h.trim());
+  return lines.slice(1).map(line=>{
+    const vals = _splitCSVLine(line);
+    const row = {};
+    headers.forEach((h,i)=>{ row[h] = (vals[i]||"").trim(); });
+    return row;
+  });
+}
+
+function _splitCSVLine(line){
+  const out = []; let inQ=false, cur="";
+  for(const ch of line){
+    if(ch==='"'){ inQ=!inQ; }
+    else if(ch==="," && !inQ){ out.push(cur); cur=""; }
+    else cur+=ch;
+  }
+  out.push(cur);
+  return out;
+}
+
+function setSheetStatus(cls, msg){
+  const el = document.getElementById("sheetStatus");
+  if(!el) return;
+  if(!cls){ el.className="sheet-status"; el.textContent=""; return; }
+  el.className = "sheet-status "+cls;
+  el.textContent = msg;
+}
+
+let _lookupTimer;
+function onShipmentIdInput(raw){
+  clearTimeout(_lookupTimer);
+  _lookupTimer = setTimeout(()=>_lookupShipment(raw), 500);
+}
+
+function _lookupShipment(raw){
+  const id = raw.trim().toUpperCase();
+  if(!id || id.length < 3) return;
+  // If data is stale or missing, reload then retry
+  if(!_sheetLoadedAt || Date.now()-_sheetLoadedAt > 15*60*1000){
+    loadSheetData().then(()=>_doLookup(id));
+    return;
+  }
+  _doLookup(id);
+}
+
+function _doLookup(id){
+  // Exact match, then try with/without "SH-" prefix
+  const row = _sheetData[id]
+           || _sheetData["SH-"+id.replace(/^SH-/i,"")]
+           || null;
+  if(!row) return; // no match — leave fields as-is
+
+  const set=(fieldId,val)=>{
+    const el=document.getElementById(fieldId);
+    if(el && val && String(val).trim()){
+      el.value=String(val).trim();
+      el.classList.add("autofill");
+    }
+  };
+
+  if(row.CARRIER)        set("carrierName", row.CARRIER);
+  if(row.TRAILER_NUMBER) set("trailerNo",   row.TRAILER_NUMBER);
+
+  // Parse DELIVERY_APPOINTMENT into date + time
+  // Supported formats: "2025-02-15 15:00", "2025-02-15T15:00:00", "02/15/2025 15:00"
+  if(row.DELIVERY_APPOINTMENT){
+    const appt = row.DELIVERY_APPOINTMENT.trim();
+    const ymdT = appt.match(/^(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})[T\s]+(\d{1,2}:\d{2})/);
+    const mdyT = appt.match(/^(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})[T\s]+(\d{1,2}:\d{2})/);
+    if(ymdT){
+      const d = new Date(ymdT[1].replace(/\//g,"-")+"T12:00:00");
+      if(!isNaN(d)) set("deliveryDate", d.toISOString().split("T")[0]);
+      set("deliveryTime", ymdT[2]+" hrs");
+    } else if(mdyT){
+      const p = mdyT[1].split(/[\/\-]/);
+      const iso = p[2]+"-"+p[0].padStart(2,"0")+"-"+p[1].padStart(2,"0");
+      const d = new Date(iso+"T12:00:00");
+      if(!isNaN(d)) set("deliveryDate", d.toISOString().split("T")[0]);
+      set("deliveryTime", mdyT[2]+" hrs");
+    } else {
+      const d = new Date(appt);
+      if(!isNaN(d)) set("deliveryDate", d.toISOString().split("T")[0]);
+    }
+  }
+
+  const carrier = row.CARRIER || "—";
+  const trailer = row.TRAILER_NUMBER || "—";
+  const appt    = row.DELIVERY_APPOINTMENT || "—";
+  setSheetStatus("match", "🔗 Matched "+id+" — Carrier: "+carrier+" | Trailer: "+trailer+" | Appt: "+appt);
+  render();
 }
 </script>
 </body>
