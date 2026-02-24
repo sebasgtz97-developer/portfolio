@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nuvocargo — Operations Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
 <style>
 :root {
   --teal:   #1C4A3E;
@@ -29,8 +29,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:1
 header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
 .hleft{display:flex;align-items:center}
 .hright{display:flex;align-items:center;gap:8px}
-.hlogo-text{font-size:15px;font-weight:700;color:var(--teal);letter-spacing:-0.02em}
-.hlogo-text span{color:var(--lime)}
+.hlogo-img{height:26px;width:auto;display:block}
 .htitle{font-size:13px;font-weight:600;color:var(--tx2);margin-left:12px;padding-left:12px;border-left:1px solid var(--bd);line-height:1}
 .hbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--green);background:#F0FDF4;border:1px solid #BBF7D0;border-radius:999px;padding:3px 9px}
 .hbadge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
@@ -171,7 +170,7 @@ td.col-id{font-weight:600;color:var(--blue)}
 
 <header>
   <div class="hleft">
-    <span class="hlogo-text">nuvo<span>cargo</span></span>
+    <img src="assets/nuvocargo-logo.svg" alt="Nuvocargo" class="hlogo-img">
     <span class="htitle">Operations Dashboard</span>
   </div>
   <div class="hright">
