@@ -2225,8 +2225,7 @@ async function loadSheetData(){
     }
     _sheetLoadedAt = Date.now();
     const n = Object.keys(_sheetData).length;
-    setSheetStatus("ok", "✅ Live data ready — "+n+" shipment"+(n===1?"":"s")+" in system");
-    setTimeout(()=>setSheetStatus("",""), 4000);
+    setSheetStatus("ok", "✅ Live data ready — "+n+" shipment"+(n===1?"":"s")+" in system. Type a Shipment ID above to auto-fill.");
   } catch(e){
     setSheetStatus("err", "⚠️ Could not load live data — carrier/trailer must be entered manually");
     console.warn("Sheet load failed:", e);
@@ -2287,7 +2286,10 @@ function _doLookup(id){
   const row = _sheetData[id]
            || _sheetData["SH-"+id.replace(/^SH-/i,"")]
            || null;
-  if(!row) return; // no match — leave fields as-is
+  if(!row){
+    setSheetStatus("err", "⚠️ No match for \""+id+"\" — check the Shipment ID or update the sheet.");
+    return;
+  }
 
   const set=(fieldId,val)=>{
     const el=document.getElementById(fieldId);
