@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuvocargo — Operations Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── NuvoOS Design System ─────────────────────────────────────────────────────
+   Matches bol-generator.html exactly.
+   Colors: teal #1C4A3E / lime #C8E64C / bg #F7F8F8 / panel #FFFFFF
+────────────────────────────────────────────────────────────────────────────── */
+:root {
+  --teal:   #1C4A3E;
+  --lime:   #C8E64C;
+  --lime-h: #b5d43a;
+  --bg:     #F7F8F8;
+  --panel:  #FFFFFF;
+  --bd:     #E5E7EB;
+  --bd2:    #D1D5DB;
+  --tx1:    #111827;
+  --tx2:    #374151;
+  --tx3:    #6B7280;
+  --tx4:    #9CA3AF;
+  --blue:   #2563EB;
+  --red:    #DC2626;
+  --green:  #16A34A;
+  --amber:  #D97706;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--tx1);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--bd);
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.hleft { display: flex; align-items: center; gap: 0; }
+.hright { display: flex; align-items: center; gap: 8px; }
+.hlogo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.hlogo-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: -0.02em;
+}
+.hlogo-text span { color: var(--lime); }
+.htitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx2);
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px solid var(--bd);
+  line-height: 1;
+}
+.hbadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--green);
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.hbadge .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.85); }
+}
+.btn-refresh {
+  background: var(--panel);
+  color: var(--tx2);
+  border: 1px solid var(--bd);
+  padding: 0 14px;
+  height: 32px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-refresh:hover { background: var(--bg); border-color: var(--bd2); }
+.btn-refresh svg { transition: transform .4s; }
+.btn-refresh.spinning svg { animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Main layout ─────────────────────────────────────────────────────────────── */
+.main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 20px 40px;
+}
+
+/* ── Page title row ───────────────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--tx1);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.page-sub {
+  font-size: 12px;
+  color: var(--tx3);
+  margin-top: 3px;
+}
+.last-updated {
+  font-size: 11px;
+  color: var(--tx4);
+  white-space: nowrap;
+  padding-top: 4px;
+}
+
+/* ── KPI cards ────────────────────────────────────────────────────────────────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.kpi-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--tx1);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.kpi-value.accent { color: var(--teal); }
+.kpi-value.green  { color: var(--green); }
+.kpi-value.amber  { color: var(--amber); }
+.kpi-value.red    { color: var(--red); }
+.kpi-sub {
+  font-size: 11px;
+  color: var(--tx4);
+  margin-top: 4px;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--tx4);
+  pointer-events: none;
+}
+#searchInput {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px 0 32px;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--tx1);
+  background: var(--panel);
+  transition: border-color .15s, box-shadow .15s;
+}
+#searchInput:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(28,74,62,.08);
+}
+.filter-select {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--tx2);
+  background: var(--panel);
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.filter-select:focus { outline: none; border-color: var(--teal); }
+.result-count {
+  font-size: 11px;
+  color: var(--tx4);
+  white-space: nowrap;
+}
+
+/* ── Status bar ─────────────────────────────────────────────────────────────── */
+.status-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.status-bar.loading {
+  display: flex;
+  background: #FFFBEB;
+  color: var(--amber);
+  border: 1px solid #FDE68A;
+}
+.status-bar.ok {
+  display: flex;
+  background: #F0FDF4;
+  color: var(--green);
+  border: 1px solid #BBF7D0;
+}
+.status-bar.err {
+  display: flex;
+  background: #FEF2F2;
+  color: var(--red);
+  border: 1px solid #FECACA;
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────────── */
+.table-wrap {
+  background: var(--panel);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+thead tr {
+  background: #F9FAFB;
+  border-bottom: 1px solid var(--bd);
+}
+th {
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+th:hover { color: var(--tx1); background: #F3F4F6; }
+th .sort-icon {
+  display: inline-block;
+  margin-left: 4px;
+  opacity: 0.35;
+  font-size: 9px;
+}
+th.sorted-asc .sort-icon::after  { content: "▲"; opacity: 1; }
+th.sorted-desc .sort-icon::after { content: "▼"; opacity: 1; }
+th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after { content: "⇅"; }
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--bd);
+  color: var(--tx2);
+  white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #F9FAFB; }
+tbody tr { transition: background .1s; }
+
+/* Shipment ID column */
+td.col-id {
+  font-weight: 600;
+  color: var(--blue);
+  font-size: 12px;
+}
+
+/* Empty state */
+.empty-state {
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+  opacity: .4;
+}
+.empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tx2);
+  margin-bottom: 4px;
+}
+.empty-sub {
+  font-size: 12px;
+  color: var(--tx4);
+}
+
+/* Skeleton loader */
+.skeleton-row td {
+  padding: 10px 12px;
+}
+.skel {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ── Status badges ───────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge-delivered  { background: #F0FDF4; color: var(--green);  border: 1px solid #BBF7D0; }
+.badge-intransit  { background: #EFF6FF; color: var(--blue);   border: 1px solid #BFDBFE; }
+.badge-pending    { background: #FFFBEB; color: var(--amber);  border: 1px solid #FDE68A; }
+.badge-exception  { background: #FEF2F2; color: var(--red);    border: 1px solid #FECACA; }
+.badge-scheduled  { background: #F5F3FF; color: #6D28D9;       border: 1px solid #DDD6FE; }
+.badge-default    { background: #F9FAFB; color: var(--tx3);    border: 1px solid var(--bd); }
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .page-header { flex-direction: column; gap: 4px; }
+}
+@media (max-width: 560px) {
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .main { padding: 14px 14px 32px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="hleft">
+    <div class="hlogo-wrap">
+      <span class="hlogo-text">nuvo<span>cargo</span></span>
+    </div>
+    <span class="htitle">Operations Dashboard</span>
+  </div>
+  <div class="hright">
+    <span class="hbadge" id="liveBadge">
+      <span class="dot"></span>
+      Live
+    </span>
+    <button class="btn-refresh" id="btnRefresh" onclick="refreshData()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/>
+        <path d="M12 2v3.5H8.5"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<div class="main">
+
+  <!-- Page title -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Shipment Monitor</div>
+      <div class="page-sub">Real-time visibility into cross-border shipments — synced from Google Sheets</div>
+    </div>
+    <div class="last-updated" id="lastUpdated">—</div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Shipments</div>
+      <div class="kpi-value accent" id="kpiTotal">—</div>
+      <div class="kpi-sub">In system</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Unique Carriers</div>
+      <div class="kpi-value" id="kpiCarriers">—</div>
+      <div class="kpi-sub">Active carriers</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Scheduled Today</div>
+      <div class="kpi-value green" id="kpiToday">—</div>
+      <div class="kpi-sub">Delivery appointments</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">This Week</div>
+      <div class="kpi-value amber" id="kpiWeek">—</div>
+      <div class="kpi-sub">Upcoming deliveries</div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar loading" id="statusBar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite">
+      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+    </svg>
+    Loading shipment data from Google Sheets…
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <circle cx="5.5" cy="5.5" r="4"/>
+        <path d="M12 12L8.5 8.5"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search by shipment ID, carrier, trailer…" oninput="filterTable()">
+    </div>
+    <select class="filter-select" id="carrierFilter" onchange="filterTable()">
+      <option value="">All carriers</option>
+    </select>
+    <select class="filter-select" id="statusFilter" onchange="filterTable()">
+      <option value="">All statuses</option>
+    </select>
+    <span class="result-count" id="resultCount"></span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table id="dataTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody">
+          <!-- skeleton rows while loading -->
+          <tr class="skeleton-row">
+            <td><div class="skel" style="width:70px"></div></td>
+            <td><div class="skel" style="width:140px"></div></td>
+            <td><div class="skel" style="width:90px"></div></td>
+            <td><div class="skel" style="width:110px"></div></td>
+            <td><div class="skel" style="width:80px"></div></td>
+          </tr>
+          <tr class="skeleton-row">
+            <td><div class="skel" style="width:80px"></div></td>
+            <td><div class="skel" style="width:160px"></div></td>
+            <td><div class="skel" style="width:75px"></div></td>
+            <td><div class="skel" style="width:120px"></div></td>
+            <td><div class="skel" style="width:90px"></div></td>
+          </tr>
+          <tr class="skeleton-row">
+            <td><div class="skel" style="width:65px"></div></td>
+            <td><div class="skel" style="width:130px"></div></td>
+            <td><div class="skel" style="width:100px"></div></td>
+            <td><div class="skel" style="width:105px"></div></td>
+            <td><div class="skel" style="width:85px"></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+//  CONFIG — same Google Sheet as the BOL generator
+// ════════════════════════════════════════════════════════════════════════════
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // auto-refresh every 5 min
+
+// ════════════════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════════════════
+let _allRows    = [];   // raw parsed CSV rows
+let _columns    = [];   // column names from CSV headers
+let _filtered   = [];   // rows after search/filter
+let _sortCol    = null;
+let _sortDir    = 1;    // 1 = asc, -1 = desc
+
+// ════════════════════════════════════════════════════════════════════════════
+//  CSV PARSER  (same as bol-generator)
+// ════════════════════════════════════════════════════════════════════════════
+function _splitCSVLine(line) {
+  const out = []; let inQ = false, cur = "";
+  for (const ch of line) {
+    if (ch === '"')          { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { out.push(cur); cur = ""; }
+    else                     cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return { columns: [], rows: [] };
+  const columns = _splitCSVLine(lines[0]).map(h => h.trim());
+  const rows = lines.slice(1).map(line => {
+    const vals = _splitCSVLine(line);
+    const row = {};
+    columns.forEach((h, i) => { row[h] = (vals[i] || "").trim(); });
+    return row;
+  });
+  return { columns, rows };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  FETCH DATA
+// ════════════════════════════════════════════════════════════════════════════
+async function loadData() {
+  setStatus("loading", "Loading shipment data from Google Sheets…");
+  setBtnSpinning(true);
+
+  try {
+    const resp = await fetch(SHEET_CSV_URL + "&t=" + Date.now()); // cache-bust
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const text = await resp.text();
+    const { columns, rows } = parseCSV(text);
+
+    _columns = columns;
+    _allRows = rows.filter(r => Object.values(r).some(v => v)); // skip empty rows
+
+    buildTableHeader();
+    buildFilterOptions();
+    updateKPIs();
+    filterTable();
+
+    const n = _allRows.length;
+    setStatus("ok", "✅ " + n + " shipment" + (n === 1 ? "" : "s") + " loaded — last synced " + fmtTime(new Date()));
+    document.getElementById("lastUpdated").textContent = "Last updated: " + fmtTime(new Date());
+
+  } catch (e) {
+    setStatus("err", "⚠️ Could not load data from Google Sheets. Check your connection or sheet permissions.");
+    document.getElementById("tableBody").innerHTML = `
+      <tr><td colspan="99">
+        <div class="empty-state">
+          <div class="empty-icon">⚠️</div>
+          <div class="empty-title">Unable to load data</div>
+          <div class="empty-sub">Check your connection or verify the sheet is published to the web.</div>
+        </div>
+      </td></tr>`;
+    console.error("Sheet load failed:", e);
+  }
+
+  setBtnSpinning(false);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  BUILD TABLE HEADER  (dynamic, based on CSV columns)
+// ════════════════════════════════════════════════════════════════════════════
+function buildTableHeader() {
+  const head = document.getElementById("tableHead");
+  head.innerHTML = "<tr>" + _columns.map((col, i) => {
+    const label = col.replace(/_/g, " ");
+    return `<th data-col="${col}" onclick="sortBy('${col}', this)">
+              ${label}
+              <span class="sort-icon"></span>
+            </th>`;
+  }).join("") + "</tr>";
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  BUILD FILTER DROPDOWNS
+// ════════════════════════════════════════════════════════════════════════════
+function buildFilterOptions() {
+  // Carrier filter
+  const carrierCol = _columns.find(c => /CARRIER/i.test(c)) || null;
+  const carrierSel = document.getElementById("carrierFilter");
+  carrierSel.innerHTML = '<option value="">All carriers</option>';
+  if (carrierCol) {
+    const carriers = [...new Set(_allRows.map(r => r[carrierCol]).filter(Boolean))].sort();
+    carriers.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c; opt.textContent = c;
+      carrierSel.appendChild(opt);
+    });
+    carrierSel.dataset.col = carrierCol;
+    carrierSel.style.display = "";
+  } else {
+    carrierSel.style.display = "none";
+  }
+
+  // Status filter — only show if a STATUS column exists
+  const statusCol = _columns.find(c => /STATUS/i.test(c)) || null;
+  const statusSel = document.getElementById("statusFilter");
+  statusSel.innerHTML = '<option value="">All statuses</option>';
+  if (statusCol) {
+    const statuses = [...new Set(_allRows.map(r => r[statusCol]).filter(Boolean))].sort();
+    statuses.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s; opt.textContent = fmtLabel(s);
+      statusSel.appendChild(opt);
+    });
+    statusSel.dataset.col = statusCol;
+    statusSel.style.display = "";
+  } else {
+    statusSel.style.display = "none";
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  KPI CARDS
+// ════════════════════════════════════════════════════════════════════════════
+function updateKPIs() {
+  document.getElementById("kpiTotal").textContent = _allRows.length;
+
+  const carrierCol = _columns.find(c => /CARRIER/i.test(c));
+  const carriers = carrierCol
+    ? new Set(_allRows.map(r => r[carrierCol]).filter(Boolean))
+    : new Set();
+  document.getElementById("kpiCarriers").textContent = carriers.size || "—";
+
+  const apptCol = _columns.find(c => /DELIVERY|APPOINTMENT|APPT|DATE/i.test(c));
+  if (apptCol) {
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
+
+    let todayCount = 0, weekCount = 0;
+    _allRows.forEach(r => {
+      const raw = r[apptCol] || "";
+      if (!raw) return;
+      const d = parseDate(raw);
+      if (!d) return;
+      const ds = d.toISOString().split("T")[0];
+      if (ds === todayStr) todayCount++;
+      if (d >= today && d <= weekEnd) weekCount++;
+    });
+
+    document.getElementById("kpiToday").textContent = todayCount;
+    document.getElementById("kpiWeek").textContent  = weekCount;
+  } else {
+    document.getElementById("kpiToday").textContent = "—";
+    document.getElementById("kpiWeek").textContent  = "—";
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  FILTER + SEARCH + RENDER
+// ════════════════════════════════════════════════════════════════════════════
+function filterTable() {
+  const query   = document.getElementById("searchInput").value.toLowerCase().trim();
+  const carrierSel = document.getElementById("carrierFilter");
+  const statusSel  = document.getElementById("statusFilter");
+  const carrierVal = carrierSel.value;
+  const statusVal  = statusSel.value;
+  const carrierCol = carrierSel.dataset.col || null;
+  const statusCol  = statusSel.dataset.col  || null;
+
+  _filtered = _allRows.filter(row => {
+    if (carrierVal && carrierCol && row[carrierCol] !== carrierVal) return false;
+    if (statusVal  && statusCol  && row[statusCol]  !== statusVal)  return false;
+    if (query) {
+      const haystack = Object.values(row).join(" ").toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+    return true;
+  });
+
+  if (_sortCol) {
+    _filtered.sort((a, b) => {
+      const av = (a[_sortCol] || "").toLowerCase();
+      const bv = (b[_sortCol] || "").toLowerCase();
+      return av < bv ? -_sortDir : av > bv ? _sortDir : 0;
+    });
+  }
+
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById("tableBody");
+  if (!_filtered.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="${_columns.length || 5}">
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">No shipments found</div>
+          <div class="empty-sub">Try adjusting your search or filters.</div>
+        </div>
+      </td></tr>`;
+    document.getElementById("resultCount").textContent = "0 results";
+    return;
+  }
+
+  const idCol     = _columns.find(c => /SHIPMENT_ID|SHIPMENT ID|ID/i.test(c));
+  const statusCol = _columns.find(c => /STATUS/i.test(c));
+  const apptCol   = _columns.find(c => /DELIVERY|APPOINTMENT|APPT/i.test(c));
+
+  tbody.innerHTML = _filtered.map(row => {
+    const tds = _columns.map(col => {
+      let val = row[col] || "";
+      let cls = "";
+
+      if (col === idCol) {
+        cls = "col-id";
+      } else if (col === statusCol && val) {
+        val = `<span class="badge ${statusBadgeClass(val)}">${fmtLabel(val)}</span>`;
+      } else if (col === apptCol && val) {
+        val = fmtAppt(val);
+      }
+
+      return `<td class="${cls}" title="${escHtml(row[col] || "")}">${val || '<span style="color:var(--tx4)">—</span>'}</td>`;
+    }).join("");
+    return `<tr>${tds}</tr>`;
+  }).join("");
+
+  const total = _allRows.length;
+  const shown = _filtered.length;
+  document.getElementById("resultCount").textContent =
+    shown === total ? `${total} shipments` : `${shown} of ${total} shipments`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  SORT
+// ════════════════════════════════════════════════════════════════════════════
+function sortBy(col, th) {
+  if (_sortCol === col) {
+    _sortDir = -_sortDir;
+  } else {
+    _sortCol = col;
+    _sortDir = 1;
+  }
+  document.querySelectorAll("th").forEach(t => t.classList.remove("sorted-asc", "sorted-desc"));
+  th.classList.add(_sortDir === 1 ? "sorted-asc" : "sorted-desc");
+  filterTable();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  REFRESH
+// ════════════════════════════════════════════════════════════════════════════
+function refreshData() {
+  loadData();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+function setStatus(cls, msg) {
+  const el = document.getElementById("statusBar");
+  el.className = "status-bar " + cls;
+  el.innerHTML = (cls === "loading"
+    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> `
+    : cls === "ok"  ? "✅ "
+    : "⚠️ ") + msg;
+}
+
+function setBtnSpinning(on) {
+  document.getElementById("btnRefresh").classList.toggle("spinning", on);
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+}
+
+function fmtLabel(str) {
+  return str.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function parseDate(raw) {
+  if (!raw) return null;
+  // "YYYY-MM-DD HH:MM" or "YYYY-MM-DDTHH:MM"
+  const ymd = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if (ymd) return new Date(ymd[1]+"-"+ymd[2].padStart(2,"0")+"-"+ymd[3].padStart(2,"0")+"T12:00:00");
+  // "MM/DD/YYYY"
+  const mdy = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (mdy) return new Date(mdy[3]+"-"+mdy[1].padStart(2,"0")+"-"+mdy[2].padStart(2,"0")+"T12:00:00");
+  const d = new Date(raw);
+  return isNaN(d) ? null : d;
+}
+
+function fmtAppt(raw) {
+  const d = parseDate(raw);
+  if (!d) return escHtml(raw);
+  const opts = { month: "short", day: "numeric", year: "numeric" };
+  const timePart = raw.match(/(\d{1,2}:\d{2})\s*(hrs?|am|pm)?/i);
+  let str = d.toLocaleDateString("en-US", opts);
+  if (timePart) str += " · " + timePart[0];
+  return str;
+}
+
+function statusBadgeClass(val) {
+  const v = val.toLowerCase().replace(/[\s_-]/g, "");
+  if (/delivered|complete/i.test(v))  return "badge-delivered";
+  if (/transit|moving|inmotion/i.test(v)) return "badge-intransit";
+  if (/pending|waiting|hold/i.test(v)) return "badge-pending";
+  if (/exception|delay|issue|problem/i.test(v)) return "badge-exception";
+  if (/scheduled|booked|confirmed/i.test(v)) return "badge-scheduled";
+  return "badge-default";
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════════════════
+loadData();
+setInterval(loadData, REFRESH_INTERVAL_MS);
+</script>
+</body>
+</html>
