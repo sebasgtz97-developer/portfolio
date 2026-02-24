@@ -6,14 +6,9 @@
 <title>Nuvocargo — Operations Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── NuvoOS Design System ─────────────────────────────────────────────────────
-   Matches bol-generator.html exactly.
-   Colors: teal #1C4A3E / lime #C8E64C / bg #F7F8F8 / panel #FFFFFF
-────────────────────────────────────────────────────────────────────────────── */
 :root {
   --teal:   #1C4A3E;
   --lime:   #C8E64C;
-  --lime-h: #b5d43a;
   --bg:     #F7F8F8;
   --panel:  #FFFFFF;
   --bd:     #E5E7EB;
@@ -27,409 +22,171 @@
   --green:  #16A34A;
   --amber:  #D97706;
 }
-*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
-  background: var(--bg);
-  color: var(--tx1);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;background:var(--bg);color:var(--tx1);min-height:100vh;-webkit-font-smoothing:antialiased}
 
-/* ── Header ─────────────────────────────────────────────────────────────────── */
-header {
-  background: var(--panel);
-  border-bottom: 1px solid var(--bd);
-  padding: 0 20px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.hleft { display: flex; align-items: center; gap: 0; }
-.hright { display: flex; align-items: center; gap: 8px; }
-.hlogo-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-.hlogo-text {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--teal);
-  letter-spacing: -0.02em;
-}
-.hlogo-text span { color: var(--lime); }
-.htitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--tx2);
-  margin-left: 12px;
-  padding-left: 12px;
-  border-left: 1px solid var(--bd);
-  line-height: 1;
-}
-.hbadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--green);
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
-  border-radius: 999px;
-  padding: 3px 9px;
-}
-.hbadge .dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%,100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: 0.5; transform: scale(0.85); }
-}
-.btn-refresh {
-  background: var(--panel);
-  color: var(--tx2);
-  border: 1px solid var(--bd);
-  padding: 0 14px;
-  height: 32px;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 12px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all .15s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-refresh:hover { background: var(--bg); border-color: var(--bd2); }
-.btn-refresh svg { transition: transform .4s; }
-.btn-refresh.spinning svg { animation: spin .6s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* Header */
+header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.hleft{display:flex;align-items:center}
+.hright{display:flex;align-items:center;gap:8px}
+.hlogo-text{font-size:15px;font-weight:700;color:var(--teal);letter-spacing:-0.02em}
+.hlogo-text span{color:var(--lime)}
+.htitle{font-size:13px;font-weight:600;color:var(--tx2);margin-left:12px;padding-left:12px;border-left:1px solid var(--bd);line-height:1}
+.hbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--green);background:#F0FDF4;border:1px solid #BBF7D0;border-radius:999px;padding:3px 9px}
+.hbadge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.btn-hdr{background:var(--panel);color:var(--tx2);border:1px solid var(--bd);padding:0 14px;height:32px;border-radius:6px;font-weight:500;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-hdr:hover{background:var(--bg);border-color:var(--bd2)}
+.btn-hdr.spinning svg{animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── Main layout ─────────────────────────────────────────────────────────────── */
-.main {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px 20px 40px;
-}
+/* Main */
+.main{max-width:1440px;margin:0 auto;padding:20px 20px 48px}
 
-/* ── Page title row ───────────────────────────────────────────────────────────── */
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  gap: 12px;
-}
-.page-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--tx1);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-.page-sub {
-  font-size: 12px;
-  color: var(--tx3);
-  margin-top: 3px;
-}
-.last-updated {
-  font-size: 11px;
-  color: var(--tx4);
-  white-space: nowrap;
-  padding-top: 4px;
-}
+/* Page header */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px}
+.page-title{font-size:20px;font-weight:700;color:var(--tx1);letter-spacing:-0.02em;line-height:1.2}
+.page-sub{font-size:12px;color:var(--tx3);margin-top:3px}
+.last-updated{font-size:11px;color:var(--tx4);white-space:nowrap;padding-top:4px}
 
-/* ── KPI cards ────────────────────────────────────────────────────────────────── */
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.kpi-card {
-  background: var(--panel);
-  border: 1px solid var(--bd);
-  border-radius: 10px;
-  padding: 14px 16px;
-}
-.kpi-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--tx3);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  margin-bottom: 6px;
-}
-.kpi-value {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--tx1);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-.kpi-value.accent { color: var(--teal); }
-.kpi-value.green  { color: var(--green); }
-.kpi-value.amber  { color: var(--amber); }
-.kpi-value.red    { color: var(--red); }
-.kpi-sub {
-  font-size: 11px;
-  color: var(--tx4);
-  margin-top: 4px;
-}
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi-card{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--tx1);line-height:1;letter-spacing:-0.02em}
+.kpi-value.accent{color:var(--teal)}
+.kpi-value.green{color:var(--green)}
+.kpi-value.amber{color:var(--amber)}
+.kpi-sub{font-size:11px;color:var(--tx4);margin-top:4px}
 
-/* ── Toolbar ─────────────────────────────────────────────────────────────────── */
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.search-wrap {
-  position: relative;
-  flex: 1;
-  min-width: 200px;
-  max-width: 360px;
-}
-.search-wrap svg {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--tx4);
-  pointer-events: none;
-}
-#searchInput {
-  width: 100%;
-  height: 32px;
-  padding: 0 10px 0 32px;
-  border: 1px solid var(--bd);
-  border-radius: 6px;
-  font-size: 12px;
-  font-family: inherit;
-  color: var(--tx1);
-  background: var(--panel);
-  transition: border-color .15s, box-shadow .15s;
-}
-#searchInput:focus {
-  outline: none;
-  border-color: var(--teal);
-  box-shadow: 0 0 0 3px rgba(28,74,62,.08);
-}
-.filter-select {
-  height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--bd);
-  border-radius: 6px;
-  font-size: 12px;
-  font-family: inherit;
-  color: var(--tx2);
-  background: var(--panel);
-  cursor: pointer;
-  transition: border-color .15s;
-}
-.filter-select:focus { outline: none; border-color: var(--teal); }
-.result-count {
-  font-size: 11px;
-  color: var(--tx4);
-  white-space: nowrap;
-}
+/* Status bar */
+.status-bar{display:none;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:500;margin-bottom:14px}
+.status-bar.loading{display:flex;background:#FFFBEB;color:var(--amber);border:1px solid #FDE68A}
+.status-bar.ok{display:flex;background:#F0FDF4;color:var(--green);border:1px solid #BBF7D0}
+.status-bar.err{display:flex;background:#FEF2F2;color:var(--red);border:1px solid #FECACA}
 
-/* ── Status bar ─────────────────────────────────────────────────────────────── */
-.status-bar {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 7px;
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 12px;
-}
-.status-bar.loading {
-  display: flex;
-  background: #FFFBEB;
-  color: var(--amber);
-  border: 1px solid #FDE68A;
-}
-.status-bar.ok {
-  display: flex;
-  background: #F0FDF4;
-  color: var(--green);
-  border: 1px solid #BBF7D0;
-}
-.status-bar.err {
-  display: flex;
-  background: #FEF2F2;
-  color: var(--red);
-  border: 1px solid #FECACA;
-}
+/* Search row */
+.search-row{display:flex;align-items:flex-end;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.srch-field{display:flex;flex-direction:column;gap:3px}
+.srch-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+.srch-iw{position:relative}
+.srch-iw svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--tx4);pointer-events:none}
+.srch-input{height:32px;padding:0 8px 0 28px;width:180px;border:1px solid var(--bd);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx1);background:var(--panel);transition:border-color .15s,box-shadow .15s}
+.srch-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08)}
+.srch-input.has-value{border-color:var(--teal);background:#F0FDF4}
+.srch-input:disabled{opacity:.4;cursor:not-allowed;background:var(--bg)}
+.search-spacer{flex:1}
+.result-count{font-size:11px;color:var(--tx4);white-space:nowrap;align-self:flex-end;padding-bottom:8px}
 
-/* ── Table ───────────────────────────────────────────────────────────────────── */
-.table-wrap {
-  background: var(--panel);
-  border: 1px solid var(--bd);
-  border-radius: 10px;
-  overflow: hidden;
-}
-.table-scroll {
-  overflow-x: auto;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-thead tr {
-  background: #F9FAFB;
-  border-bottom: 1px solid var(--bd);
-}
-th {
-  padding: 9px 12px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--tx3);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-  position: relative;
-}
-th:hover { color: var(--tx1); background: #F3F4F6; }
-th .sort-icon {
-  display: inline-block;
-  margin-left: 4px;
-  opacity: 0.35;
-  font-size: 9px;
-}
-th.sorted-asc .sort-icon::after  { content: "▲"; opacity: 1; }
-th.sorted-desc .sort-icon::after { content: "▼"; opacity: 1; }
-th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after { content: "⇅"; }
-td {
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--bd);
-  color: var(--tx2);
-  white-space: nowrap;
-  max-width: 240px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: #F9FAFB; }
-tbody tr { transition: background .1s; }
+/* Filter bar */
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;margin-bottom:10px;background:var(--panel);border:1px solid var(--bd);border-radius:8px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+.fsep{width:1px;height:36px;background:var(--bd);flex-shrink:0;margin:0 2px}
+.fsel{height:28px;padding:0 8px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-family:inherit;color:var(--tx2);background:var(--panel);cursor:pointer;transition:border-color .15s;max-width:160px;min-width:110px}
+.fsel:focus{outline:none;border-color:var(--teal)}
+.fsel.active{border-color:var(--teal);background:#F0FDF4;color:var(--teal);font-weight:500}
+.date-pair{display:flex;align-items:center;gap:4px}
+.fdate{height:28px;padding:0 6px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-family:inherit;color:var(--tx2);background:var(--panel);transition:border-color .15s;width:130px}
+.fdate:focus{outline:none;border-color:var(--teal)}
+.fdate.active{border-color:var(--teal);background:#EFF6FF}
+.date-arrow{font-size:10px;color:var(--tx4)}
+.filter-actions{display:flex;align-items:flex-end;gap:6px;padding-bottom:1px;margin-left:auto}
+.btn-clear{height:28px;padding:0 10px;background:none;border:1px solid var(--bd);color:var(--tx3);border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn-clear:hover{border-color:var(--red);color:var(--red);background:#FEF2F2}
+.active-count{display:none;height:18px;padding:0 6px;background:var(--teal);color:#fff;border-radius:999px;font-size:10px;font-weight:600;align-items:center;justify-content:center;white-space:nowrap}
+.active-count.show{display:inline-flex}
 
-/* Shipment ID column */
-td.col-id {
-  font-weight: 600;
-  color: var(--blue);
-  font-size: 12px;
-}
+/* Views bar */
+.views-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;min-height:30px}
+.views-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.view-pills{display:flex;gap:6px;flex-wrap:wrap}
+.view-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 6px 3px 10px;background:#EEF2FF;border:1px solid #C7D2FE;color:#3730A3;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+.view-pill:hover{background:#E0E7FF;border-color:#A5B4FC}
+.view-pill.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.pill-del{width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.1);border:none;color:inherit;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .1s;flex-shrink:0;font-family:inherit;line-height:1}
+.pill-del:hover{background:rgba(0,0,0,.25)}
+.view-pill.active .pill-del{background:rgba(255,255,255,.2)}
+.view-pill.active .pill-del:hover{background:rgba(255,255,255,.4)}
+.views-empty{font-size:11px;color:var(--tx4);font-style:italic}
+.save-view-wrap{position:relative}
+.btn-save-view{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--panel);border:1px dashed var(--bd2);color:var(--tx3);border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-save-view:hover{border-color:var(--teal);color:var(--teal);background:#F0FDF4}
+.save-popover{position:absolute;top:calc(100% + 6px);left:0;z-index:100;background:var(--panel);border:1px solid var(--bd);border-radius:8px;padding:10px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,.1);white-space:nowrap}
+.save-popover.hidden{display:none}
+.save-popover input{height:28px;padding:0 8px;width:164px;border:1px solid var(--bd);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx1);background:var(--panel);transition:border-color .15s}
+.save-popover input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08)}
+.btn-pop-ok{height:28px;padding:0 12px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn-pop-ok:hover{background:#163d32}
+.btn-pop-cancel{height:28px;padding:0 10px;background:none;border:1px solid var(--bd);color:var(--tx3);border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-pop-cancel:hover{border-color:var(--tx3);color:var(--tx1)}
 
-/* Empty state */
-.empty-state {
-  padding: 48px 24px;
-  text-align: center;
-}
-.empty-icon {
-  font-size: 32px;
-  margin-bottom: 10px;
-  opacity: .4;
-}
-.empty-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--tx2);
-  margin-bottom: 4px;
-}
-.empty-sub {
-  font-size: 12px;
-  color: var(--tx4);
-}
+/* Table */
+.table-wrap{background:var(--panel);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:#F9FAFB;border-bottom:2px solid var(--bd)}
+th{padding:0;text-align:left;font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:default;user-select:none;position:relative;transition:background .12s}
+th:hover{background:#F3F4F6;color:var(--tx1)}
+th.drag-over{background:#EFF6FF !important;outline:2px solid var(--blue);outline-offset:-2px}
+th.dragging{opacity:.3}
+.th-inner{display:flex;align-items:center;padding:9px 12px;gap:0}
+.drag-handle{cursor:grab;color:var(--tx4);font-size:13px;margin-right:6px;opacity:.3;transition:opacity .15s;line-height:1;flex-shrink:0}
+th:hover .drag-handle{opacity:.85}
+.th-sort{display:inline-flex;align-items:center;gap:4px;cursor:pointer;flex:1}
+.sort-icon{font-size:9px;opacity:.35}
+th.sorted-asc .sort-icon,.th.sorted-desc .sort-icon{opacity:1}
+th.sorted-asc .sort-icon::after{content:"▲";opacity:1}
+th.sorted-desc .sort-icon::after{content:"▼";opacity:1}
+th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after{content:"⇅"}
+td{padding:9px 12px;border-bottom:1px solid var(--bd);color:var(--tx2);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#F9FAFB}
+tbody tr{transition:background .08s}
+td.col-id{font-weight:600;color:var(--blue)}
 
-/* Skeleton loader */
-.skeleton-row td {
-  padding: 10px 12px;
-}
-.skel {
-  height: 12px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.2s infinite;
-}
-@keyframes shimmer { to { background-position: -200% 0; } }
+/* Empty / skeleton */
+.empty-state{padding:52px 24px;text-align:center}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.35}
+.empty-title{font-size:14px;font-weight:600;color:var(--tx2);margin-bottom:4px}
+.empty-sub{font-size:12px;color:var(--tx4)}
+.skel{height:12px;border-radius:4px;background:linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
 
-/* ── Status badges ───────────────────────────────────────────────────────────── */
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.badge-delivered  { background: #F0FDF4; color: var(--green);  border: 1px solid #BBF7D0; }
-.badge-intransit  { background: #EFF6FF; color: var(--blue);   border: 1px solid #BFDBFE; }
-.badge-pending    { background: #FFFBEB; color: var(--amber);  border: 1px solid #FDE68A; }
-.badge-exception  { background: #FEF2F2; color: var(--red);    border: 1px solid #FECACA; }
-.badge-scheduled  { background: #F5F3FF; color: #6D28D9;       border: 1px solid #DDD6FE; }
-.badge-default    { background: #F9FAFB; color: var(--tx3);    border: 1px solid var(--bd); }
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.badge-delivered{background:#F0FDF4;color:var(--green);border:1px solid #BBF7D0}
+.badge-intransit{background:#EFF6FF;color:var(--blue);border:1px solid #BFDBFE}
+.badge-pending{background:#FFFBEB;color:var(--amber);border:1px solid #FDE68A}
+.badge-exception{background:#FEF2F2;color:var(--red);border:1px solid #FECACA}
+.badge-scheduled{background:#F5F3FF;color:#6D28D9;border:1px solid #DDD6FE}
+.badge-default{background:#F9FAFB;color:var(--tx3);border:1px solid var(--bd)}
 
-/* ── Responsive ──────────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .kpi-row { grid-template-columns: repeat(2, 1fr); }
-  .page-header { flex-direction: column; gap: 4px; }
-}
-@media (max-width: 560px) {
-  .kpi-row { grid-template-columns: 1fr 1fr; }
-  .main { padding: 14px 14px 32px; }
-}
+/* Responsive */
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.page-header{flex-direction:column;gap:4px}}
+@media(max-width:560px){.kpi-row{grid-template-columns:1fr 1fr}.main{padding:14px 14px 32px}.srch-input{width:140px}}
 </style>
 </head>
 <body>
 
-<!-- ── Header ── -->
 <header>
   <div class="hleft">
-    <div class="hlogo-wrap">
-      <span class="hlogo-text">nuvo<span>cargo</span></span>
-    </div>
+    <span class="hlogo-text">nuvo<span>cargo</span></span>
     <span class="htitle">Operations Dashboard</span>
   </div>
   <div class="hright">
-    <span class="hbadge" id="liveBadge">
-      <span class="dot"></span>
-      Live
-    </span>
-    <button class="btn-refresh" id="btnRefresh" onclick="refreshData()">
+    <span class="hbadge"><span class="dot"></span>Live</span>
+    <button class="btn-hdr" id="btnRefresh" onclick="refreshData()">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/>
-        <path d="M12 2v3.5H8.5"/>
+        <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/><path d="M12 2v3.5H8.5"/>
       </svg>
       Refresh
     </button>
   </div>
 </header>
 
-<!-- ── Main ── -->
 <div class="main">
 
-  <!-- Page title -->
   <div class="page-header">
     <div>
       <div class="page-title">Shipment Monitor</div>
@@ -438,54 +195,99 @@ td.col-id {
     <div class="last-updated" id="lastUpdated">—</div>
   </div>
 
-  <!-- KPI cards -->
-  <div class="kpi-row" id="kpiRow">
-    <div class="kpi-card">
-      <div class="kpi-label">Total Shipments</div>
-      <div class="kpi-value accent" id="kpiTotal">—</div>
-      <div class="kpi-sub">In system</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Unique Carriers</div>
-      <div class="kpi-value" id="kpiCarriers">—</div>
-      <div class="kpi-sub">Active carriers</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Scheduled Today</div>
-      <div class="kpi-value green" id="kpiToday">—</div>
-      <div class="kpi-sub">Delivery appointments</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">This Week</div>
-      <div class="kpi-value amber" id="kpiWeek">—</div>
-      <div class="kpi-sub">Upcoming deliveries</div>
-    </div>
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Total Shipments</div><div class="kpi-value accent" id="kpiTotal">—</div><div class="kpi-sub">In system</div></div>
+    <div class="kpi-card"><div class="kpi-label">Unique Carriers</div><div class="kpi-value" id="kpiCarriers">—</div><div class="kpi-sub">Active carriers</div></div>
+    <div class="kpi-card"><div class="kpi-label">Scheduled Today</div><div class="kpi-value green" id="kpiToday">—</div><div class="kpi-sub">Delivery appointments</div></div>
+    <div class="kpi-card"><div class="kpi-label">This Week</div><div class="kpi-value amber" id="kpiWeek">—</div><div class="kpi-sub">Upcoming deliveries</div></div>
   </div>
 
-  <!-- Status bar -->
   <div class="status-bar loading" id="statusBar">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite">
-      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-    </svg>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
     Loading shipment data from Google Sheets…
   </div>
 
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-        <circle cx="5.5" cy="5.5" r="4"/>
-        <path d="M12 12L8.5 8.5"/>
-      </svg>
-      <input type="text" id="searchInput" placeholder="Search by shipment ID, carrier, trailer…" oninput="filterTable()">
+  <!-- Search row -->
+  <div class="search-row">
+    <div class="srch-field">
+      <span class="srch-label">Shipment ID</span>
+      <div class="srch-iw">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
+        <input class="srch-input" id="srchShipment" placeholder="e.g. SH-12345" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+      </div>
     </div>
-    <select class="filter-select" id="carrierFilter" onchange="filterTable()">
-      <option value="">All carriers</option>
-    </select>
-    <select class="filter-select" id="statusFilter" onchange="filterTable()">
-      <option value="">All statuses</option>
-    </select>
+    <div class="srch-field">
+      <span class="srch-label">Trailer #</span>
+      <div class="srch-iw">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
+        <input class="srch-input" id="srchTrailer" placeholder="e.g. AL15179" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+      </div>
+    </div>
+    <div class="srch-field">
+      <span class="srch-label">Customer Ref</span>
+      <div class="srch-iw">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
+        <input class="srch-input" id="srchRef" placeholder="Reference / PO #" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+      </div>
+    </div>
+    <div class="search-spacer"></div>
     <span class="result-count" id="resultCount"></span>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar" id="filterBar">
+    <div class="fg" id="fgCarrier">
+      <span class="fg-label">Carrier</span>
+      <select class="fsel" id="fCarrier" onchange="onFselChange(this);filterTable()"><option value="">All carriers</option></select>
+    </div>
+    <div class="fg" id="fgShipper" style="display:none">
+      <span class="fg-label">Shipper</span>
+      <select class="fsel" id="fShipper" onchange="onFselChange(this);filterTable()"><option value="">All shippers</option></select>
+    </div>
+    <div class="fg" id="fgStatus" style="display:none">
+      <span class="fg-label">Status</span>
+      <select class="fsel" id="fStatus" onchange="onFselChange(this);filterTable()"><option value="">All statuses</option></select>
+    </div>
+    <div class="fsep"></div>
+    <div class="fg" id="fgPickup" style="display:none">
+      <span class="fg-label">Pickup date</span>
+      <div class="date-pair">
+        <input type="date" class="fdate" id="fPickupFrom" onchange="onFdateChange(this);filterTable()">
+        <span class="date-arrow">→</span>
+        <input type="date" class="fdate" id="fPickupTo" onchange="onFdateChange(this);filterTable()">
+      </div>
+    </div>
+    <div class="fsep" id="fgPickupSep" style="display:none"></div>
+    <div class="fg" id="fgDelivery">
+      <span class="fg-label">Delivery date</span>
+      <div class="date-pair">
+        <input type="date" class="fdate" id="fDeliveryFrom" onchange="onFdateChange(this);filterTable()">
+        <span class="date-arrow">→</span>
+        <input type="date" class="fdate" id="fDeliveryTo" onchange="onFdateChange(this);filterTable()">
+      </div>
+    </div>
+    <div class="filter-actions">
+      <span class="active-count" id="activeCount"></span>
+      <button class="btn-clear" onclick="clearAllFilters()">Clear filters</button>
+    </div>
+  </div>
+
+  <!-- Views bar -->
+  <div class="views-bar">
+    <span class="views-label">Views</span>
+    <div class="view-pills" id="viewPills"></div>
+    <div class="save-view-wrap">
+      <button class="btn-save-view" id="btnSaveView" onclick="openSaveView()">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5.5 1v9M1 5.5h9"/></svg>
+        Save view
+      </button>
+      <div class="save-popover hidden" id="savePopover">
+        <input id="viewNameInput" placeholder="Name this view…" maxlength="32"
+               onkeydown="if(event.key==='Enter')confirmSaveView();if(event.key==='Escape')closeSaveView()">
+        <button class="btn-pop-ok" onclick="confirmSaveView()">Save</button>
+        <button class="btn-pop-cancel" onclick="closeSaveView()">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <!-- Table -->
@@ -494,372 +296,466 @@ td.col-id {
       <table id="dataTable">
         <thead id="tableHead"></thead>
         <tbody id="tableBody">
-          <!-- skeleton rows while loading -->
-          <tr class="skeleton-row">
-            <td><div class="skel" style="width:70px"></div></td>
-            <td><div class="skel" style="width:140px"></div></td>
-            <td><div class="skel" style="width:90px"></div></td>
-            <td><div class="skel" style="width:110px"></div></td>
-            <td><div class="skel" style="width:80px"></div></td>
-          </tr>
-          <tr class="skeleton-row">
-            <td><div class="skel" style="width:80px"></div></td>
-            <td><div class="skel" style="width:160px"></div></td>
-            <td><div class="skel" style="width:75px"></div></td>
-            <td><div class="skel" style="width:120px"></div></td>
-            <td><div class="skel" style="width:90px"></div></td>
-          </tr>
-          <tr class="skeleton-row">
-            <td><div class="skel" style="width:65px"></div></td>
-            <td><div class="skel" style="width:130px"></div></td>
-            <td><div class="skel" style="width:100px"></div></td>
-            <td><div class="skel" style="width:105px"></div></td>
-            <td><div class="skel" style="width:85px"></div></td>
-          </tr>
+          <tr><td><div class="skel" style="width:70px"></div></td><td><div class="skel" style="width:150px"></div></td><td><div class="skel" style="width:90px"></div></td><td><div class="skel" style="width:115px"></div></td><td><div class="skel" style="width:80px"></div></td></tr>
+          <tr><td><div class="skel" style="width:80px"></div></td><td><div class="skel" style="width:170px"></div></td><td><div class="skel" style="width:75px"></div></td><td><div class="skel" style="width:125px"></div></td><td><div class="skel" style="width:90px"></div></td></tr>
+          <tr><td><div class="skel" style="width:65px"></div></td><td><div class="skel" style="width:140px"></div></td><td><div class="skel" style="width:100px"></div></td><td><div class="skel" style="width:108px"></div></td><td><div class="skel" style="width:85px"></div></td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-</div><!-- /main -->
+</div>
 
 <script>
-// ════════════════════════════════════════════════════════════════════════════
-//  CONFIG — same Google Sheet as the BOL generator
-// ════════════════════════════════════════════════════════════════════════════
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // auto-refresh every 5 min
+// ── Config ──────────────────────────────────────────────────────────────────
+const SHEET_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
+const REFRESH_MS  = 5 * 60 * 1000;
+const LS_VIEWS    = "nuvo_ops_views";
+const LS_COLS     = "nuvo_ops_col_order";
 
-// ════════════════════════════════════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════════════════════════════════════
-let _allRows    = [];   // raw parsed CSV rows
-let _columns    = [];   // column names from CSV headers
-let _filtered   = [];   // rows after search/filter
-let _sortCol    = null;
-let _sortDir    = 1;    // 1 = asc, -1 = desc
+// ── State ────────────────────────────────────────────────────────────────────
+let _allRows  = [];
+let _columns  = [];
+let _colOrder = [];
+let _filtered = [];
+let _sortCol  = null;
+let _sortDir  = 1;
+let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, status:null };
+let _dragSrcIdx = null;
+let _isDragging = false;
+let _views      = [];
+let _activeView = null;
 
-// ════════════════════════════════════════════════════════════════════════════
-//  CSV PARSER  (same as bol-generator)
-// ════════════════════════════════════════════════════════════════════════════
-function _splitCSVLine(line) {
-  const out = []; let inQ = false, cur = "";
-  for (const ch of line) {
-    if (ch === '"')          { inQ = !inQ; }
-    else if (ch === ',' && !inQ) { out.push(cur); cur = ""; }
-    else                     cur += ch;
+// ── CSV parser ───────────────────────────────────────────────────────────────
+function splitCSVLine(line){
+  const out=[];let inQ=false,cur="";
+  for(const ch of line){
+    if(ch==='"')inQ=!inQ;
+    else if(ch===','&&!inQ){out.push(cur);cur="";}
+    else cur+=ch;
   }
-  out.push(cur);
-  return out;
+  out.push(cur);return out;
 }
-
-function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (!lines.length) return { columns: [], rows: [] };
-  const columns = _splitCSVLine(lines[0]).map(h => h.trim());
-  const rows = lines.slice(1).map(line => {
-    const vals = _splitCSVLine(line);
-    const row = {};
-    columns.forEach((h, i) => { row[h] = (vals[i] || "").trim(); });
+function parseCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length)return{columns:[],rows:[]};
+  const columns=splitCSVLine(lines[0]).map(h=>h.trim());
+  const rows=lines.slice(1).map(line=>{
+    const vals=splitCSVLine(line);
+    const row={};
+    columns.forEach((h,i)=>{row[h]=(vals[i]||"").trim();});
     return row;
   });
-  return { columns, rows };
+  return{columns,rows};
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  FETCH DATA
-// ════════════════════════════════════════════════════════════════════════════
-async function loadData() {
-  setStatus("loading", "Loading shipment data from Google Sheets…");
+// ── Detect semantic columns ───────────────────────────────────────────────────
+function detectCols(cols){
+  const find=re=>cols.find(c=>re.test(c))||null;
+  _cm.shipmentId = find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$/i);
+  _cm.carrier    = find(/^CARRIER/i);
+  _cm.shipper    = find(/SHIPPER|CONSIGNOR|SHIP.FROM|ORIGIN.COMPANY/i);
+  _cm.trailer    = find(/TRAILER/i);
+  _cm.ref        = find(/CUSTOMER.?REF|CUST.?REF|REFERENCE|^PO.?NUM|^PO$/i);
+  _cm.pickup     = find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
+  _cm.delivery   = find(/DELIVERY|APPOINTMENT|APPT/i);
+  _cm.status     = find(/^STATUS$/i);
+}
+
+// ── Load data ─────────────────────────────────────────────────────────────────
+async function loadData(){
+  setStatus("loading","Loading shipment data from Google Sheets…");
   setBtnSpinning(true);
+  try{
+    const resp=await fetch(SHEET_URL+"&t="+Date.now());
+    if(!resp.ok)throw new Error("HTTP "+resp.status);
+    const{columns,rows}=parseCSV(await resp.text());
+    _columns=columns;
+    _allRows=rows.filter(r=>Object.values(r).some(v=>v));
+    detectCols(_columns);
 
-  try {
-    const resp = await fetch(SHEET_CSV_URL + "&t=" + Date.now()); // cache-bust
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    const text = await resp.text();
-    const { columns, rows } = parseCSV(text);
+    // restore or init column order
+    const saved=tryJSON(localStorage.getItem(LS_COLS));
+    if(saved&&Array.isArray(saved)){
+      const valid=saved.filter(c=>_columns.includes(c));
+      const added=_columns.filter(c=>!valid.includes(c));
+      _colOrder=[...valid,...added];
+    }else{
+      _colOrder=[..._columns];
+    }
 
-    _columns = columns;
-    _allRows = rows.filter(r => Object.values(r).some(v => v)); // skip empty rows
-
-    buildTableHeader();
-    buildFilterOptions();
+    buildHeader();
+    buildFilters();
     updateKPIs();
     filterTable();
 
-    const n = _allRows.length;
-    setStatus("ok", "✅ " + n + " shipment" + (n === 1 ? "" : "s") + " loaded — last synced " + fmtTime(new Date()));
-    document.getElementById("lastUpdated").textContent = "Last updated: " + fmtTime(new Date());
-
-  } catch (e) {
-    setStatus("err", "⚠️ Could not load data from Google Sheets. Check your connection or sheet permissions.");
-    document.getElementById("tableBody").innerHTML = `
-      <tr><td colspan="99">
-        <div class="empty-state">
-          <div class="empty-icon">⚠️</div>
-          <div class="empty-title">Unable to load data</div>
-          <div class="empty-sub">Check your connection or verify the sheet is published to the web.</div>
-        </div>
-      </td></tr>`;
-    console.error("Sheet load failed:", e);
+    const n=_allRows.length;
+    setStatus("ok","✅ "+n+" shipment"+(n===1?"":"s")+" loaded · last synced "+fmtTime(new Date()));
+    document.getElementById("lastUpdated").textContent="Last updated: "+fmtTime(new Date());
+  }catch(e){
+    setStatus("err","⚠️ Could not load data — check your connection or verify the sheet is published.");
+    document.getElementById("tableBody").innerHTML='<tr><td colspan="99"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Unable to load data</div><div class="empty-sub">Verify the sheet is published to the web.</div></div></td></tr>';
+    console.error(e);
   }
-
   setBtnSpinning(false);
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  BUILD TABLE HEADER  (dynamic, based on CSV columns)
-// ════════════════════════════════════════════════════════════════════════════
-function buildTableHeader() {
-  const head = document.getElementById("tableHead");
-  head.innerHTML = "<tr>" + _columns.map((col, i) => {
-    const label = col.replace(/_/g, " ");
-    return `<th data-col="${col}" onclick="sortBy('${col}', this)">
-              ${label}
-              <span class="sort-icon"></span>
-            </th>`;
-  }).join("") + "</tr>";
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-//  BUILD FILTER DROPDOWNS
-// ════════════════════════════════════════════════════════════════════════════
-function buildFilterOptions() {
-  // Carrier filter
-  const carrierCol = _columns.find(c => /CARRIER/i.test(c)) || null;
-  const carrierSel = document.getElementById("carrierFilter");
-  carrierSel.innerHTML = '<option value="">All carriers</option>';
-  if (carrierCol) {
-    const carriers = [...new Set(_allRows.map(r => r[carrierCol]).filter(Boolean))].sort();
-    carriers.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c; opt.textContent = c;
-      carrierSel.appendChild(opt);
+// ── Build table header (draggable + sortable) ─────────────────────────────────
+function buildHeader(){
+  document.getElementById("tableHead").innerHTML="<tr>"+_colOrder.map((col,idx)=>`
+    <th draggable="true" data-col="${ea(col)}" data-idx="${idx}"
+        ondragstart="dStart(event)" ondragover="dOver(event)"
+        ondrop="dDrop(event)" ondragend="dEnd(event)">
+      <div class="th-inner">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <span class="th-sort" onclick="if(!_isDragging)sortBy('${ea(col)}',this.closest('th'))">
+          ${eh(col.replace(/_/g," "))}
+          <span class="sort-icon"></span>
+        </span>
+      </div>
+    </th>`).join("")+"</tr>";
+  if(_sortCol){
+    document.querySelectorAll("th").forEach(th=>{
+      if(th.dataset.col===_sortCol)
+        th.classList.add(_sortDir===1?"sorted-asc":"sorted-desc");
     });
-    carrierSel.dataset.col = carrierCol;
-    carrierSel.style.display = "";
-  } else {
-    carrierSel.style.display = "none";
-  }
-
-  // Status filter — only show if a STATUS column exists
-  const statusCol = _columns.find(c => /STATUS/i.test(c)) || null;
-  const statusSel = document.getElementById("statusFilter");
-  statusSel.innerHTML = '<option value="">All statuses</option>';
-  if (statusCol) {
-    const statuses = [...new Set(_allRows.map(r => r[statusCol]).filter(Boolean))].sort();
-    statuses.forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s; opt.textContent = fmtLabel(s);
-      statusSel.appendChild(opt);
-    });
-    statusSel.dataset.col = statusCol;
-    statusSel.style.display = "";
-  } else {
-    statusSel.style.display = "none";
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  KPI CARDS
-// ════════════════════════════════════════════════════════════════════════════
-function updateKPIs() {
-  document.getElementById("kpiTotal").textContent = _allRows.length;
+// ── Column drag & drop ────────────────────────────────────────────────────────
+function dStart(e){
+  _isDragging=true;
+  _dragSrcIdx=parseInt(e.currentTarget.dataset.idx);
+  e.currentTarget.classList.add("dragging");
+  e.dataTransfer.effectAllowed="move";
+  e.dataTransfer.setData("text/plain",_dragSrcIdx);
+}
+function dOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect="move";
+  document.querySelectorAll("th").forEach(t=>t.classList.remove("drag-over"));
+  e.currentTarget.classList.add("drag-over");
+}
+function dDrop(e){
+  e.preventDefault();
+  const dest=parseInt(e.currentTarget.dataset.idx);
+  if(_dragSrcIdx===null||_dragSrcIdx===dest)return;
+  const moved=_colOrder.splice(_dragSrcIdx,1)[0];
+  _colOrder.splice(dest,0,moved);
+  localStorage.setItem(LS_COLS,JSON.stringify(_colOrder));
+  clearActiveView();
+  buildHeader();
+  renderTable();
+}
+function dEnd(e){
+  e.currentTarget.classList.remove("dragging");
+  document.querySelectorAll("th").forEach(t=>t.classList.remove("drag-over"));
+  setTimeout(()=>{_isDragging=false;_dragSrcIdx=null;},120);
+}
 
-  const carrierCol = _columns.find(c => /CARRIER/i.test(c));
-  const carriers = carrierCol
-    ? new Set(_allRows.map(r => r[carrierCol]).filter(Boolean))
-    : new Set();
-  document.getElementById("kpiCarriers").textContent = carriers.size || "—";
+// ── Sort ──────────────────────────────────────────────────────────────────────
+function sortBy(col,th){
+  if(_sortCol===col)_sortDir=-_sortDir;
+  else{_sortCol=col;_sortDir=1;}
+  document.querySelectorAll("th").forEach(t=>t.classList.remove("sorted-asc","sorted-desc"));
+  th.classList.add(_sortDir===1?"sorted-asc":"sorted-desc");
+  filterTable();
+}
 
-  const apptCol = _columns.find(c => /DELIVERY|APPOINTMENT|APPT|DATE/i.test(c));
-  if (apptCol) {
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-    const weekEnd = new Date(today); weekEnd.setDate(today.getDate() + 7);
-
-    let todayCount = 0, weekCount = 0;
-    _allRows.forEach(r => {
-      const raw = r[apptCol] || "";
-      if (!raw) return;
-      const d = parseDate(raw);
-      if (!d) return;
-      const ds = d.toISOString().split("T")[0];
-      if (ds === todayStr) todayCount++;
-      if (d >= today && d <= weekEnd) weekCount++;
-    });
-
-    document.getElementById("kpiToday").textContent = todayCount;
-    document.getElementById("kpiWeek").textContent  = weekCount;
-  } else {
-    document.getElementById("kpiToday").textContent = "—";
-    document.getElementById("kpiWeek").textContent  = "—";
+// ── Build filter dropdowns ────────────────────────────────────────────────────
+function buildFilters(){
+  populateSel("fCarrier",_cm.carrier,"All carriers","fgCarrier",true);
+  populateSel("fShipper",_cm.shipper,"All shippers","fgShipper",false);
+  populateSel("fStatus", _cm.status, "All statuses","fgStatus", false);
+  showEl("fgPickup",   !!_cm.pickup);
+  showEl("fgPickupSep",!!_cm.pickup);
+  // disable search inputs if column missing
+  disableInput("srchShipment",!_cm.shipmentId,_cm.shipmentId?"e.g. SH-12345":"Column not in sheet");
+  disableInput("srchTrailer", !_cm.trailer,   _cm.trailer   ?"e.g. AL15179":"Column not in sheet");
+  disableInput("srchRef",     !_cm.ref,       _cm.ref       ?"Reference / PO #":"Column not in sheet");
+}
+function populateSel(id,col,placeholder,groupId,alwaysShow){
+  const sel=document.getElementById(id);
+  sel.innerHTML=`<option value="">${placeholder}</option>`;
+  if(col){
+    const vals=[...new Set(_allRows.map(r=>r[col]).filter(Boolean))].sort();
+    vals.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);});
+    sel.dataset.col=col;
+    showEl(groupId,true);
+  }else{
+    sel.dataset.col="";
+    showEl(groupId,alwaysShow);
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  FILTER + SEARCH + RENDER
-// ════════════════════════════════════════════════════════════════════════════
-function filterTable() {
-  const query   = document.getElementById("searchInput").value.toLowerCase().trim();
-  const carrierSel = document.getElementById("carrierFilter");
-  const statusSel  = document.getElementById("statusFilter");
-  const carrierVal = carrierSel.value;
-  const statusVal  = statusSel.value;
-  const carrierCol = carrierSel.dataset.col || null;
-  const statusCol  = statusSel.dataset.col  || null;
+// ── KPIs ──────────────────────────────────────────────────────────────────────
+function updateKPIs(){
+  document.getElementById("kpiTotal").textContent=_allRows.length;
+  const carriers=_cm.carrier?new Set(_allRows.map(r=>r[_cm.carrier]).filter(Boolean)):new Set();
+  document.getElementById("kpiCarriers").textContent=carriers.size||"—";
+  const apptCol=_cm.delivery||_cm.pickup;
+  if(apptCol){
+    const today=new Date();today.setHours(0,0,0,0);
+    const todayStr=today.toISOString().split("T")[0];
+    const weekEnd=new Date(today);weekEnd.setDate(today.getDate()+7);
+    let tod=0,wk=0;
+    _allRows.forEach(r=>{
+      const d=parseDate(r[apptCol]||"");
+      if(!d)return;
+      if(d.toISOString().split("T")[0]===todayStr)tod++;
+      if(d>=today&&d<=weekEnd)wk++;
+    });
+    document.getElementById("kpiToday").textContent=tod;
+    document.getElementById("kpiWeek").textContent=wk;
+  }else{
+    document.getElementById("kpiToday").textContent="—";
+    document.getElementById("kpiWeek").textContent="—";
+  }
+}
 
-  _filtered = _allRows.filter(row => {
-    if (carrierVal && carrierCol && row[carrierCol] !== carrierVal) return false;
-    if (statusVal  && statusCol  && row[statusCol]  !== statusVal)  return false;
-    if (query) {
-      const haystack = Object.values(row).join(" ").toLowerCase();
-      if (!haystack.includes(query)) return false;
+// ── Filter + render ───────────────────────────────────────────────────────────
+function filterTable(){
+  updateActiveCount();
+  const sShip=gv("srchShipment").toLowerCase();
+  const sTrl =gv("srchTrailer").toLowerCase();
+  const sRef =gv("srchRef").toLowerCase();
+  const vCar =gv("fCarrier");
+  const vShip=gv("fShipper");
+  const vStat=gv("fStatus");
+  const pfrom=gv("fPickupFrom");
+  const pto  =gv("fPickupTo");
+  const dfrom=gv("fDeliveryFrom");
+  const dto  =gv("fDeliveryTo");
+
+  _filtered=_allRows.filter(row=>{
+    if(sShip&&_cm.shipmentId&&!(row[_cm.shipmentId]||"").toLowerCase().includes(sShip))return false;
+    if(sTrl &&_cm.trailer   &&!(row[_cm.trailer]   ||"").toLowerCase().includes(sTrl)) return false;
+    if(sRef &&_cm.ref       &&!(row[_cm.ref]        ||"").toLowerCase().includes(sRef)) return false;
+    if(vCar &&_cm.carrier &&row[_cm.carrier]!==vCar)  return false;
+    if(vShip&&_cm.shipper &&row[_cm.shipper]!==vShip) return false;
+    if(vStat&&_cm.status  &&row[_cm.status] !==vStat) return false;
+    if((pfrom||pto)&&_cm.pickup){
+      const d=parseDate(row[_cm.pickup]||"");
+      if(!d)return false;
+      if(pfrom&&d<new Date(pfrom+"T00:00:00"))return false;
+      if(pto  &&d>new Date(pto  +"T23:59:59"))return false;
+    }
+    if((dfrom||dto)&&_cm.delivery){
+      const d=parseDate(row[_cm.delivery]||"");
+      if(!d)return false;
+      if(dfrom&&d<new Date(dfrom+"T00:00:00"))return false;
+      if(dto  &&d>new Date(dto  +"T23:59:59"))return false;
     }
     return true;
   });
 
-  if (_sortCol) {
-    _filtered.sort((a, b) => {
-      const av = (a[_sortCol] || "").toLowerCase();
-      const bv = (b[_sortCol] || "").toLowerCase();
-      return av < bv ? -_sortDir : av > bv ? _sortDir : 0;
+  if(_sortCol){
+    _filtered.sort((a,b)=>{
+      const av=(a[_sortCol]||"").toLowerCase();
+      const bv=(b[_sortCol]||"").toLowerCase();
+      return av<bv?-_sortDir:av>bv?_sortDir:0;
     });
   }
-
   renderTable();
 }
 
-function renderTable() {
-  const tbody = document.getElementById("tableBody");
-  if (!_filtered.length) {
-    tbody.innerHTML = `
-      <tr><td colspan="${_columns.length || 5}">
-        <div class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <div class="empty-title">No shipments found</div>
-          <div class="empty-sub">Try adjusting your search or filters.</div>
-        </div>
-      </td></tr>`;
-    document.getElementById("resultCount").textContent = "0 results";
+function renderTable(){
+  const tbody=document.getElementById("tableBody");
+  const total=_allRows.length,shown=_filtered.length;
+  document.getElementById("resultCount").textContent=
+    shown===total?`${total} shipments`:`${shown} of ${total} shipments`;
+
+  if(!_filtered.length){
+    tbody.innerHTML=`<tr><td colspan="${_colOrder.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No shipments match</div><div class="empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
     return;
   }
-
-  const idCol     = _columns.find(c => /SHIPMENT_ID|SHIPMENT ID|ID/i.test(c));
-  const statusCol = _columns.find(c => /STATUS/i.test(c));
-  const apptCol   = _columns.find(c => /DELIVERY|APPOINTMENT|APPT/i.test(c));
-
-  tbody.innerHTML = _filtered.map(row => {
-    const tds = _columns.map(col => {
-      let val = row[col] || "";
-      let cls = "";
-
-      if (col === idCol) {
-        cls = "col-id";
-      } else if (col === statusCol && val) {
-        val = `<span class="badge ${statusBadgeClass(val)}">${fmtLabel(val)}</span>`;
-      } else if (col === apptCol && val) {
-        val = fmtAppt(val);
-      }
-
-      return `<td class="${cls}" title="${escHtml(row[col] || "")}">${val || '<span style="color:var(--tx4)">—</span>'}</td>`;
+  tbody.innerHTML=_filtered.map(row=>{
+    const tds=_colOrder.map(col=>{
+      let val=row[col]||"";
+      let cls="";
+      const raw=val;
+      if(col===_cm.shipmentId){cls="col-id";val=eh(val);}
+      else if(col===_cm.status&&val)val=`<span class="badge ${badgeCls(val)}">${fmtLabel(val)}</span>`;
+      else if((col===_cm.delivery||col===_cm.pickup)&&val)val=fmtAppt(val);
+      else val=eh(val);
+      return `<td class="${cls}" title="${eh(raw)}">${val||'<span style="color:var(--tx4)">—</span>'}</td>`;
     }).join("");
-    return `<tr>${tds}</tr>`;
+    return`<tr>${tds}</tr>`;
   }).join("");
-
-  const total = _allRows.length;
-  const shown = _filtered.length;
-  document.getElementById("resultCount").textContent =
-    shown === total ? `${total} shipments` : `${shown} of ${total} shipments`;
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  SORT
-// ════════════════════════════════════════════════════════════════════════════
-function sortBy(col, th) {
-  if (_sortCol === col) {
-    _sortDir = -_sortDir;
-  } else {
-    _sortCol = col;
-    _sortDir = 1;
-  }
-  document.querySelectorAll("th").forEach(t => t.classList.remove("sorted-asc", "sorted-desc"));
-  th.classList.add(_sortDir === 1 ? "sorted-asc" : "sorted-desc");
+// ── Active filter count ───────────────────────────────────────────────────────
+function updateActiveCount(){
+  const ids=["srchShipment","srchTrailer","srchRef","fCarrier","fShipper","fStatus","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"];
+  const n=ids.filter(id=>gv(id)).length;
+  const el=document.getElementById("activeCount");
+  el.textContent=n+" active";
+  el.classList.toggle("show",n>0);
+}
+
+// ── Clear ─────────────────────────────────────────────────────────────────────
+function clearAllFilters(){
+  ["srchShipment","srchTrailer","srchRef"].forEach(id=>{
+    const el=document.getElementById(id);el.value="";el.classList.remove("has-value");
+  });
+  ["fCarrier","fShipper","fStatus"].forEach(id=>{
+    const el=document.getElementById(id);el.value="";el.classList.remove("active");
+  });
+  ["fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
+    const el=document.getElementById(id);el.value="";el.classList.remove("active");
+  });
+  clearActiveView();
   filterTable();
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  REFRESH
-// ════════════════════════════════════════════════════════════════════════════
-function refreshData() {
-  loadData();
+// ── Input / select change helpers ─────────────────────────────────────────────
+function onSrchInput(el){el.classList.toggle("has-value",!!el.value);clearActiveView();}
+function onFselChange(el){el.classList.toggle("active",!!el.value);clearActiveView();}
+function onFdateChange(el){el.classList.toggle("active",!!el.value);clearActiveView();}
+
+// ── Views ─────────────────────────────────────────────────────────────────────
+function loadViews(){_views=tryJSON(localStorage.getItem(LS_VIEWS))||[];renderPills();}
+function saveViews(){localStorage.setItem(LS_VIEWS,JSON.stringify(_views));}
+
+function getState(){
+  return{
+    shipment:gv("srchShipment"),trailer:gv("srchTrailer"),ref:gv("srchRef"),
+    carrier:gv("fCarrier"),shipper:gv("fShipper"),status:gv("fStatus"),
+    pickupFrom:gv("fPickupFrom"),pickupTo:gv("fPickupTo"),
+    deliveryFrom:gv("fDeliveryFrom"),deliveryTo:gv("fDeliveryTo"),
+    colOrder:[..._colOrder]
+  };
+}
+function applyState(s){
+  sv("srchShipment",s.shipment||"");sv("srchTrailer",s.trailer||"");sv("srchRef",s.ref||"");
+  sv("fCarrier",s.carrier||"");sv("fShipper",s.shipper||"");sv("fStatus",s.status||"");
+  sv("fPickupFrom",s.pickupFrom||"");sv("fPickupTo",s.pickupTo||"");
+  sv("fDeliveryFrom",s.deliveryFrom||"");sv("fDeliveryTo",s.deliveryTo||"");
+  ["srchShipment","srchTrailer","srchRef"].forEach(id=>{
+    document.getElementById(id).classList.toggle("has-value",!!gv(id));
+  });
+  ["fCarrier","fShipper","fStatus","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
+    document.getElementById(id).classList.toggle("active",!!gv(id));
+  });
+  if(s.colOrder&&s.colOrder.length){
+    const valid=s.colOrder.filter(c=>_columns.includes(c));
+    const added=_columns.filter(c=>!valid.includes(c));
+    _colOrder=[...valid,...added];
+    localStorage.setItem(LS_COLS,JSON.stringify(_colOrder));
+    buildHeader();
+  }
+}
+function applyView(idx){
+  if(!_views[idx])return;
+  _activeView=idx;
+  applyState(_views[idx].state);
+  filterTable();
+  renderPills();
+}
+function deleteView(idx,e){
+  e.stopPropagation();
+  _views.splice(idx,1);
+  if(_activeView===idx)_activeView=null;
+  else if(_activeView>idx)_activeView--;
+  saveViews();renderPills();
+}
+function clearActiveView(){if(_activeView!==null){_activeView=null;renderPills();}}
+
+function renderPills(){
+  const c=document.getElementById("viewPills");
+  if(!_views.length){
+    c.innerHTML='<span class="views-empty">No saved views — apply filters then click "Save view"</span>';
+    return;
+  }
+  c.innerHTML=_views.map((vw,i)=>`
+    <span class="view-pill${_activeView===i?" active":""}" onclick="applyView(${i})">
+      ${eh(vw.name)}
+      <button class="pill-del" onclick="deleteView(${i},event)" title="Delete">✕</button>
+    </span>`).join("");
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  HELPERS
-// ════════════════════════════════════════════════════════════════════════════
-function setStatus(cls, msg) {
-  const el = document.getElementById("statusBar");
-  el.className = "status-bar " + cls;
-  el.innerHTML = (cls === "loading"
-    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> `
-    : cls === "ok"  ? "✅ "
-    : "⚠️ ") + msg;
+function openSaveView(){
+  const pop=document.getElementById("savePopover");
+  pop.classList.remove("hidden");
+  const inp=document.getElementById("viewNameInput");
+  inp.value=_activeView!==null?_views[_activeView].name:"";
+  setTimeout(()=>{inp.focus();inp.select();},50);
+}
+function closeSaveView(){document.getElementById("savePopover").classList.add("hidden");}
+function confirmSaveView(){
+  const name=document.getElementById("viewNameInput").value.trim();
+  if(!name){document.getElementById("viewNameInput").focus();return;}
+  const state=getState();
+  const ex=_views.findIndex(v=>v.name.toLowerCase()===name.toLowerCase());
+  if(ex>=0){_views[ex].state=state;_activeView=ex;}
+  else{_views.push({name,state});_activeView=_views.length-1;}
+  saveViews();renderPills();closeSaveView();
 }
 
-function setBtnSpinning(on) {
-  document.getElementById("btnRefresh").classList.toggle("spinning", on);
+document.addEventListener("click",e=>{
+  const pop=document.getElementById("savePopover");
+  const btn=document.getElementById("btnSaveView");
+  if(!pop.classList.contains("hidden")&&!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))
+    closeSaveView();
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function gv(id){return(document.getElementById(id)?.value||"").trim();}
+function sv(id,val){const el=document.getElementById(id);if(el)el.value=val;}
+function showEl(id,v){const el=document.getElementById(id);if(el)el.style.display=v?"":""+"none".slice(v?9999:0);}
+function disableInput(id,dis,ph){const el=document.getElementById(id);if(!el)return;el.disabled=dis;if(ph)el.placeholder=ph;}
+function setStatus(cls,msg){
+  const el=document.getElementById("statusBar");
+  el.className="status-bar "+cls;
+  const ico=cls==="loading"?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>':cls==="ok"?"✅":"⚠️";
+  el.innerHTML=ico+" "+msg;
+}
+function setBtnSpinning(on){document.getElementById("btnRefresh").classList.toggle("spinning",on);}
+function refreshData(){loadData();}
+function fmtTime(d){return d.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});}
+function fmtLabel(s){return s.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());}
+function eh(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function ea(s){return String(s).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function tryJSON(s){try{return JSON.parse(s);}catch{return null;}}
+function parseDate(raw){
+  if(!raw)return null;
+  const ymd=raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(ymd)return new Date(`${ymd[1]}-${ymd[2].padStart(2,"0")}-${ymd[3].padStart(2,"0")}T12:00:00`);
+  const mdy=raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(mdy)return new Date(`${mdy[3]}-${mdy[1].padStart(2,"0")}-${mdy[2].padStart(2,"0")}T12:00:00`);
+  const d=new Date(raw);return isNaN(d)?null:d;
+}
+function fmtAppt(raw){
+  const d=parseDate(raw);
+  if(!d)return eh(raw);
+  const t=raw.match(/(\d{1,2}:\d{2})(\s*(hrs?|am|pm))?/i);
+  let out=d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+  if(t)out+=" · "+t[0];
+  return out;
+}
+function badgeCls(val){
+  const v=val.toLowerCase();
+  if(/delivered|complete/i.test(v))return"badge-delivered";
+  if(/transit|moving/i.test(v))return"badge-intransit";
+  if(/pending|waiting|hold/i.test(v))return"badge-pending";
+  if(/exception|delay|issue/i.test(v))return"badge-exception";
+  if(/scheduled|booked|confirmed/i.test(v))return"badge-scheduled";
+  return"badge-default";
 }
 
-function fmtTime(d) {
-  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-}
+// Tiny showEl fix
+(function(){
+  const orig=showEl;
+  window.showEl=function(id,visible){
+    const el=document.getElementById(id);
+    if(el)el.style.display=visible?"":"none";
+  };
+})();
 
-function fmtLabel(str) {
-  return str.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
-function parseDate(raw) {
-  if (!raw) return null;
-  // "YYYY-MM-DD HH:MM" or "YYYY-MM-DDTHH:MM"
-  const ymd = raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-  if (ymd) return new Date(ymd[1]+"-"+ymd[2].padStart(2,"0")+"-"+ymd[3].padStart(2,"0")+"T12:00:00");
-  // "MM/DD/YYYY"
-  const mdy = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-  if (mdy) return new Date(mdy[3]+"-"+mdy[1].padStart(2,"0")+"-"+mdy[2].padStart(2,"0")+"T12:00:00");
-  const d = new Date(raw);
-  return isNaN(d) ? null : d;
-}
-
-function fmtAppt(raw) {
-  const d = parseDate(raw);
-  if (!d) return escHtml(raw);
-  const opts = { month: "short", day: "numeric", year: "numeric" };
-  const timePart = raw.match(/(\d{1,2}:\d{2})\s*(hrs?|am|pm)?/i);
-  let str = d.toLocaleDateString("en-US", opts);
-  if (timePart) str += " · " + timePart[0];
-  return str;
-}
-
-function statusBadgeClass(val) {
-  const v = val.toLowerCase().replace(/[\s_-]/g, "");
-  if (/delivered|complete/i.test(v))  return "badge-delivered";
-  if (/transit|moving|inmotion/i.test(v)) return "badge-intransit";
-  if (/pending|waiting|hold/i.test(v)) return "badge-pending";
-  if (/exception|delay|issue|problem/i.test(v)) return "badge-exception";
-  if (/scheduled|booked|confirmed/i.test(v)) return "badge-scheduled";
-  return "badge-default";
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-//  INIT
-// ════════════════════════════════════════════════════════════════════════════
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadViews();
 loadData();
-setInterval(loadData, REFRESH_INTERVAL_MS);
+setInterval(loadData,REFRESH_MS);
 </script>
 </body>
 </html>
