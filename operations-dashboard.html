@@ -29,7 +29,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:1
 header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
 .hleft{display:flex;align-items:center}
 .hright{display:flex;align-items:center;gap:8px}
-.hlogo-img{height:26px;width:auto;display:block}
 .htitle{font-size:13px;font-weight:600;color:var(--tx2);margin-left:12px;padding-left:12px;border-left:1px solid var(--bd);line-height:1}
 .hbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--green);background:#F0FDF4;border:1px solid #BBF7D0;border-radius:999px;padding:3px 9px}
 .hbadge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
@@ -96,6 +95,23 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 .active-count{display:none;height:18px;padding:0 6px;background:var(--teal);color:#fff;border-radius:999px;font-size:10px;font-weight:600;align-items:center;justify-content:center;white-space:nowrap}
 .active-count.show{display:inline-flex}
 
+/* Multi-select */
+.msel-wrap{position:relative}
+.msel-btn{height:28px;padding:0 8px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-family:inherit;color:var(--tx2);background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:4px;min-width:110px;max-width:180px;transition:border-color .15s;white-space:nowrap}
+.msel-btn:hover{border-color:var(--bd2)}
+.msel-btn.active{border-color:var(--teal);background:#F0FDF4;color:var(--teal);font-weight:500}
+.msel-btn-label{flex:1;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.msel-chev{flex-shrink:0;opacity:.4;transition:transform .15s}
+.msel-btn[aria-expanded="true"] .msel-chev{transform:rotate(180deg)}
+.msel-drop{position:absolute;top:calc(100% + 4px);left:0;z-index:400;background:var(--panel);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:190px;max-height:230px;overflow-y:auto;padding:4px 0;display:none}
+.msel-drop.open{display:block}
+.msel-item{display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--tx2);transition:background .08s;user-select:none}
+.msel-item:hover{background:var(--bg)}
+.msel-item input[type=checkbox]{accent-color:var(--teal);cursor:pointer;flex-shrink:0;width:13px;height:13px}
+.msel-divider{height:1px;background:var(--bd);margin:3px 0}
+.msel-clear-item{font-size:11px;font-weight:500;color:var(--tx3)}
+.msel-clear-item:hover{color:var(--red);background:#FEF2F2}
+
 /* Views bar */
 .views-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;min-height:30px}
 .views-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
@@ -133,11 +149,13 @@ th.dragging{opacity:.3}
 .drag-handle{cursor:grab;color:var(--tx4);font-size:13px;margin-right:6px;opacity:.3;transition:opacity .15s;line-height:1;flex-shrink:0}
 th:hover .drag-handle{opacity:.85}
 .th-sort{display:inline-flex;align-items:center;gap:4px;cursor:pointer;flex:1}
-.sort-icon{font-size:9px;opacity:.35}
-th.sorted-asc .sort-icon,.th.sorted-desc .sort-icon{opacity:1}
-th.sorted-asc .sort-icon::after{content:"▲";opacity:1}
-th.sorted-desc .sort-icon::after{content:"▼";opacity:1}
-th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after{content:"⇅"}
+.th-sort:hover{color:var(--tx1)}
+.sort-icon{font-size:9px;color:var(--tx4);min-width:10px;text-align:center}
+th.sorted-asc .sort-icon{color:var(--teal);opacity:1}
+th.sorted-desc .sort-icon{color:var(--teal);opacity:1}
+th.sorted-asc .sort-icon::after{content:"▲"}
+th.sorted-desc .sort-icon::after{content:"▼"}
+th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after{content:"⇅";opacity:.4}
 td{padding:9px 12px;border-bottom:1px solid var(--bd);color:var(--tx2);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
 tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:#F9FAFB}
@@ -197,8 +215,8 @@ td.col-id{font-weight:600;color:var(--blue)}
   </div>
 
   <div class="kpi-row">
-    <div class="kpi-card"><div class="kpi-label">Total Shipments</div><div class="kpi-value accent" id="kpiTotal">—</div><div class="kpi-sub">In system</div></div>
-    <div class="kpi-card"><div class="kpi-label">Unique Carriers</div><div class="kpi-value" id="kpiCarriers">—</div><div class="kpi-sub">Active carriers</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Shipments</div><div class="kpi-value accent" id="kpiTotal">—</div><div class="kpi-sub" id="kpiTotalSub">In system</div></div>
+    <div class="kpi-card"><div class="kpi-label">Unique Carriers</div><div class="kpi-value" id="kpiCarriers">—</div><div class="kpi-sub" id="kpiCarriersSub">Active carriers</div></div>
     <div class="kpi-card"><div class="kpi-label">Scheduled Today</div><div class="kpi-value green" id="kpiToday">—</div><div class="kpi-sub">Delivery appointments</div></div>
     <div class="kpi-card"><div class="kpi-label">This Week</div><div class="kpi-value amber" id="kpiWeek">—</div><div class="kpi-sub">Upcoming deliveries</div></div>
   </div>
@@ -237,19 +255,39 @@ td.col-id{font-weight:600;color:var(--blue)}
 
   <!-- Filter bar -->
   <div class="filter-bar" id="filterBar">
+
+    <!-- Carrier multi-select -->
     <div class="fg" id="fgCarrier">
       <span class="fg-label">Carrier</span>
-      <select class="fsel" id="fCarrier" onchange="onFselChange(this);filterTable()"><option value="">All carriers</option></select>
+      <div class="msel-wrap" id="mselWrapCarrier">
+        <button class="msel-btn" id="mselBtnCarrier" aria-expanded="false" onclick="toggleMsel('carrier')">
+          <span class="msel-btn-label" id="mselLabelCarrier">All carriers</span>
+          <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
+        </button>
+        <div class="msel-drop" id="mselDropCarrier"></div>
+      </div>
     </div>
+
+    <!-- Shipper multi-select -->
     <div class="fg" id="fgShipper" style="display:none">
       <span class="fg-label">Shipper</span>
-      <select class="fsel" id="fShipper" onchange="onFselChange(this);filterTable()"><option value="">All shippers</option></select>
+      <div class="msel-wrap" id="mselWrapShipper">
+        <button class="msel-btn" id="mselBtnShipper" aria-expanded="false" onclick="toggleMsel('shipper')">
+          <span class="msel-btn-label" id="mselLabelShipper">All shippers</span>
+          <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
+        </button>
+        <div class="msel-drop" id="mselDropShipper"></div>
+      </div>
     </div>
-    <div class="fg" id="fgStatus" style="display:none">
-      <span class="fg-label">Status</span>
-      <select class="fsel" id="fStatus" onchange="onFselChange(this);filterTable()"><option value="">All statuses</option></select>
+
+    <!-- Last Event single-select -->
+    <div class="fg" id="fgLastEvent" style="display:none">
+      <span class="fg-label">Last Event</span>
+      <select class="fsel" id="fLastEvent" onchange="onFselChange(this);filterTable()"><option value="">All events</option></select>
     </div>
+
     <div class="fsep"></div>
+
     <div class="fg" id="fgPickup" style="display:none">
       <span class="fg-label">Pickup date</span>
       <div class="date-pair">
@@ -259,6 +297,7 @@ td.col-id{font-weight:600;color:var(--blue)}
       </div>
     </div>
     <div class="fsep" id="fgPickupSep" style="display:none"></div>
+
     <div class="fg" id="fgDelivery">
       <span class="fg-label">Delivery date</span>
       <div class="date-pair">
@@ -267,6 +306,7 @@ td.col-id{font-weight:600;color:var(--blue)}
         <input type="date" class="fdate" id="fDeliveryTo" onchange="onFdateChange(this);filterTable()">
       </div>
     </div>
+
     <div class="filter-actions">
       <span class="active-count" id="activeCount"></span>
       <button class="btn-clear" onclick="clearAllFilters()">Clear filters</button>
@@ -308,11 +348,11 @@ td.col-id{font-weight:600;color:var(--blue)}
 </div>
 
 <script>
-// ── Config ──────────────────────────────────────────────────────────────────
-const SHEET_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
-const REFRESH_MS  = 5 * 60 * 1000;
-const LS_VIEWS    = "nuvo_ops_views";
-const LS_COLS     = "nuvo_ops_col_order";
+// ── Config ───────────────────────────────────────────────────────────────────
+const SHEET_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
+const REFRESH_MS = 5 * 60 * 1000;
+const LS_VIEWS   = "nuvo_ops_views";
+const LS_COLS    = "nuvo_ops_col_order";
 
 // ── State ────────────────────────────────────────────────────────────────────
 let _allRows  = [];
@@ -321,11 +361,13 @@ let _colOrder = [];
 let _filtered = [];
 let _sortCol  = null;
 let _sortDir  = 1;
-let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, status:null };
-let _dragSrcIdx = null;
-let _isDragging = false;
-let _views      = [];
-let _activeView = null;
+let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, lastEvent:null };
+let _selCarriers = new Set();
+let _selShippers = new Set();
+let _dragSrcIdx  = null;
+let _isDragging  = false;
+let _views       = [];
+let _activeView  = null;
 
 // ── CSV parser ───────────────────────────────────────────────────────────────
 function splitCSVLine(line){
@@ -360,7 +402,7 @@ function detectCols(cols){
   _cm.ref        = find(/CUSTOMER.?REF|CUST.?REF|REFERENCE|^PO.?NUM|^PO$/i);
   _cm.pickup     = find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
   _cm.delivery   = find(/DELIVERY|APPOINTMENT|APPT/i);
-  _cm.status     = find(/^STATUS$/i);
+  _cm.lastEvent  = find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$/i) || find(/^STATUS$/i);
 }
 
 // ── Load data ─────────────────────────────────────────────────────────────────
@@ -387,8 +429,7 @@ async function loadData(){
 
     buildHeader();
     buildFilters();
-    updateKPIs();
-    filterTable();
+    filterTable(); // also updates KPIs
 
     const n=_allRows.length;
     setStatus("ok","✅ "+n+" shipment"+(n===1?"":"s")+" loaded · last synced "+fmtTime(new Date()));
@@ -409,7 +450,7 @@ function buildHeader(){
         ondrop="dDrop(event)" ondragend="dEnd(event)">
       <div class="th-inner">
         <span class="drag-handle" title="Drag to reorder">⠿</span>
-        <span class="th-sort" onclick="if(!_isDragging)sortBy('${ea(col)}',this.closest('th'))">
+        <span class="th-sort" onclick="if(!_isDragging)sortBy('${ea(col)}',this.closest('th'))" title="Click to sort">
           ${eh(col.replace(/_/g," "))}
           <span class="sort-icon"></span>
         </span>
@@ -465,16 +506,16 @@ function sortBy(col,th){
 
 // ── Build filter dropdowns ────────────────────────────────────────────────────
 function buildFilters(){
-  populateSel("fCarrier",_cm.carrier,"All carriers","fgCarrier",true);
-  populateSel("fShipper",_cm.shipper,"All shippers","fgShipper",false);
-  populateSel("fStatus", _cm.status, "All statuses","fgStatus", false);
-  showEl("fgPickup",   !!_cm.pickup);
-  showEl("fgPickupSep",!!_cm.pickup);
-  // disable search inputs if column missing
+  buildMsel("carrier", _cm.carrier, "fgCarrier", true);
+  buildMsel("shipper", _cm.shipper, "fgShipper", false);
+  populateSel("fLastEvent", _cm.lastEvent, "All events", "fgLastEvent", false);
+  showEl("fgPickup",    !!_cm.pickup);
+  showEl("fgPickupSep", !!_cm.pickup);
   disableInput("srchShipment",!_cm.shipmentId,_cm.shipmentId?"e.g. SH-12345":"Column not in sheet");
   disableInput("srchTrailer", !_cm.trailer,   _cm.trailer   ?"e.g. AL15179":"Column not in sheet");
   disableInput("srchRef",     !_cm.ref,       _cm.ref       ?"Reference / PO #":"Column not in sheet");
 }
+
 function populateSel(id,col,placeholder,groupId,alwaysShow){
   const sel=document.getElementById(id);
   sel.innerHTML=`<option value="">${placeholder}</option>`;
@@ -489,18 +530,111 @@ function populateSel(id,col,placeholder,groupId,alwaysShow){
   }
 }
 
-// ── KPIs ──────────────────────────────────────────────────────────────────────
-function updateKPIs(){
-  document.getElementById("kpiTotal").textContent=_allRows.length;
-  const carriers=_cm.carrier?new Set(_allRows.map(r=>r[_cm.carrier]).filter(Boolean)):new Set();
+// ── Multi-select ──────────────────────────────────────────────────────────────
+function buildMsel(type, col, groupId, alwaysShow){
+  showEl(groupId, col ? true : alwaysShow);
+  if(!col) return;
+  const vals=[...new Set(_allRows.map(r=>r[col]).filter(Boolean))].sort();
+  const drop=document.getElementById("mselDrop"+cap(type));
+  const placeholder=type==="carrier"?"All carriers":"All shippers";
+  drop.innerHTML=
+    `<div class="msel-item msel-clear-item" onclick="clearMsel('${type}')">Clear selection</div>
+     <div class="msel-divider"></div>`+
+    vals.map(v=>`
+      <div class="msel-item" onclick="onMselItemClick(event,'${type}','${ea(v)}')">
+        <input type="checkbox" data-val="${ea(v)}" onclick="event.stopPropagation()"
+               onchange="onMselChk('${type}','${ea(v)}',this.checked)">
+        <span>${eh(v)}</span>
+      </div>`).join("");
+}
+
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+function toggleMsel(type){
+  const drop=document.getElementById("mselDrop"+cap(type));
+  const btn =document.getElementById("mselBtn" +cap(type));
+  const isOpen=drop.classList.contains("open");
+  closeAllMsel();
+  if(!isOpen){
+    drop.classList.add("open");
+    btn.setAttribute("aria-expanded","true");
+  }
+}
+
+function closeAllMsel(){
+  ["carrier","shipper"].forEach(t=>{
+    const d=document.getElementById("mselDrop"+cap(t));
+    const b=document.getElementById("mselBtn" +cap(t));
+    if(d)d.classList.remove("open");
+    if(b)b.setAttribute("aria-expanded","false");
+  });
+}
+
+function onMselItemClick(e,type,val){
+  const chk=e.currentTarget.querySelector("input[type=checkbox]");
+  if(e.target===chk)return; // already handled by onchange
+  chk.checked=!chk.checked;
+  onMselChk(type,val,chk.checked);
+}
+
+function onMselChk(type,val,checked){
+  const set=type==="carrier"?_selCarriers:_selShippers;
+  if(checked)set.add(val); else set.delete(val);
+  refreshMselLabel(type);
+  clearActiveView();
+  filterTable();
+}
+
+function clearMsel(type){
+  const set=type==="carrier"?_selCarriers:_selShippers;
+  set.clear();
+  // uncheck all boxes in this drop
+  document.querySelectorAll(`#mselDrop${cap(type)} input[type=checkbox]`).forEach(cb=>cb.checked=false);
+  refreshMselLabel(type);
+  clearActiveView();
+  filterTable();
+}
+
+function refreshMselLabel(type){
+  const set=type==="carrier"?_selCarriers:_selShippers;
+  const placeholder=type==="carrier"?"All carriers":"All shippers";
+  const label=document.getElementById("mselLabel"+cap(type));
+  const btn  =document.getElementById("mselBtn"  +cap(type));
+  if(!label||!btn)return;
+  if(set.size===0)label.textContent=placeholder;
+  else if(set.size===1)label.textContent=[...set][0];
+  else label.textContent=set.size+" selected";
+  btn.classList.toggle("active",set.size>0);
+}
+
+function syncMselCheckboxes(type){
+  const set=type==="carrier"?_selCarriers:_selShippers;
+  document.querySelectorAll(`#mselDrop${cap(type)} input[type=checkbox]`).forEach(cb=>{
+    cb.checked=set.has(cb.dataset.val);
+  });
+  refreshMselLabel(type);
+}
+
+// ── KPIs (driven by filtered rows) ───────────────────────────────────────────
+function updateKPIs(rows){
+  const total=_allRows.length;
+  const shown=rows.length;
+  const isFiltered=shown<total;
+
+  document.getElementById("kpiTotal").textContent=shown;
+  document.getElementById("kpiTotalSub").textContent=isFiltered?`of ${total} total`:"In system";
+
+  const carriers=_cm.carrier?new Set(rows.map(r=>r[_cm.carrier]).filter(Boolean)):new Set();
   document.getElementById("kpiCarriers").textContent=carriers.size||"—";
+  document.getElementById("kpiCarriersSub").textContent=isFiltered?"In selection":"Active carriers";
+
   const apptCol=_cm.delivery||_cm.pickup;
   if(apptCol){
     const today=new Date();today.setHours(0,0,0,0);
     const todayStr=today.toISOString().split("T")[0];
     const weekEnd=new Date(today);weekEnd.setDate(today.getDate()+7);
     let tod=0,wk=0;
-    _allRows.forEach(r=>{
+    rows.forEach(r=>{
       const d=parseDate(r[apptCol]||"");
       if(!d)return;
       if(d.toISOString().split("T")[0]===todayStr)tod++;
@@ -520,9 +654,7 @@ function filterTable(){
   const sShip=gv("srchShipment").toLowerCase();
   const sTrl =gv("srchTrailer").toLowerCase();
   const sRef =gv("srchRef").toLowerCase();
-  const vCar =gv("fCarrier");
-  const vShip=gv("fShipper");
-  const vStat=gv("fStatus");
+  const vEvt =gv("fLastEvent");
   const pfrom=gv("fPickupFrom");
   const pto  =gv("fPickupTo");
   const dfrom=gv("fDeliveryFrom");
@@ -532,9 +664,9 @@ function filterTable(){
     if(sShip&&_cm.shipmentId&&!(row[_cm.shipmentId]||"").toLowerCase().includes(sShip))return false;
     if(sTrl &&_cm.trailer   &&!(row[_cm.trailer]   ||"").toLowerCase().includes(sTrl)) return false;
     if(sRef &&_cm.ref       &&!(row[_cm.ref]        ||"").toLowerCase().includes(sRef)) return false;
-    if(vCar &&_cm.carrier &&row[_cm.carrier]!==vCar)  return false;
-    if(vShip&&_cm.shipper &&row[_cm.shipper]!==vShip) return false;
-    if(vStat&&_cm.status  &&row[_cm.status] !==vStat) return false;
+    if(_selCarriers.size&&_cm.carrier &&!_selCarriers.has(row[_cm.carrier]))  return false;
+    if(_selShippers.size&&_cm.shipper &&!_selShippers.has(row[_cm.shipper]))  return false;
+    if(vEvt&&_cm.lastEvent&&row[_cm.lastEvent]!==vEvt) return false;
     if((pfrom||pto)&&_cm.pickup){
       const d=parseDate(row[_cm.pickup]||"");
       if(!d)return false;
@@ -557,6 +689,8 @@ function filterTable(){
       return av<bv?-_sortDir:av>bv?_sortDir:0;
     });
   }
+
+  updateKPIs(_filtered);
   renderTable();
 }
 
@@ -576,7 +710,7 @@ function renderTable(){
       let cls="";
       const raw=val;
       if(col===_cm.shipmentId){cls="col-id";val=eh(val);}
-      else if(col===_cm.status&&val)val=`<span class="badge ${badgeCls(val)}">${fmtLabel(val)}</span>`;
+      else if(col===_cm.lastEvent&&val)val=`<span class="badge ${badgeCls(val)}">${fmtLabel(val)}</span>`;
       else if((col===_cm.delivery||col===_cm.pickup)&&val)val=fmtAppt(val);
       else val=eh(val);
       return `<td class="${cls}" title="${eh(raw)}">${val||'<span style="color:var(--tx4)">—</span>'}</td>`;
@@ -587,8 +721,9 @@ function renderTable(){
 
 // ── Active filter count ───────────────────────────────────────────────────────
 function updateActiveCount(){
-  const ids=["srchShipment","srchTrailer","srchRef","fCarrier","fShipper","fStatus","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"];
-  const n=ids.filter(id=>gv(id)).length;
+  const textIds=["srchShipment","srchTrailer","srchRef","fLastEvent","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"];
+  let n=textIds.filter(id=>gv(id)).length;
+  n+=(_selCarriers.size>0?1:0)+(_selShippers.size>0?1:0);
   const el=document.getElementById("activeCount");
   el.textContent=n+" active";
   el.classList.toggle("show",n>0);
@@ -599,12 +734,16 @@ function clearAllFilters(){
   ["srchShipment","srchTrailer","srchRef"].forEach(id=>{
     const el=document.getElementById(id);el.value="";el.classList.remove("has-value");
   });
-  ["fCarrier","fShipper","fStatus"].forEach(id=>{
-    const el=document.getElementById(id);el.value="";el.classList.remove("active");
+  ["fLastEvent"].forEach(id=>{
+    const el=document.getElementById(id);if(el){el.value="";el.classList.remove("active");}
   });
   ["fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
     const el=document.getElementById(id);el.value="";el.classList.remove("active");
   });
+  _selCarriers.clear();
+  _selShippers.clear();
+  syncMselCheckboxes("carrier");
+  syncMselCheckboxes("shipper");
   clearActiveView();
   filterTable();
 }
@@ -621,7 +760,8 @@ function saveViews(){localStorage.setItem(LS_VIEWS,JSON.stringify(_views));}
 function getState(){
   return{
     shipment:gv("srchShipment"),trailer:gv("srchTrailer"),ref:gv("srchRef"),
-    carrier:gv("fCarrier"),shipper:gv("fShipper"),status:gv("fStatus"),
+    carriers:[..._selCarriers],shippers:[..._selShippers],
+    lastEvent:gv("fLastEvent"),
     pickupFrom:gv("fPickupFrom"),pickupTo:gv("fPickupTo"),
     deliveryFrom:gv("fDeliveryFrom"),deliveryTo:gv("fDeliveryTo"),
     colOrder:[..._colOrder]
@@ -629,15 +769,19 @@ function getState(){
 }
 function applyState(s){
   sv("srchShipment",s.shipment||"");sv("srchTrailer",s.trailer||"");sv("srchRef",s.ref||"");
-  sv("fCarrier",s.carrier||"");sv("fShipper",s.shipper||"");sv("fStatus",s.status||"");
+  sv("fLastEvent",s.lastEvent||"");
   sv("fPickupFrom",s.pickupFrom||"");sv("fPickupTo",s.pickupTo||"");
   sv("fDeliveryFrom",s.deliveryFrom||"");sv("fDeliveryTo",s.deliveryTo||"");
   ["srchShipment","srchTrailer","srchRef"].forEach(id=>{
     document.getElementById(id).classList.toggle("has-value",!!gv(id));
   });
-  ["fCarrier","fShipper","fStatus","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
-    document.getElementById(id).classList.toggle("active",!!gv(id));
+  ["fLastEvent","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.classList.toggle("active",!!gv(id));
   });
+  _selCarriers=new Set(Array.isArray(s.carriers)?s.carriers:[]);
+  _selShippers=new Set(Array.isArray(s.shippers)?s.shippers:[]);
+  syncMselCheckboxes("carrier");
+  syncMselCheckboxes("shipper");
   if(s.colOrder&&s.colOrder.length){
     const valid=s.colOrder.filter(c=>_columns.includes(c));
     const added=_columns.filter(c=>!valid.includes(c));
@@ -693,7 +837,11 @@ function confirmSaveView(){
   saveViews();renderPills();closeSaveView();
 }
 
+// ── Close dropdowns on outside click ─────────────────────────────────────────
 document.addEventListener("click",e=>{
+  // multi-selects
+  if(!e.target.closest(".msel-wrap"))closeAllMsel();
+  // save-view popover
   const pop=document.getElementById("savePopover");
   const btn=document.getElementById("btnSaveView");
   if(!pop.classList.contains("hidden")&&!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))
@@ -703,7 +851,7 @@ document.addEventListener("click",e=>{
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function gv(id){return(document.getElementById(id)?.value||"").trim();}
 function sv(id,val){const el=document.getElementById(id);if(el)el.value=val;}
-function showEl(id,v){const el=document.getElementById(id);if(el)el.style.display=v?"":""+"none".slice(v?9999:0);}
+function showEl(id,visible){const el=document.getElementById(id);if(el)el.style.display=visible?"":"none";}
 function disableInput(id,dis,ph){const el=document.getElementById(id);if(!el)return;el.disabled=dis;if(ph)el.placeholder=ph;}
 function setStatus(cls,msg){
   const el=document.getElementById("statusBar");
@@ -743,15 +891,6 @@ function badgeCls(val){
   if(/scheduled|booked|confirmed/i.test(v))return"badge-scheduled";
   return"badge-default";
 }
-
-// Tiny showEl fix
-(function(){
-  const orig=showEl;
-  window.showEl=function(id,visible){
-    const el=document.getElementById(id);
-    if(el)el.style.display=visible?"":"none";
-  };
-})();
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadViews();
