@@ -2282,9 +2282,12 @@ function _lookupShipment(raw){
 }
 
 function _doLookup(id){
-  // Exact match, then try with/without "SH-" prefix
+  // Normalize: strip any "SH-" prefix to get the numeric part
+  const numericPart = id.replace(/^SH-/i, "");
+  // Try exact match, then with "SH-" prefix, then plain numbers
   const row = _sheetData[id]
-           || _sheetData["SH-"+id.replace(/^SH-/i,"")]
+           || _sheetData["SH-"+numericPart]
+           || _sheetData[numericPart]
            || null;
   if(!row){
     setSheetStatus("err", "⚠️ No match for \""+id+"\" — check the Shipment ID or update the sheet.");
