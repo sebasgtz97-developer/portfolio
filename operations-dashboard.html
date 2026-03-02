@@ -788,10 +788,14 @@ function filterTable(){
   const sTrl =gv("srchTrailer").toLowerCase();
   const sRef =gv("srchRef").toLowerCase();
   const vEvt =gv("fLastEvent");
-  const pfrom=gv("fPickupFrom");
-  const pto  =gv("fPickupTo");
-  const dfrom=gv("fDeliveryFrom");
-  const dto  =gv("fDeliveryTo");
+  let pfrom=gv("fPickupFrom");
+  let pto  =gv("fPickupTo");
+  if(pfrom&&!pto)pto=pfrom;
+  if(pto&&!pfrom)pfrom=pto;
+  let dfrom=gv("fDeliveryFrom");
+  let dto  =gv("fDeliveryTo");
+  if(dfrom&&!dto)dto=dfrom;
+  if(dto&&!dfrom)dfrom=dto;
 
   _filtered=_allRows.filter(row=>{
     if(sShip&&_cm.shipmentId&&!(row[_cm.shipmentId]||"").toLowerCase().includes(sShip))return false;
