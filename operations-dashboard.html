@@ -22,6 +22,9 @@
   --red:    #DC2626;
   --green:  #16A34A;
   --amber:  #D97706;
+  --bg2:    #F3F4F6;
+  --bg3:    #E5E7EB;
+  --brd:    #D1D5DB;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;background:var(--bg);color:var(--tx1);min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -38,6 +41,8 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 .btn-hdr:hover{background:var(--bg);border-color:var(--bd2)}
 .btn-hdr.spinning svg{animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.btn-util{height:32px;padding:0 10px;border-radius:6px;background:var(--panel);border:1px solid var(--bd);color:var(--tx2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:11px;font-weight:600;transition:all .15s;flex-shrink:0;font-family:inherit;white-space:nowrap}
+.btn-util:hover{background:var(--bg);border-color:var(--bd2)}
 
 /* Main */
 .main{max-width:1440px;margin:0 auto;padding:20px 20px 48px}
@@ -256,6 +261,34 @@ tbody tr.clickable:hover td{background:#f0fdf4 !important}
 tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
 @media(max-width:740px){.drawer{width:100%;max-height:90vh;border-radius:20px 20px 0 0;top:auto;bottom:0;left:0;transform:translateY(100%);opacity:1}.drawer.open{transform:translateY(0)}.detail-grid{grid-template-columns:1fr}}
+
+/* ── Dark mode ──────────────────────────────────────────────────────────────── */
+[data-theme="dark"]{--bg:#0F172A;--bg2:#1E293B;--bg3:#334155;--panel:#1A2332;--bd:#2E3F52;--bd2:#475569;--brd:#2E3F52;--tx1:#F1F5F9;--tx2:#CBD5E1;--tx3:#94A3B8;--tx4:#64748B}
+[data-theme="dark"] thead tr{background:#162032}
+[data-theme="dark"] th:hover{background:#1e2d3d}
+[data-theme="dark"] tbody tr:hover td{background:#182234}
+[data-theme="dark"] tbody tr.clickable:hover td{background:#1a2e28!important}
+[data-theme="dark"] .skel{background:linear-gradient(90deg,#1e293b 25%,#334155 50%,#1e293b 75%);background-size:200% 100%}
+[data-theme="dark"] .badge-delivered{background:#052e16;border-color:#14532d}
+[data-theme="dark"] .badge-intransit{background:#0c1a3d;border-color:#1e3a8a}
+[data-theme="dark"] .badge-pending{background:#2d1d07;border-color:#78350f}
+[data-theme="dark"] .badge-exception{background:#2d0a0a;border-color:#7f1d1d}
+[data-theme="dark"] .badge-scheduled{background:#1e1040;border-color:#4c1d95;color:#a78bfa}
+[data-theme="dark"] .badge-default{background:#1e293b}
+[data-theme="dark"] .msel-btn.active,[data-theme="dark"] .fsel.active,[data-theme="dark"] .btn-col-vis.active{background:#0d261f;color:#4ade80}
+[data-theme="dark"] .fdate.active{background:#0f1f3d}
+[data-theme="dark"] .btn-save-view:hover{background:#0d261f}
+[data-theme="dark"] .view-pill:not(.active){background:#1e1a3d;border-color:#3730a3;color:#a5b4fc}
+[data-theme="dark"] .eta-card{background:linear-gradient(135deg,#0d261f 0%,#0f2d24 100%);border-color:#1a4a38}
+[data-theme="dark"] .eta-label{color:#4ade80}
+[data-theme="dark"] .eta-value{color:#86efac}
+[data-theme="dark"] .loc-pill{background:#0d261f;border-color:#1a4a38;color:#4ade80}
+[data-theme="dark"] .drawer-close:hover{background:#2d1519;border-color:#7f1d1d;color:var(--red)}
+[data-theme="dark"] .btn-clear:hover{background:#2d1519}
+[data-theme="dark"] .hbadge{background:#052e16;border-color:#14532d}
+[data-theme="dark"] .status-bar.ok{background:#052e16;border-color:#14532d}
+[data-theme="dark"] .status-bar.loading{background:#2d1d07;border-color:#78350f}
+[data-theme="dark"] .status-bar.err{background:#2d0a0a;border-color:#7f1d1d}
 </style>
 </head>
 <body>
@@ -265,15 +298,20 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
     <svg width="160" height="28" viewBox="0 0 160 28" xmlns="http://www.w3.org/2000/svg" aria-label="Nuvocargo" role="img">
       <text x="0" y="23" font-family="'Cormorant Garamond',Georgia,serif" font-size="26" font-weight="500" letter-spacing="0.3" fill="#1C4A3E">nuvocargo</text>
     </svg>
-    <span class="htitle">Operations Dashboard</span>
+    <span class="htitle" data-i18n="ops-dashboard">Operations Dashboard</span>
   </div>
   <div class="hright">
-    <span class="hbadge"><span class="dot"></span>Live</span>
+    <button class="btn-util" id="btnLang" onclick="toggleLang()" title="Cambiar a español / Switch to English">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span id="langLabel">ES</span>
+    </button>
+    <button class="btn-util" id="btnTheme" onclick="toggleTheme()"></button>
+    <span class="hbadge"><span class="dot"></span><span data-i18n="live">Live</span></span>
     <button class="btn-hdr" id="btnRefresh" onclick="refreshData()">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/><path d="M12 2v3.5H8.5"/>
       </svg>
-      Refresh
+      <span data-i18n="refresh">Refresh</span>
     </button>
   </div>
 </header>
@@ -282,17 +320,17 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
   <div class="page-header">
     <div>
-      <div class="page-title">Shipment Monitor</div>
-      <div class="page-sub">Real-time visibility into cross-border shipments — synced from Google Sheets</div>
+      <div class="page-title" data-i18n="shipment-monitor">Shipment Monitor</div>
+      <div class="page-sub" data-i18n="page-sub">Real-time visibility into cross-border shipments — synced from Google Sheets</div>
     </div>
     <div class="last-updated" id="lastUpdated">—</div>
   </div>
 
   <div class="kpi-row">
-    <div class="kpi-card"><div class="kpi-label">Total Shipments</div><div class="kpi-value accent" id="kpiTotal">—</div><div class="kpi-sub" id="kpiTotalSub">In system</div></div>
-    <div class="kpi-card"><div class="kpi-label">Unique Carriers</div><div class="kpi-value" id="kpiCarriers">—</div><div class="kpi-sub" id="kpiCarriersSub">Active carriers</div></div>
-    <div class="kpi-card"><div class="kpi-label">Scheduled Today</div><div class="kpi-value green" id="kpiToday">—</div><div class="kpi-sub">Delivery appointments</div></div>
-    <div class="kpi-card"><div class="kpi-label">This Week</div><div class="kpi-value amber" id="kpiWeek">—</div><div class="kpi-sub">Upcoming deliveries</div></div>
+    <div class="kpi-card"><div class="kpi-label" data-i18n="kpi-total">Total Shipments</div><div class="kpi-value accent" id="kpiTotal">—</div><div class="kpi-sub" id="kpiTotalSub" data-i18n="kpi-total-sub">In system</div></div>
+    <div class="kpi-card"><div class="kpi-label" data-i18n="kpi-carriers">Unique Carriers</div><div class="kpi-value" id="kpiCarriers">—</div><div class="kpi-sub" id="kpiCarriersSub" data-i18n="kpi-carriers-sub">Active carriers</div></div>
+    <div class="kpi-card"><div class="kpi-label" data-i18n="kpi-today">Scheduled Today</div><div class="kpi-value green" id="kpiToday">—</div><div class="kpi-sub" data-i18n="kpi-today-sub">Delivery appointments</div></div>
+    <div class="kpi-card"><div class="kpi-label" data-i18n="kpi-week">This Week</div><div class="kpi-value amber" id="kpiWeek">—</div><div class="kpi-sub" data-i18n="kpi-week-sub">Upcoming deliveries</div></div>
   </div>
 
   <div class="status-bar loading" id="statusBar">
@@ -303,31 +341,31 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
   <!-- Search row -->
   <div class="search-row">
     <div class="srch-field">
-      <span class="srch-label">Shipment ID</span>
+      <span class="srch-label" data-i18n="lbl-shipment-id">Shipment ID</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
-        <input class="srch-input" id="srchShipment" placeholder="e.g. SH-12345" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+        <input class="srch-input" id="srchShipment" placeholder="e.g. SH-12345" data-i18n="ph-shipment" autocomplete="off" oninput="onSrchInput(this);filterTable()">
       </div>
     </div>
     <div class="srch-field">
-      <span class="srch-label">Trailer #</span>
+      <span class="srch-label" data-i18n="lbl-trailer">Trailer #</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
-        <input class="srch-input" id="srchTrailer" placeholder="e.g. AL15179" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+        <input class="srch-input" id="srchTrailer" placeholder="e.g. AL15179" data-i18n="ph-trailer" autocomplete="off" oninput="onSrchInput(this);filterTable()">
       </div>
     </div>
     <div class="srch-field">
-      <span class="srch-label">Customer Ref</span>
+      <span class="srch-label" data-i18n="lbl-ref">Customer Ref</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
-        <input class="srch-input" id="srchRef" placeholder="Reference / PO #" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+        <input class="srch-input" id="srchRef" placeholder="Reference / PO #" data-i18n="ph-ref" autocomplete="off" oninput="onSrchInput(this);filterTable()">
       </div>
     </div>
     <div class="search-spacer"></div>
     <div class="col-vis-wrap" id="colVisWrap">
       <button class="btn-col-vis" id="btnColVis" onclick="toggleColDrop()">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="1" y="1" width="11" height="11" rx="1.5"/><path d="M4.5 1v11M8.5 1v11"/></svg>
-        Columns
+        <span data-i18n="columns">Columns</span>
         <span class="col-hidden-badge" id="colHiddenBadge" style="display:none">0</span>
       </button>
       <div class="col-vis-drop hidden" id="colVisDrop"></div>
@@ -340,10 +378,10 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
     <!-- Carrier multi-select -->
     <div class="fg" id="fgCarrier">
-      <span class="fg-label">Carrier</span>
+      <span class="fg-label" data-i18n="lbl-carrier">Carrier</span>
       <div class="msel-wrap" id="mselWrapCarrier">
         <button class="msel-btn" id="mselBtnCarrier" aria-expanded="false" onclick="toggleMsel('carrier')">
-          <span class="msel-btn-label" id="mselLabelCarrier">All carriers</span>
+          <span class="msel-btn-label" id="mselLabelCarrier" data-i18n="all-carriers">All carriers</span>
           <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
         </button>
         <div class="msel-drop" id="mselDropCarrier"></div>
@@ -352,10 +390,10 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
     <!-- Shipper multi-select -->
     <div class="fg" id="fgShipper" style="display:none">
-      <span class="fg-label">Shipper</span>
+      <span class="fg-label" data-i18n="lbl-shipper">Shipper</span>
       <div class="msel-wrap" id="mselWrapShipper">
         <button class="msel-btn" id="mselBtnShipper" aria-expanded="false" onclick="toggleMsel('shipper')">
-          <span class="msel-btn-label" id="mselLabelShipper">All shippers</span>
+          <span class="msel-btn-label" id="mselLabelShipper" data-i18n="all-shippers">All shippers</span>
           <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
         </button>
         <div class="msel-drop" id="mselDropShipper"></div>
@@ -364,14 +402,14 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
     <!-- Last Event single-select -->
     <div class="fg" id="fgLastEvent" style="display:none">
-      <span class="fg-label">Last Event</span>
-      <select class="fsel" id="fLastEvent" onchange="onFselChange(this);filterTable()"><option value="">All events</option></select>
+      <span class="fg-label" data-i18n="lbl-last-event">Last Event</span>
+      <select class="fsel" id="fLastEvent" onchange="onFselChange(this);filterTable()"><option value="" data-i18n="all-events">All events</option></select>
     </div>
 
     <div class="fsep"></div>
 
     <div class="fg" id="fgPickup" style="display:none">
-      <span class="fg-label">Pickup date</span>
+      <span class="fg-label" data-i18n="lbl-pickup">Pickup date</span>
       <div class="date-pair">
         <input type="date" class="fdate" id="fPickupFrom" onchange="onFdateChange(this);filterTable()">
         <span class="date-arrow">→</span>
@@ -381,7 +419,7 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
     <div class="fsep" id="fgPickupSep" style="display:none"></div>
 
     <div class="fg" id="fgDelivery">
-      <span class="fg-label">Delivery date</span>
+      <span class="fg-label" data-i18n="lbl-delivery">Delivery date</span>
       <div class="date-pair">
         <input type="date" class="fdate" id="fDeliveryFrom" onchange="onFdateChange(this);filterTable()">
         <span class="date-arrow">→</span>
@@ -391,24 +429,24 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
     <div class="filter-actions">
       <span class="active-count" id="activeCount"></span>
-      <button class="btn-clear" onclick="clearAllFilters()">Clear filters</button>
+      <button class="btn-clear" onclick="clearAllFilters()" data-i18n="clear-filters">Clear filters</button>
     </div>
   </div>
 
   <!-- Views bar -->
   <div class="views-bar">
-    <span class="views-label">Views</span>
+    <span class="views-label" data-i18n="views">Views</span>
     <div class="view-pills" id="viewPills"></div>
     <div class="save-view-wrap">
       <button class="btn-save-view" id="btnSaveView" onclick="openSaveView()">
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5.5 1v9M1 5.5h9"/></svg>
-        Save view
+        <span data-i18n="save-view">Save view</span>
       </button>
       <div class="save-popover hidden" id="savePopover">
-        <input id="viewNameInput" placeholder="Name this view…" maxlength="32"
+        <input id="viewNameInput" placeholder="Name this view…" data-i18n="view-name-ph" maxlength="32"
                onkeydown="if(event.key==='Enter')confirmSaveView();if(event.key==='Escape')closeSaveView()">
-        <button class="btn-pop-ok" onclick="confirmSaveView()">Save</button>
-        <button class="btn-pop-cancel" onclick="closeSaveView()">Cancel</button>
+        <button class="btn-pop-ok" onclick="confirmSaveView()" data-i18n="save">Save</button>
+        <button class="btn-pop-cancel" onclick="closeSaveView()" data-i18n="cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -434,7 +472,7 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
 <aside class="drawer" id="shipmentDrawer" role="dialog" aria-modal="true" aria-labelledby="dId">
   <div class="drawer-header">
     <div class="drawer-header-left">
-      <span class="drawer-eyebrow">Shipment Detail</span>
+      <span class="drawer-eyebrow" data-i18n="shipment-detail">Shipment Detail</span>
       <div class="drawer-id" id="dId">—</div>
       <div id="dStatusBadge"></div>
     </div>
@@ -657,7 +695,7 @@ const LAST_EVENT_OPTIONS=[
 
 function buildLastEventSel(){
   const sel=document.getElementById("fLastEvent");
-  sel.innerHTML='<option value="">All events</option>'+
+  sel.innerHTML=`<option value="">${T[_lang]["all-events"]}</option>`+
     LAST_EVENT_OPTIONS.map(e=>`<option value="${eh(e)}">${eh(e.replace(/\b\w/g,c=>c.toUpperCase()))}</option>`).join("");
   sel.dataset.col=_cm.lastEvent||"";
   showEl("fgLastEvent",!!_cm.lastEvent);
@@ -730,7 +768,7 @@ function clearMsel(type){
 
 function refreshMselLabel(type){
   const set=type==="carrier"?_selCarriers:_selShippers;
-  const placeholder=type==="carrier"?"All carriers":"All shippers";
+  const placeholder=T[_lang][type==="carrier"?"all-carriers":"all-shippers"];
   const label=document.getElementById("mselLabel"+cap(type));
   const btn  =document.getElementById("mselBtn"  +cap(type));
   if(!label||!btn)return;
@@ -994,11 +1032,12 @@ function toggleColDrop(){
 
 function buildColDrop(){
   const drop=document.getElementById("colVisDrop");
+  const tr=T[_lang];
   drop.innerHTML=`<div class="col-vis-header">
-    <span class="col-vis-title">Show / hide columns</span>
+    <span class="col-vis-title">${tr["show-hide-cols"]}</span>
     <div style="display:flex;gap:6px">
-      <button class="btn-show-all" onclick="showAllCols()">Show all</button>
-      <button class="btn-show-all" onclick="hideAllCols()" style="background:var(--bg2);color:var(--tx2)">Hide all</button>
+      <button class="btn-show-all" onclick="showAllCols()">${tr["show-all"]}</button>
+      <button class="btn-show-all" onclick="hideAllCols()" style="background:var(--bg2);color:var(--tx2)">${tr["hide-all"]}</button>
     </div>
   </div>`+
   _colOrder.map(col=>`
@@ -1291,7 +1330,85 @@ function mkSec(title){
 
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
 
+// ── i18n ──────────────────────────────────────────────────────────────────────
+const T={
+  en:{
+    "ops-dashboard":"Operations Dashboard","live":"Live","refresh":"Refresh",
+    "shipment-monitor":"Shipment Monitor",
+    "page-sub":"Real-time visibility into cross-border shipments — synced from Google Sheets",
+    "kpi-total":"Total Shipments","kpi-total-sub":"In system",
+    "kpi-carriers":"Unique Carriers","kpi-carriers-sub":"Active carriers",
+    "kpi-today":"Scheduled Today","kpi-today-sub":"Delivery appointments",
+    "kpi-week":"This Week","kpi-week-sub":"Upcoming deliveries",
+    "lbl-shipment-id":"Shipment ID","ph-shipment":"e.g. SH-12345",
+    "lbl-trailer":"Trailer #","ph-trailer":"e.g. AL15179",
+    "lbl-ref":"Customer Ref","ph-ref":"Reference / PO #",
+    "columns":"Columns","lbl-carrier":"Carrier","all-carriers":"All carriers",
+    "lbl-shipper":"Shipper","all-shippers":"All shippers",
+    "lbl-last-event":"Last Event","all-events":"All events",
+    "lbl-pickup":"Pickup date","lbl-delivery":"Delivery date",
+    "clear-filters":"Clear filters","views":"Views","save-view":"Save view",
+    "view-name-ph":"Name this view…","save":"Save","cancel":"Cancel",
+    "show-hide-cols":"Show / hide columns","show-all":"Show all","hide-all":"Hide all",
+    "shipment-detail":"Shipment Detail"
+  },
+  es:{
+    "ops-dashboard":"Panel de Operaciones","live":"En vivo","refresh":"Actualizar",
+    "shipment-monitor":"Monitor de Embarques",
+    "page-sub":"Visibilidad en tiempo real de embarques transfronterizos — sincronizado con Google Sheets",
+    "kpi-total":"Total de Embarques","kpi-total-sub":"En el sistema",
+    "kpi-carriers":"Transportistas","kpi-carriers-sub":"Transportistas activos",
+    "kpi-today":"Programados Hoy","kpi-today-sub":"Citas de entrega",
+    "kpi-week":"Esta Semana","kpi-week-sub":"Próximas entregas",
+    "lbl-shipment-id":"ID de Embarque","ph-shipment":"ej. SH-12345",
+    "lbl-trailer":"# Trailer","ph-trailer":"ej. AL15179",
+    "lbl-ref":"Ref. Cliente","ph-ref":"Referencia / PO #",
+    "columns":"Columnas","lbl-carrier":"Transportista","all-carriers":"Todos los transportistas",
+    "lbl-shipper":"Embarcador","all-shippers":"Todos los embarcadores",
+    "lbl-last-event":"Último Evento","all-events":"Todos los eventos",
+    "lbl-pickup":"Fecha de recolección","lbl-delivery":"Fecha de entrega",
+    "clear-filters":"Limpiar filtros","views":"Vistas","save-view":"Guardar vista",
+    "view-name-ph":"Nombre de la vista…","save":"Guardar","cancel":"Cancelar",
+    "show-hide-cols":"Mostrar / ocultar columnas","show-all":"Mostrar todo","hide-all":"Ocultar todo",
+    "shipment-detail":"Detalle de Embarque"
+  }
+};
+
+let _lang=localStorage.getItem("nuvo_lang")||"en";
+function applyLang(l){
+  _lang=l;
+  const tr=T[l];
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const key=el.getAttribute("data-i18n");
+    const val=tr[key];
+    if(!val)return;
+    if(el.tagName==="INPUT"){el.placeholder=val;}
+    else{el.textContent=val;}
+  });
+  document.getElementById("langLabel").textContent=l==="en"?"ES":"EN";
+  document.getElementById("btnLang").title=l==="en"?"Cambiar a español":"Switch to English";
+  buildColDrop();
+  localStorage.setItem("nuvo_lang",l);
+}
+function toggleLang(){applyLang(_lang==="en"?"es":"en");}
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+let _theme=localStorage.getItem("nuvo_theme")||"light";
+const _moonIcon=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+const _sunIcon=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+function applyTheme(t){
+  _theme=t;
+  document.documentElement.setAttribute("data-theme",t);
+  const btn=document.getElementById("btnTheme");
+  if(t==="dark"){btn.innerHTML=_sunIcon;btn.title="Switch to light mode";}
+  else{btn.innerHTML=_moonIcon;btn.title="Switch to dark mode";}
+  localStorage.setItem("nuvo_theme",t);
+}
+function toggleTheme(){applyTheme(_theme==="dark"?"light":"dark");}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
+applyTheme(_theme);
+applyLang(_lang);
 loadViews();
 loadData();
 setInterval(loadData,REFRESH_MS);
