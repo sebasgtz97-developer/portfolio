@@ -113,6 +113,19 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 .msel-clear-item{font-size:11px;font-weight:500;color:var(--tx3)}
 .msel-clear-item:hover{color:var(--red);background:#FEF2F2}
 
+/* Column visibility */
+.col-vis-wrap{position:relative;align-self:flex-end}
+.btn-col-vis{height:32px;padding:0 10px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-weight:500;color:var(--tx2);background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn-col-vis:hover{border-color:var(--bd2);background:var(--bg)}
+.btn-col-vis.active{border-color:var(--teal);background:#F0FDF4;color:var(--teal);font-weight:600}
+.col-hidden-badge{min-width:16px;height:16px;padding:0 4px;background:var(--teal);color:#fff;border-radius:999px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.col-vis-drop{position:absolute;top:calc(100% + 4px);right:0;z-index:400;background:var(--panel);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:210px;max-height:300px;overflow-y:auto;padding:0}
+.col-vis-drop.hidden{display:none}
+.col-vis-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 6px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--panel)}
+.col-vis-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em}
+.btn-show-all{font-size:11px;font-weight:500;color:var(--teal);background:none;border:none;cursor:pointer;padding:0;font-family:inherit}
+.btn-show-all:hover{text-decoration:underline}
+
 /* Views bar */
 .views-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;min-height:30px}
 .views-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
@@ -311,6 +324,14 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
       </div>
     </div>
     <div class="search-spacer"></div>
+    <div class="col-vis-wrap" id="colVisWrap">
+      <button class="btn-col-vis" id="btnColVis" onclick="toggleColDrop()">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="1" y="1" width="11" height="11" rx="1.5"/><path d="M4.5 1v11M8.5 1v11"/></svg>
+        Columns
+        <span class="col-hidden-badge" id="colHiddenBadge" style="display:none">0</span>
+      </button>
+      <div class="col-vis-drop hidden" id="colVisDrop"></div>
+    </div>
     <span class="result-count" id="resultCount"></span>
   </div>
 
@@ -430,6 +451,7 @@ const SHEET_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6m
 const REFRESH_MS = 5 * 60 * 1000;
 const LS_VIEWS   = "nuvo_ops_views";
 const LS_COLS    = "nuvo_ops_col_order";
+const LS_HIDDEN  = "nuvo_ops_hidden_cols";
 
 // ── State ────────────────────────────────────────────────────────────────────
 let _allRows  = [];
@@ -445,6 +467,7 @@ let _dragSrcIdx  = null;
 let _isDragging  = false;
 let _views       = [];
 let _activeView  = null;
+let _hiddenCols  = new Set();
 
 // ── CSV parser ───────────────────────────────────────────────────────────────
 function splitCSVLine(line){
@@ -511,6 +534,11 @@ async function loadData(){
       _colOrder=[..._columns];
     }
 
+    // restore hidden columns
+    const savedHidden=tryJSON(localStorage.getItem(LS_HIDDEN));
+    _hiddenCols=new Set(Array.isArray(savedHidden)?savedHidden.filter(c=>_columns.includes(c)):[]);
+    updateColVisBtn();
+
     buildHeader();
     buildFilters();
     filterTable(); // also updates KPIs
@@ -528,8 +556,10 @@ async function loadData(){
 
 // ── Build table header (draggable + sortable) ─────────────────────────────────
 function buildHeader(){
-  document.getElementById("tableHead").innerHTML="<tr>"+_colOrder.map((col,idx)=>`
-    <th draggable="true" data-col="${ea(col)}" data-idx="${idx}"
+  const visCols=_colOrder.filter(c=>!_hiddenCols.has(c));
+  document.getElementById("tableHead").innerHTML="<tr>"+visCols.map(col=>{
+    const idx=_colOrder.indexOf(col);
+    return`<th draggable="true" data-col="${ea(col)}" data-idx="${idx}"
         ondragstart="dStart(event)" ondragover="dOver(event)"
         ondrop="dDrop(event)" ondragend="dEnd(event)">
       <div class="th-inner">
@@ -539,7 +569,8 @@ function buildHeader(){
           <span class="sort-icon"></span>
         </span>
       </div>
-    </th>`).join("")+"</tr>";
+    </th>`;
+  }).join("")+"</tr>";
   if(_sortCol){
     document.querySelectorAll("th").forEach(th=>{
       if(th.dataset.col===_sortCol)
@@ -791,12 +822,13 @@ function renderTable(){
   document.getElementById("resultCount").textContent=
     shown===total?`${total} shipments`:`${shown} of ${total} shipments`;
 
+  const visCols=_colOrder.filter(c=>!_hiddenCols.has(c));
   if(!_filtered.length){
-    tbody.innerHTML=`<tr><td colspan="${_colOrder.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No shipments match</div><div class="empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="${visCols.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No shipments match</div><div class="empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
     return;
   }
   tbody.innerHTML=_filtered.map((row,i)=>{
-    const tds=_colOrder.map(col=>{
+    const tds=visCols.map(col=>{
       let val=row[col]||"";
       let cls="";
       const raw=val;
@@ -855,7 +887,8 @@ function getState(){
     lastEvent:gv("fLastEvent"),
     pickupFrom:gv("fPickupFrom"),pickupTo:gv("fPickupTo"),
     deliveryFrom:gv("fDeliveryFrom"),deliveryTo:gv("fDeliveryTo"),
-    colOrder:[..._colOrder]
+    colOrder:[..._colOrder],
+    hiddenCols:[..._hiddenCols]
   };
 }
 function applyState(s){
@@ -878,8 +911,13 @@ function applyState(s){
     const added=_columns.filter(c=>!valid.includes(c));
     _colOrder=[...valid,...added];
     localStorage.setItem(LS_COLS,JSON.stringify(_colOrder));
-    buildHeader();
   }
+  if(Array.isArray(s.hiddenCols)){
+    _hiddenCols=new Set(s.hiddenCols.filter(c=>_columns.includes(c)));
+    localStorage.setItem(LS_HIDDEN,JSON.stringify([..._hiddenCols]));
+    updateColVisBtn();
+  }
+  buildHeader();
 }
 function applyView(idx){
   if(!_views[idx])return;
@@ -928,10 +966,71 @@ function confirmSaveView(){
   saveViews();renderPills();closeSaveView();
 }
 
+// ── Column visibility ─────────────────────────────────────────────────────────
+function toggleColDrop(){
+  const drop=document.getElementById("colVisDrop");
+  const isOpen=!drop.classList.contains("hidden");
+  closeAllMsel();
+  closeSaveView();
+  if(isOpen){drop.classList.add("hidden");return;}
+  buildColDrop();
+  drop.classList.remove("hidden");
+}
+
+function buildColDrop(){
+  const drop=document.getElementById("colVisDrop");
+  drop.innerHTML=`<div class="col-vis-header">
+    <span class="col-vis-title">Show / hide columns</span>
+    <button class="btn-show-all" onclick="showAllCols()">Show all</button>
+  </div>`+
+  _colOrder.map(col=>`
+    <div class="msel-item" onclick="onColVisClick(event,'${ea(col)}')">
+      <input type="checkbox" data-col="${ea(col)}" ${_hiddenCols.has(col)?'':'checked'}
+             onclick="event.stopPropagation()"
+             onchange="toggleColVis('${ea(col)}',this.checked)">
+      <span>${eh(col.replace(/_/g,' '))}</span>
+    </div>`).join('');
+}
+
+function onColVisClick(e,col){
+  const chk=e.currentTarget.querySelector("input[type=checkbox]");
+  if(e.target===chk)return;
+  chk.checked=!chk.checked;
+  toggleColVis(col,chk.checked);
+}
+
+function toggleColVis(col,visible){
+  if(visible)_hiddenCols.delete(col); else _hiddenCols.add(col);
+  localStorage.setItem(LS_HIDDEN,JSON.stringify([..._hiddenCols]));
+  updateColVisBtn();
+  clearActiveView();
+  buildHeader();
+  renderTable();
+}
+
+function showAllCols(){
+  _hiddenCols.clear();
+  localStorage.setItem(LS_HIDDEN,"[]");
+  updateColVisBtn();
+  buildColDrop();
+  clearActiveView();
+  buildHeader();
+  renderTable();
+}
+
+function updateColVisBtn(){
+  const n=_hiddenCols.size;
+  document.getElementById("btnColVis").classList.toggle("active",n>0);
+  const badge=document.getElementById("colHiddenBadge");
+  badge.textContent=n;
+  badge.style.display=n>0?"inline-flex":"none";
+}
+
 // ── Close dropdowns on outside click ─────────────────────────────────────────
 document.addEventListener("click",e=>{
-  // multi-selects
   if(!e.target.closest(".msel-wrap"))closeAllMsel();
+  // col vis drop
+  if(!e.target.closest("#colVisWrap"))document.getElementById("colVisDrop").classList.add("hidden");
   // save-view popover
   const pop=document.getElementById("savePopover");
   const btn=document.getElementById("btnSaveView");
