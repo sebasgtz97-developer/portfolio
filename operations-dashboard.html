@@ -592,7 +592,7 @@ function sortBy(col,th){
 function buildFilters(){
   buildMsel("carrier", _cm.carrier, "fgCarrier", true);
   buildMsel("shipper", _cm.shipper, "fgShipper", false);
-  populateSel("fLastEvent", _cm.lastEvent, "All events", "fgLastEvent", false);
+  buildLastEventSel();
   showEl("fgPickup",    !!_cm.pickup);
   showEl("fgPickupSep", !!_cm.pickup);
   disableInput("srchShipment",!_cm.shipmentId,_cm.shipmentId?"e.g. SH-12345":"Column not in sheet");
@@ -600,18 +600,25 @@ function buildFilters(){
   disableInput("srchRef",     !_cm.ref,       _cm.ref       ?"Reference / PO #":"Column not in sheet");
 }
 
-function populateSel(id,col,placeholder,groupId,alwaysShow){
-  const sel=document.getElementById(id);
-  sel.innerHTML=`<option value="">${placeholder}</option>`;
-  if(col){
-    const vals=[...new Set(_allRows.map(r=>r[col]).filter(Boolean))].sort();
-    vals.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);});
-    sel.dataset.col=col;
-    showEl(groupId,true);
-  }else{
-    sel.dataset.col="";
-    showEl(groupId,alwaysShow);
-  }
+const LAST_EVENT_OPTIONS=[
+  "arrived to final destination",
+  "arrived to mx border",
+  "arrived to origin",
+  "arrived to us border",
+  "cleared us customs",
+  "delivered to final destination",
+  "driver on way to origin",
+  "empty trailer picked up",
+  "picked up from mx border",
+  "picked up from origin"
+];
+
+function buildLastEventSel(){
+  const sel=document.getElementById("fLastEvent");
+  sel.innerHTML='<option value="">All events</option>'+
+    LAST_EVENT_OPTIONS.map(e=>`<option value="${eh(e)}">${eh(e.replace(/\b\w/g,c=>c.toUpperCase()))}</option>`).join("");
+  sel.dataset.col=_cm.lastEvent||"";
+  showEl("fgLastEvent",!!_cm.lastEvent);
 }
 
 // ── Multi-select ──────────────────────────────────────────────────────────────
@@ -750,7 +757,7 @@ function filterTable(){
     if(sRef &&_cm.ref       &&!(row[_cm.ref]        ||"").toLowerCase().includes(sRef)) return false;
     if(_selCarriers.size&&_cm.carrier &&!_selCarriers.has(row[_cm.carrier]))  return false;
     if(_selShippers.size&&_cm.shipper &&!_selShippers.has(row[_cm.shipper]))  return false;
-    if(vEvt&&_cm.lastEvent&&row[_cm.lastEvent]!==vEvt) return false;
+    if(vEvt&&_cm.lastEvent&&(row[_cm.lastEvent]||"").toLowerCase()!==vEvt) return false;
     if((pfrom||pto)&&_cm.pickup){
       const d=parseDate(row[_cm.pickup]||"");
       if(!d)return false;
