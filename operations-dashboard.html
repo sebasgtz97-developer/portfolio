@@ -187,8 +187,8 @@ td.col-id{font-weight:600;color:var(--teal)}
 /* ── Shipment Detail Modal ─────────────────────────────────────────────── */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;opacity:0;pointer-events:none;transition:opacity .22s ease;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .drawer-overlay.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:50%;left:50%;width:720px;max-width:96vw;max-height:88vh;background:var(--panel);z-index:501;border-radius:16px;border:1px solid var(--bd);box-shadow:0 32px 80px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;transform:translate(-50%,-46%);opacity:0;transition:transform .3s cubic-bezier(.34,1.1,.64,1),opacity .22s ease}
-.drawer.open{transform:translate(-50%,-50%);opacity:1}
+.drawer{position:fixed;top:50%;left:50%;width:720px;max-width:96vw;max-height:88vh;background:var(--panel);z-index:501;border-radius:16px;border:1px solid var(--bd);box-shadow:0 32px 80px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;transform:translate(-50%,-46%);opacity:0;pointer-events:none;transition:transform .3s cubic-bezier(.34,1.1,.64,1),opacity .22s ease}
+.drawer.open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
 .drawer-header{display:flex;align-items:flex-start;justify-content:space-between;padding:22px 24px 18px;border-bottom:1px solid var(--bd);flex-shrink:0;gap:16px;background:var(--panel);border-radius:16px 16px 0 0}
 .drawer-header-left{display:flex;flex-direction:column;gap:6px;min-width:0}
 .drawer-eyebrow{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.12em}
