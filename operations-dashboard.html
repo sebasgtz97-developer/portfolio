@@ -182,6 +182,63 @@ td.col-id{font-weight:600;color:var(--blue)}
 /* Responsive */
 @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.page-header{flex-direction:column;gap:4px}}
 @media(max-width:560px){.kpi-row{grid-template-columns:1fr 1fr}.main{padding:14px 14px 32px}.srch-input{width:140px}}
+
+/* ── Shipment Detail Drawer ─────────────────────────────────────────────── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:opacity .25s ease;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.drawer-overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:500px;max-width:100vw;background:var(--panel);z-index:501;transform:translateX(102%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;border-left:1px solid var(--bd);display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.12)}
+.drawer.open{transform:translateX(0)}
+.drawer-header{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--panel);z-index:1;flex-shrink:0;gap:12px}
+.drawer-header-left{display:flex;flex-direction:column;gap:6px;min-width:0}
+.drawer-eyebrow{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em}
+.drawer-id{font-size:22px;font-weight:700;color:var(--blue);letter-spacing:-.02em;line-height:1.1;word-break:break-all}
+.drawer-close{width:32px;height:32px;border-radius:8px;background:none;border:1px solid var(--bd);color:var(--tx3);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;font-family:inherit;line-height:1;margin-top:2px}
+.drawer-close:hover{background:#FEF2F2;border-color:#FECACA;color:var(--red)}
+.drawer-body{padding:16px 20px 40px;flex:1;display:flex;flex-direction:column;gap:16px}
+
+/* Section */
+.dsec-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.dsec-title::after{content:"";flex:1;height:1px;background:var(--bd)}
+
+/* Status hero */
+.status-hero{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:12px 14px}
+.status-hero-left{display:flex;flex-direction:column;gap:3px}
+.status-hero-label{font-size:10px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em}
+.status-hero .badge{font-size:11px;padding:5px 14px}
+
+/* Route banner */
+.route-banner{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:0}
+.rp{flex:1;min-width:0}
+.rp-label{font-size:10px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.rp-name{font-size:13px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-date{font-size:11px;color:var(--tx3);margin-top:2px}
+.rp-arrow{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 14px}
+.rp-arrow-line{width:40px;height:1px;background:var(--bd2)}
+.rp-arrow-head{font-size:14px;color:var(--tx4);line-height:1}
+.rp-carrier-tag{font-size:10px;color:var(--tx3);white-space:nowrap;margin-top:2px;text-align:center}
+
+/* Detail grid */
+.detail-grid{background:var(--bg);border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.detail-row{display:grid;grid-template-columns:120px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--bd);align-items:baseline}
+.detail-row:last-child{border-bottom:none}
+.dl{font-size:11px;font-weight:500;color:var(--tx3);display:flex;align-items:center;gap:5px;flex-shrink:0}
+.dv{font-size:12px;color:var(--tx1);font-weight:500;word-break:break-word;line-height:1.45}
+.dv.empty{color:var(--tx4);font-weight:400}
+.dv.id{color:var(--blue);font-weight:600;font-size:13px}
+
+/* All-fields grid */
+.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.fc{background:var(--panel);padding:9px 12px}
+.fc-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-val{font-size:12px;color:var(--tx1);word-break:break-word;line-height:1.4}
+.fc-val.empty{color:var(--tx4)}
+
+/* Clickable rows */
+tbody tr.clickable{cursor:pointer}
+tbody tr.clickable:hover td{background:#EFF6FF !important}
+tbody tr.clickable:hover td.col-id{color:#1d4ed8}
+
+@media(max-width:560px){.drawer{width:100%}.detail-row{grid-template-columns:100px 1fr}.fields-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -346,6 +403,22 @@ td.col-id{font-weight:600;color:var(--blue)}
   </div>
 
 </div>
+
+<!-- ── Shipment Detail Drawer ─────────────────────────────────────────────── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="shipmentDrawer" role="dialog" aria-modal="true" aria-labelledby="dId">
+  <div class="drawer-header">
+    <div class="drawer-header-left">
+      <span class="drawer-eyebrow">Shipment Detail</span>
+      <div class="drawer-id" id="dId">—</div>
+      <div id="dStatusBadge"></div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Close detail panel">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l12 12M13 1L1 13"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
 
 <script>
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -704,7 +777,7 @@ function renderTable(){
     tbody.innerHTML=`<tr><td colspan="${_colOrder.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No shipments match</div><div class="empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
     return;
   }
-  tbody.innerHTML=_filtered.map(row=>{
+  tbody.innerHTML=_filtered.map((row,i)=>{
     const tds=_colOrder.map(col=>{
       let val=row[col]||"";
       let cls="";
@@ -715,7 +788,7 @@ function renderTable(){
       else val=eh(val);
       return `<td class="${cls}" title="${eh(raw)}">${val||'<span style="color:var(--tx4)">—</span>'}</td>`;
     }).join("");
-    return`<tr>${tds}</tr>`;
+    return`<tr class="clickable" onclick="openDrawer(${i})">${tds}</tr>`;
   }).join("");
 }
 
@@ -891,6 +964,126 @@ function badgeCls(val){
   if(/scheduled|booked|confirmed/i.test(v))return"badge-scheduled";
   return"badge-default";
 }
+
+// ── Shipment Detail Drawer ────────────────────────────────────────────────────
+function openDrawer(rowIdx){
+  const row=_filtered[rowIdx];
+  if(!row)return;
+
+  // Header
+  const id=_cm.shipmentId?row[_cm.shipmentId]||"—":"—";
+  document.getElementById("dId").textContent=id;
+
+  const status=_cm.lastEvent?row[_cm.lastEvent]||"":"";
+  document.getElementById("dStatusBadge").innerHTML=status
+    ?`<span class="badge ${badgeCls(status)}" style="font-size:11px;padding:4px 12px">${fmtLabel(status)}</span>`
+    :"";
+
+  // Body
+  const body=document.getElementById("drawerBody");
+  body.innerHTML="";
+
+  // ── Status section ──
+  if(status){
+    const sec=mkSec("Current Status");
+    sec.innerHTML+=`<div class="status-hero">
+      <div class="status-hero-left">
+        <span class="status-hero-label">Last recorded event</span>
+      </div>
+      <span class="badge ${badgeCls(status)}" style="font-size:12px;padding:6px 16px">${fmtLabel(status)}</span>
+    </div>`;
+    body.appendChild(sec);
+  }
+
+  // ── Route section ──
+  const shipper=_cm.shipper?row[_cm.shipper]||"":"";
+  const carrier=_cm.carrier?row[_cm.carrier]||"":"";
+  const pickupDate=_cm.pickup?row[_cm.pickup]||"":"";
+  const deliveryDate=_cm.delivery?row[_cm.delivery]||"":"";
+
+  if(shipper||carrier||deliveryDate){
+    const sec=mkSec("Route & Schedule");
+    sec.innerHTML+=`<div class="route-banner">
+      <div class="rp">
+        <div class="rp-label">Origin / Shipper</div>
+        <div class="rp-name">${shipper?eh(shipper):'<span style="color:var(--tx4)">—</span>'}</div>
+        ${pickupDate?`<div class="rp-date">Pickup: ${fmtAppt(pickupDate)}</div>`:""}
+      </div>
+      <div class="rp-arrow">
+        <div class="rp-arrow-head">→</div>
+        ${carrier?`<div class="rp-carrier-tag" title="${eh(carrier)}" style="max-width:80px;overflow:hidden;text-overflow:ellipsis">${eh(carrier)}</div>`:""}
+      </div>
+      <div class="rp" style="text-align:right">
+        <div class="rp-label" style="text-align:right">Destination</div>
+        <div class="rp-name" style="text-align:right">${deliveryDate?fmtAppt(deliveryDate):'<span style="color:var(--tx4)">—</span>'}</div>
+        ${deliveryDate?`<div class="rp-date" style="text-align:right">Delivery appt.</div>`:""}
+      </div>
+    </div>`;
+    body.appendChild(sec);
+  }
+
+  // ── Key details section ──
+  const coreFields=[];
+  if(_cm.ref&&row[_cm.ref])coreFields.push(["🏷","Customer Ref",row[_cm.ref],"id"]);
+  if(_cm.trailer&&row[_cm.trailer])coreFields.push(["🚛","Trailer #",row[_cm.trailer],"id"]);
+  if(_cm.carrier&&row[_cm.carrier])coreFields.push(["🏢","Carrier",row[_cm.carrier],""]);
+  if(_cm.shipper&&row[_cm.shipper])coreFields.push(["📦","Shipper",row[_cm.shipper],""]);
+  if(_cm.pickup&&row[_cm.pickup])coreFields.push(["📅","Pickup Date",fmtAppt(row[_cm.pickup]),""]);
+  if(_cm.delivery&&row[_cm.delivery])coreFields.push(["🎯","Delivery Appt.",fmtAppt(row[_cm.delivery]),""]);
+
+  if(coreFields.length){
+    const sec=mkSec("Shipment Details");
+    sec.innerHTML+=`<div class="detail-grid">${
+      coreFields.map(([icon,label,val,cls])=>`
+        <div class="detail-row">
+          <div class="dl">${icon} ${label}</div>
+          <div class="dv ${cls}">${eh(val)}</div>
+        </div>`).join("")
+    }</div>`;
+    body.appendChild(sec);
+  }
+
+  // ── All other columns ──
+  const known=new Set([_cm.shipmentId,_cm.carrier,_cm.shipper,_cm.trailer,_cm.ref,_cm.pickup,_cm.delivery,_cm.lastEvent].filter(Boolean));
+  const extra=_colOrder.filter(c=>!known.has(c)&&c);
+  const extraWithData=extra.filter(c=>row[c]);
+  const extraEmpty=extra.filter(c=>!row[c]);
+  const allExtra=[...extraWithData,...extraEmpty];
+
+  if(allExtra.length){
+    const sec=mkSec("All Fields");
+    sec.innerHTML+=`<div class="fields-grid">${
+      allExtra.map(col=>{
+        const v=row[col]||"";
+        const formatted=(col===_cm.delivery||col===_cm.pickup)&&v?fmtAppt(v):eh(v);
+        return`<div class="fc">
+          <div class="fc-label" title="${eh(col)}">${eh(col)}</div>
+          <div class="fc-val${v?"":" empty"}">${v?formatted:"—"}</div>
+        </div>`;
+      }).join("")
+    }</div>`;
+    body.appendChild(sec);
+  }
+
+  document.getElementById("drawerOverlay").classList.add("open");
+  document.getElementById("shipmentDrawer").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+
+function closeDrawer(){
+  document.getElementById("drawerOverlay").classList.remove("open");
+  document.getElementById("shipmentDrawer").classList.remove("open");
+  document.body.style.overflow="";
+}
+
+function mkSec(title){
+  const div=document.createElement("div");
+  div.className="drawer-section";
+  div.innerHTML=`<div class="dsec-title">${title}</div>`;
+  return div;
+}
+
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadViews();
