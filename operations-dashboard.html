@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nuvocargo — Operations Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root {
   --teal:   #1C4A3E;
@@ -160,7 +161,7 @@ td{padding:9px 12px;border-bottom:1px solid var(--bd);color:var(--tx2);white-spa
 tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:#F9FAFB}
 tbody tr{transition:background .08s}
-td.col-id{font-weight:600;color:var(--blue)}
+td.col-id{font-weight:600;color:var(--teal)}
 
 /* Empty / skeleton */
 .empty-state{padding:52px 24px;text-align:center}
@@ -183,62 +184,65 @@ td.col-id{font-weight:600;color:var(--blue)}
 @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.page-header{flex-direction:column;gap:4px}}
 @media(max-width:560px){.kpi-row{grid-template-columns:1fr 1fr}.main{padding:14px 14px 32px}.srch-input{width:140px}}
 
-/* ── Shipment Detail Drawer ─────────────────────────────────────────────── */
-.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;opacity:0;pointer-events:none;transition:opacity .25s ease;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+/* ── Shipment Detail Modal ─────────────────────────────────────────────── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;opacity:0;pointer-events:none;transition:opacity .22s ease;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .drawer-overlay.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;height:100%;width:500px;max-width:100vw;background:var(--panel);z-index:501;transform:translateX(102%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;border-left:1px solid var(--bd);display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.12)}
-.drawer.open{transform:translateX(0)}
-.drawer-header{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 20px 16px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--panel);z-index:1;flex-shrink:0;gap:12px}
+.drawer{position:fixed;top:50%;left:50%;width:720px;max-width:96vw;max-height:88vh;background:var(--panel);z-index:501;border-radius:16px;border:1px solid var(--bd);box-shadow:0 32px 80px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;transform:translate(-50%,-46%);opacity:0;transition:transform .3s cubic-bezier(.34,1.1,.64,1),opacity .22s ease}
+.drawer.open{transform:translate(-50%,-50%);opacity:1}
+.drawer-header{display:flex;align-items:flex-start;justify-content:space-between;padding:22px 24px 18px;border-bottom:1px solid var(--bd);flex-shrink:0;gap:16px;background:var(--panel);border-radius:16px 16px 0 0}
 .drawer-header-left{display:flex;flex-direction:column;gap:6px;min-width:0}
-.drawer-eyebrow{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em}
-.drawer-id{font-size:22px;font-weight:700;color:var(--blue);letter-spacing:-.02em;line-height:1.1;word-break:break-all}
-.drawer-close{width:32px;height:32px;border-radius:8px;background:none;border:1px solid var(--bd);color:var(--tx3);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;font-family:inherit;line-height:1;margin-top:2px}
+.drawer-eyebrow{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.12em}
+.drawer-id{font-size:28px;font-weight:700;color:var(--teal);letter-spacing:-.03em;line-height:1}
+.drawer-close{width:34px;height:34px;border-radius:8px;background:none;border:1px solid var(--bd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;margin-top:2px}
 .drawer-close:hover{background:#FEF2F2;border-color:#FECACA;color:var(--red)}
-.drawer-body{padding:16px 20px 40px;flex:1;display:flex;flex-direction:column;gap:16px}
+.drawer-body{padding:20px 24px 32px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+
+/* Map */
+#dMap{height:210px;border-radius:10px;overflow:hidden;border:1px solid var(--bd);flex-shrink:0}
+.leaflet-container{font-family:'Inter',-apple-system,sans-serif!important}
+.leaflet-popup-content-wrapper{border-radius:8px!important;font-size:12px!important;font-family:'Inter',sans-serif!important;box-shadow:0 4px 16px rgba(0,0,0,.15)!important}
+.map-placeholder{height:210px;border-radius:10px;border:1px dashed var(--bd);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--tx4);background:var(--bg)}
+.map-placeholder svg{opacity:.3}
 
 /* Section */
 .dsec-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .dsec-title::after{content:"";flex:1;height:1px;background:var(--bd)}
 
-/* Status hero */
-.status-hero{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:12px 14px}
-.status-hero-left{display:flex;flex-direction:column;gap:3px}
-.status-hero-label{font-size:10px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em}
-.status-hero .badge{font-size:11px;padding:5px 14px}
+/* ETA hero */
+.eta-card{background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border:1px solid #BBF7D0;border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.eta-left{display:flex;flex-direction:column;gap:2px}
+.eta-label{font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.08em}
+.eta-value{font-size:16px;font-weight:700;color:#15803d;margin-top:2px}
 
 /* Route banner */
-.route-banner{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:0}
+.route-banner{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px 18px;display:flex;align-items:center}
 .rp{flex:1;min-width:0}
-.rp-label{font-size:10px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.rp-label{font-size:10px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
 .rp-name{font-size:13px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rp-date{font-size:11px;color:var(--tx3);margin-top:2px}
-.rp-arrow{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 14px}
-.rp-arrow-line{width:40px;height:1px;background:var(--bd2)}
-.rp-arrow-head{font-size:14px;color:var(--tx4);line-height:1}
-.rp-carrier-tag{font-size:10px;color:var(--tx3);white-space:nowrap;margin-top:2px;text-align:center}
+.rp-date{font-size:11px;color:var(--tx3);margin-top:3px}
+.rp-arrow{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:0 18px}
+.rp-arrow-head{font-size:20px;color:var(--bd2);line-height:1}
+.rp-carrier-tag{font-size:10px;font-weight:500;color:var(--tx3);white-space:nowrap;text-align:center;max-width:100px;overflow:hidden;text-overflow:ellipsis}
+
+/* Current location pill */
+.loc-pill{display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:999px;font-size:11px;font-weight:600;padding:4px 10px;margin-bottom:2px}
+.loc-dot{width:7px;height:7px;border-radius:50%;background:#1C4A3E;flex-shrink:0}
 
 /* Detail grid */
-.detail-grid{background:var(--bg);border:1px solid var(--bd);border-radius:8px;overflow:hidden}
-.detail-row{display:grid;grid-template-columns:120px 1fr;gap:8px;padding:9px 14px;border-bottom:1px solid var(--bd);align-items:baseline}
-.detail-row:last-child{border-bottom:none}
-.dl{font-size:11px;font-weight:500;color:var(--tx3);display:flex;align-items:center;gap:5px;flex-shrink:0}
-.dv{font-size:12px;color:var(--tx1);font-weight:500;word-break:break-word;line-height:1.45}
-.dv.empty{color:var(--tx4);font-weight:400}
-.dv.id{color:var(--blue);font-weight:600;font-size:13px}
-
-/* All-fields grid */
-.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:8px;overflow:hidden}
-.fc{background:var(--panel);padding:9px 12px}
-.fc-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fc-val{font-size:12px;color:var(--tx1);word-break:break-word;line-height:1.4}
-.fc-val.empty{color:var(--tx4)}
+.detail-grid{background:var(--bg);border:1px solid var(--bd);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
+.detail-row{padding:11px 16px;border-bottom:1px solid var(--bd);border-right:1px solid var(--bd)}
+.detail-row:nth-child(even){border-right:none}
+.detail-row:last-child,.detail-row:nth-last-child(2):nth-child(odd){border-bottom:none}
+.dl{font-size:10px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.dv{font-size:13px;color:var(--tx1);font-weight:500;word-break:break-word;line-height:1.4}
+.dv.nuvo{color:var(--teal);font-weight:700}
 
 /* Clickable rows */
 tbody tr.clickable{cursor:pointer}
-tbody tr.clickable:hover td{background:#EFF6FF !important}
-tbody tr.clickable:hover td.col-id{color:#1d4ed8}
+tbody tr.clickable:hover td{background:#f0fdf4 !important}
+tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
-@media(max-width:560px){.drawer{width:100%}.detail-row{grid-template-columns:100px 1fr}.fields-grid{grid-template-columns:1fr}}
+@media(max-width:740px){.drawer{width:100%;max-height:90vh;border-radius:20px 20px 0 0;top:auto;bottom:0;left:0;transform:translateY(100%);opacity:1}.drawer.open{transform:translateY(0)}.detail-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -434,7 +438,7 @@ let _colOrder = [];
 let _filtered = [];
 let _sortCol  = null;
 let _sortDir  = 1;
-let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, lastEvent:null };
+let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, lastEvent:null, origin:null, destination:null, coords:null, locationCity:null, nextEvent:null, checkCall:null, gpsLink:null };
 let _selCarriers = new Set();
 let _selShippers = new Set();
 let _dragSrcIdx  = null;
@@ -468,14 +472,21 @@ function parseCSV(text){
 // ── Detect semantic columns ───────────────────────────────────────────────────
 function detectCols(cols){
   const find=re=>cols.find(c=>re.test(c))||null;
-  _cm.shipmentId = find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$/i);
-  _cm.carrier    = find(/^CARRIER/i);
-  _cm.shipper    = find(/SHIPPER|CONSIGNOR|SHIP.FROM|ORIGIN.COMPANY/i);
-  _cm.trailer    = find(/TRAILER/i);
-  _cm.ref        = find(/CUSTOMER.?REF|CUST.?REF|REFERENCE|^PO.?NUM|^PO$/i);
-  _cm.pickup     = find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
-  _cm.delivery   = find(/DELIVERY|APPOINTMENT|APPT/i);
-  _cm.lastEvent  = find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$/i) || find(/^STATUS$/i);
+  _cm.shipmentId   = find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$/i);
+  _cm.carrier      = find(/^CARRIER/i);
+  _cm.shipper      = find(/SHIPPER|CONSIGNOR|SHIP.FROM|ORIGIN.COMPANY/i);
+  _cm.trailer      = find(/TRAILER/i);
+  _cm.ref          = find(/CUSTOMER.?REF|CUST.?REF|REFERENCE|^PO.?NUM|^PO$/i);
+  _cm.pickup       = find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
+  _cm.delivery     = find(/DELIVERY|APPOINTMENT|APPT/i);
+  _cm.lastEvent    = find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$/i) || find(/^STATUS$/i);
+  _cm.origin       = find(/^ORIGIN$/i);
+  _cm.destination  = find(/DESTINAITON|^DESTINATION$/i);
+  _cm.coords       = find(/^COORDINATES_P$|^COORDINATES$/i);
+  _cm.locationCity = find(/LOCATION_CITY/i);
+  _cm.nextEvent    = find(/NEXT_EVENT_FOR_ETA|NEXT.EVENT.FOR/i);
+  _cm.checkCall    = find(/LAST_CHECK_CALL/i);
+  _cm.gpsLink      = find(/^GPS.?LINK$/i);
 }
 
 // ── Load data ─────────────────────────────────────────────────────────────────
@@ -965,120 +976,169 @@ function badgeCls(val){
   return"badge-default";
 }
 
-// ── Shipment Detail Drawer ────────────────────────────────────────────────────
+// ── Shipment Detail Modal ─────────────────────────────────────────────────────
 function openDrawer(rowIdx){
   const row=_filtered[rowIdx];
   if(!row)return;
 
+  const get=col=>col?row[col]||"":"";
+  const id       = get(_cm.shipmentId)||"—";
+  const status   = get(_cm.lastEvent);
+  const carrier  = get(_cm.carrier);
+  const shipper  = get(_cm.shipper);
+  const ref      = get(_cm.ref);
+  const trailer  = get(_cm.trailer);
+  const pickup   = get(_cm.pickup);
+  const delivery = get(_cm.delivery);
+  const origin   = get(_cm.origin);
+  const dest     = get(_cm.destination);
+  const coords   = get(_cm.coords);
+  const locCity  = get(_cm.locationCity);
+  const nextEvt  = get(_cm.nextEvent);
+  const checkCall= get(_cm.checkCall);
+  const gpsLink  = get(_cm.gpsLink);
+
   // Header
-  const id=_cm.shipmentId?row[_cm.shipmentId]||"—":"—";
   document.getElementById("dId").textContent=id;
-
-  const status=_cm.lastEvent?row[_cm.lastEvent]||"":"";
   document.getElementById("dStatusBadge").innerHTML=status
-    ?`<span class="badge ${badgeCls(status)}" style="font-size:11px;padding:4px 12px">${fmtLabel(status)}</span>`
-    :"";
+    ?`<span class="badge ${badgeCls(status)}" style="font-size:11px;padding:4px 12px">${fmtLabel(status)}</span>`:"";
 
-  // Body
   const body=document.getElementById("drawerBody");
   body.innerHTML="";
 
-  // ── Status section ──
-  if(status){
-    const sec=mkSec("Current Status");
-    sec.innerHTML+=`<div class="status-hero">
-      <div class="status-hero-left">
-        <span class="status-hero-label">Last recorded event</span>
+  // ── Map ──
+  const mapDiv=document.createElement("div");
+  mapDiv.id="dMap";
+  if(!coords){
+    mapDiv.className="map-placeholder";
+    mapDiv.innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span style="font-size:12px">No GPS coordinates available</span>`;
+  }
+  body.appendChild(mapDiv);
+
+  // ── Next Event / ETA ──
+  if(nextEvt){
+    const el=document.createElement("div");
+    el.innerHTML=`<div class="eta-card">
+      <div class="eta-left">
+        <div class="eta-label">Next event / ETA</div>
+        <div class="eta-value">${eh(nextEvt)}</div>
       </div>
-      <span class="badge ${badgeCls(status)}" style="font-size:12px;padding:6px 16px">${fmtLabel(status)}</span>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
     </div>`;
-    body.appendChild(sec);
+    body.appendChild(el);
   }
 
-  // ── Route section ──
-  const shipper=_cm.shipper?row[_cm.shipper]||"":"";
-  const carrier=_cm.carrier?row[_cm.carrier]||"":"";
-  const pickupDate=_cm.pickup?row[_cm.pickup]||"":"";
-  const deliveryDate=_cm.delivery?row[_cm.delivery]||"":"";
-
-  if(shipper||carrier||deliveryDate){
-    const sec=mkSec("Route & Schedule");
+  // ── Route ──
+  const originLabel = origin||shipper||"—";
+  const destLabel   = dest||"—";
+  if(originLabel!=="—"||destLabel!=="—"||carrier){
+    const sec=mkSec("Route");
+    const locPill=locCity
+      ?`<div class="loc-pill"><span class="loc-dot"></span>${eh(locCity)}</div>`:"";
     sec.innerHTML+=`<div class="route-banner">
       <div class="rp">
-        <div class="rp-label">Origin / Shipper</div>
-        <div class="rp-name">${shipper?eh(shipper):'<span style="color:var(--tx4)">—</span>'}</div>
-        ${pickupDate?`<div class="rp-date">Pickup: ${fmtAppt(pickupDate)}</div>`:""}
+        <div class="rp-label">Origin</div>
+        <div class="rp-name" title="${eh(originLabel)}">${eh(originLabel)}</div>
+        ${pickup?`<div class="rp-date">${fmtAppt(pickup)}</div>`:""}
       </div>
       <div class="rp-arrow">
+        ${locPill}
         <div class="rp-arrow-head">→</div>
-        ${carrier?`<div class="rp-carrier-tag" title="${eh(carrier)}" style="max-width:80px;overflow:hidden;text-overflow:ellipsis">${eh(carrier)}</div>`:""}
+        ${carrier?`<div class="rp-carrier-tag" title="${eh(carrier)}">${eh(carrier)}</div>`:""}
       </div>
       <div class="rp" style="text-align:right">
         <div class="rp-label" style="text-align:right">Destination</div>
-        <div class="rp-name" style="text-align:right">${deliveryDate?fmtAppt(deliveryDate):'<span style="color:var(--tx4)">—</span>'}</div>
-        ${deliveryDate?`<div class="rp-date" style="text-align:right">Delivery appt.</div>`:""}
+        <div class="rp-name" style="text-align:right" title="${eh(destLabel)}">${eh(destLabel)}</div>
+        ${delivery?`<div class="rp-date" style="text-align:right">${fmtAppt(delivery)}</div>`:""}
       </div>
     </div>`;
     body.appendChild(sec);
   }
 
-  // ── Key details section ──
-  const coreFields=[];
-  if(_cm.ref&&row[_cm.ref])coreFields.push(["🏷","Customer Ref",row[_cm.ref],"id"]);
-  if(_cm.trailer&&row[_cm.trailer])coreFields.push(["🚛","Trailer #",row[_cm.trailer],"id"]);
-  if(_cm.carrier&&row[_cm.carrier])coreFields.push(["🏢","Carrier",row[_cm.carrier],""]);
-  if(_cm.shipper&&row[_cm.shipper])coreFields.push(["📦","Shipper",row[_cm.shipper],""]);
-  if(_cm.pickup&&row[_cm.pickup])coreFields.push(["📅","Pickup Date",fmtAppt(row[_cm.pickup]),""]);
-  if(_cm.delivery&&row[_cm.delivery])coreFields.push(["🎯","Delivery Appt.",fmtAppt(row[_cm.delivery]),""]);
+  // ── Key details (2-column grid, client view) ──
+  const details=[];
+  if(ref)       details.push(["Customer Ref",  eh(ref),           "nuvo"]);
+  if(pickup)    details.push(["Pickup",         fmtAppt(pickup),  ""]);
+  if(carrier)   details.push(["Carrier",        eh(carrier),       ""]);
+  if(delivery)  details.push(["Delivery Appt.", fmtAppt(delivery),""]);
+  if(trailer)   details.push(["Trailer #",      eh(trailer),       ""]);
+  if(checkCall) details.push(["Last Check Call",fmtAppt(checkCall)||eh(checkCall),""]);
 
-  if(coreFields.length){
-    const sec=mkSec("Shipment Details");
+  if(details.length){
+    const sec=mkSec("Details");
+    // Ensure even count for 2-col grid
+    if(details.length%2!==0)details.push(["","","muted"]);
     sec.innerHTML+=`<div class="detail-grid">${
-      coreFields.map(([icon,label,val,cls])=>`
+      details.map(([label,val,cls])=>`
         <div class="detail-row">
-          <div class="dl">${icon} ${label}</div>
-          <div class="dv ${cls}">${eh(val)}</div>
+          <div class="dl">${label}</div>
+          <div class="dv ${cls}">${val||'<span style="color:var(--tx4)">—</span>'}</div>
         </div>`).join("")
     }</div>`;
     body.appendChild(sec);
   }
 
-  // ── All other columns ──
-  const known=new Set([_cm.shipmentId,_cm.carrier,_cm.shipper,_cm.trailer,_cm.ref,_cm.pickup,_cm.delivery,_cm.lastEvent].filter(Boolean));
-  const extra=_colOrder.filter(c=>!known.has(c)&&c);
-  const extraWithData=extra.filter(c=>row[c]);
-  const extraEmpty=extra.filter(c=>!row[c]);
-  const allExtra=[...extraWithData,...extraEmpty];
-
-  if(allExtra.length){
-    const sec=mkSec("All Fields");
-    sec.innerHTML+=`<div class="fields-grid">${
-      allExtra.map(col=>{
-        const v=row[col]||"";
-        const formatted=(col===_cm.delivery||col===_cm.pickup)&&v?fmtAppt(v):eh(v);
-        return`<div class="fc">
-          <div class="fc-label" title="${eh(col)}">${eh(col)}</div>
-          <div class="fc-val${v?"":" empty"}">${v?formatted:"—"}</div>
-        </div>`;
-      }).join("")
-    }</div>`;
-    body.appendChild(sec);
+  // ── GPS live tracking link ──
+  if(gpsLink){
+    const el=document.createElement("div");
+    el.innerHTML=`<a href="${eh(gpsLink)}" target="_blank" rel="noopener"
+      style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--teal);color:#fff;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s"
+      onmouseover="this.style.background='#163d32'" onmouseout="this.style.background='var(--teal)'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      View Live Tracking
+    </a>`;
+    body.appendChild(el);
   }
 
   document.getElementById("drawerOverlay").classList.add("open");
   document.getElementById("shipmentDrawer").classList.add("open");
   document.body.style.overflow="hidden";
+
+  // Init map after element is in DOM
+  setTimeout(()=>initMap(coords,locCity),60);
+}
+
+function initMap(coordStr,locCity){
+  if(typeof L==="undefined")return;
+  const mapEl=document.getElementById("dMap");
+  if(!mapEl||mapEl.classList.contains("map-placeholder"))return;
+  if(window._lmap){window._lmap.remove();window._lmap=null;}
+  if(!coordStr)return;
+
+  const parts=coordStr.split(",").map(s=>parseFloat(s.trim()));
+  if(parts.length<2||isNaN(parts[0])||isNaN(parts[1]))return;
+
+  window._lmap=L.map("dMap",{zoomControl:true,scrollWheelZoom:false,attributionControl:false})
+    .setView(parts,8);
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{maxZoom:19})
+    .addTo(window._lmap);
+
+  L.control.attribution({prefix:false})
+    .addAttribution('© <a href="https://carto.com">CARTO</a>')
+    .addTo(window._lmap);
+
+  // Teal truck marker
+  const icon=L.divIcon({
+    className:"",
+    html:`<div style="width:18px;height:18px;background:#1C4A3E;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 10px rgba(28,74,62,.5)"></div>`,
+    iconSize:[18,18],iconAnchor:[9,9]
+  });
+
+  L.marker(parts,{icon}).addTo(window._lmap)
+    .bindPopup(`<b style="color:#1C4A3E;font-size:12px">${locCity||"Current Location"}</b>`)
+    .openPopup();
 }
 
 function closeDrawer(){
   document.getElementById("drawerOverlay").classList.remove("open");
   document.getElementById("shipmentDrawer").classList.remove("open");
   document.body.style.overflow="";
+  if(window._lmap){window._lmap.remove();window._lmap=null;}
 }
 
 function mkSec(title){
   const div=document.createElement("div");
-  div.className="drawer-section";
   div.innerHTML=`<div class="dsec-title">${title}</div>`;
   return div;
 }
@@ -1090,5 +1150,6 @@ loadViews();
 loadData();
 setInterval(loadData,REFRESH_MS);
 </script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </body>
 </html>
