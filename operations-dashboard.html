@@ -1339,28 +1339,34 @@ function openDrawer(rowIdx){
     body.appendChild(sec);
   }
 
-  // ── Action buttons (GPS + NuvoOS) ──
-  if(gpsLink||nuvoosLink){
-    const wrap=document.createElement("div");
-    wrap.style.cssText="display:flex;gap:8px;flex-wrap:wrap";
-    if(gpsLink){
-      wrap.innerHTML+=`<a href="${eh(gpsLink)}" target="_blank" rel="noopener"
-        style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--teal);color:#fff;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s"
-        onmouseover="this.style.background='#163d32'" onmouseout="this.style.background='var(--teal)'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-        View Live Tracking
-      </a>`;
-    }
-    if(nuvoosLink){
-      wrap.innerHTML+=`<a href="${eh(nuvoosLink)}" target="_blank" rel="noopener"
-        style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg2);color:var(--tx1);border:1px solid var(--brd);border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s"
-        onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
-        View NuvoOS
-      </a>`;
-    }
-    body.appendChild(wrap);
+  // ── Action buttons (GPS + NuvoOS + Log Event) ──
+  const wrap=document.createElement("div");
+  wrap.style.cssText="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px";
+  if(gpsLink){
+    wrap.innerHTML+=`<a href="${eh(gpsLink)}" target="_blank" rel="noopener"
+      style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--teal);color:#fff;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s"
+      onmouseover="this.style.background='#163d32'" onmouseout="this.style.background='var(--teal)'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      View Live Tracking
+    </a>`;
   }
+  if(nuvoosLink){
+    wrap.innerHTML+=`<a href="${eh(nuvoosLink)}" target="_blank" rel="noopener"
+      style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg2);color:var(--tx1);border:1px solid var(--brd);border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s"
+      onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+      View NuvoOS
+    </a>`;
+  }
+  const _logBtn=document.createElement("button");
+  _logBtn.type="button";
+  _logBtn.style.cssText="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--lime);color:#0f2d14;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s";
+  _logBtn.innerHTML=`<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg> Log Event`;
+  _logBtn.onmouseover=()=>_logBtn.style.background="#a3e635";
+  _logBtn.onmouseout=()=>_logBtn.style.background="var(--lime)";
+  _logBtn.onclick=()=>openEventModal(id==="—"?"":id, status);
+  wrap.appendChild(_logBtn);
+  body.appendChild(wrap);
 
   document.getElementById("drawerOverlay").classList.add("open");
   document.getElementById("shipmentDrawer").classList.add("open");
@@ -1420,21 +1426,69 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
 // ── NuvoOS Load Event ─────────────────────────────────────────────────────────
 const nuvoUrl    = (path) => `/api/proxy?p=${encodeURIComponent(path)}`;
 const LS_API_KEY = "nuvo_api_key";
-let _eventTypes  = null;
 
-function openEventModal() {
+const LOAD_EVENT_TYPES = [
+  {id:1,  name:"arrived_to_origin"},
+  {id:2,  name:"trailer_dropped"},
+  {id:3,  name:"trailer_loaded"},
+  {id:4,  name:"picked_up_from_origin"},
+  {id:5,  name:"arrived_to_mx_border"},
+  {id:6,  name:"arrived_for_pick_up_to_mx_border"},
+  {id:7,  name:"picked_up_from_mx_border"},
+  {id:8,  name:"cleared_mx_customs"},
+  {id:9,  name:"cleared_us_customs"},
+  {id:10, name:"arrived_to_us_border"},
+  {id:11, name:"trailer_unloaded"},
+  {id:12, name:"empty_trailer_picked_up"},
+  {id:13, name:"arrived_for_pick_up_to_us_border"},
+  {id:14, name:"picked_up_from_us_border"},
+  {id:15, name:"arrived_to_final_destination"},
+  {id:16, name:"delivered_to_final_destination"},
+  {id:17, name:"driver_on_way_to_origin"}
+];
+
+// Common progression order — used to auto-suggest the next event
+const EVENT_SEQUENCE = [17, 1, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16];
+
+function getNextEventId(lastEventName) {
+  if (!lastEventName) return null;
+  const evt = LOAD_EVENT_TYPES.find(e => e.name === lastEventName.toLowerCase().trim());
+  if (!evt) return null;
+  const idx = EVENT_SEQUENCE.indexOf(evt.id);
+  if (idx === -1 || idx === EVENT_SEQUENCE.length - 1) return null;
+  return EVENT_SEQUENCE[idx + 1];
+}
+
+function buildEventTypeSelect(suggestedId) {
+  const sel = document.getElementById("evEventType");
+  sel.innerHTML = '<option value="">— select event type —</option>' +
+    LOAD_EVENT_TYPES.map(t =>
+      `<option value="${t.id}"${t.id === suggestedId ? " selected" : ""}>${t.id} — ${fmtLabel(t.name)}</option>`
+    ).join("");
+}
+
+function openEventModal(shipmentId, lastEventName) {
   const savedKey = localStorage.getItem(LS_API_KEY) || "";
   sv("evApiKey", savedKey);
-  // Pre-fill shipment ID from search if active
-  sv("evShipmentId", gv("srchShipment"));
-  // Default event time to now (truncate seconds)
+  sv("evShipmentId", shipmentId != null ? String(shipmentId) : gv("srchShipment"));
   const now = new Date();
   now.setSeconds(0, 0);
   sv("evEventTime", now.toISOString().slice(0, 16));
   document.getElementById("evError").classList.add("hidden");
   document.getElementById("eventModal").classList.remove("hidden");
-  loadEventTypes(savedKey);
-  // Focus first empty required field
+
+  const suggestedId = getNextEventId(lastEventName || "");
+  buildEventTypeSelect(suggestedId);
+
+  const hint = document.getElementById("evSuggestedHint");
+  if (suggestedId) {
+    const evtName = LOAD_EVENT_TYPES.find(e => e.id === suggestedId)?.name || "";
+    hint.textContent = `Suggested next: ${suggestedId} — ${fmtLabel(evtName)}`;
+    hint.classList.remove("hidden");
+  } else {
+    hint.classList.add("hidden");
+  }
+
   if (!savedKey) document.getElementById("evApiKey").focus();
   else if (!gv("evShipmentId")) document.getElementById("evShipmentId").focus();
 }
@@ -1446,38 +1500,6 @@ function closeEventModal() {
 
 function handleModalOverlayClick(e) {
   if (e.target === e.currentTarget) closeEventModal();
-}
-
-async function loadEventTypes(apiKey) {
-  const key = (apiKey || gv("evApiKey") || localStorage.getItem(LS_API_KEY) || "").replace(/[^\x20-\x7E]/g, "").trim();
-  const sel = document.getElementById("evEventType");
-  if (!key) {
-    sel.innerHTML = '<option value="">Enter API key above, then click ↻</option>';
-    return;
-  }
-  sel.innerHTML = '<option value="">Loading…</option>';
-  try {
-    const r = await fetch(nuvoUrl('/api/internal/active_hashes/LoadEventType'), {
-      headers: { "Authorization": `Token ${key}` }
-    });
-    const body = await r.text();
-    console.log('[NuvoOS active_hashes]', r.status, body);
-    if (!r.ok) throw new Error(`HTTP ${r.status} — ${body}`);
-    const data = JSON.parse(body);
-    _eventTypes = data;
-    sel.innerHTML = '<option value="">Select event type…</option>' +
-      data.map(t => `<option value="${eh(String(t.id))}">${eh(t.name || t.type || t.id)}</option>`).join("");
-  } catch(err) {
-    _eventTypes = null;
-    // Fall back to a free-text input so the form remains usable
-    const input = document.createElement('input');
-    input.className = sel.className;
-    input.id = sel.id;
-    input.placeholder = 'Enter event type ID (e.g. 5)';
-    sel.replaceWith(input);
-    const errEl = document.getElementById('evError');
-    if (errEl) { errEl.textContent = err.message; errEl.classList.remove('hidden'); }
-  }
 }
 
 async function submitLoadEvent() {
@@ -1581,13 +1603,10 @@ setInterval(loadData,REFRESH_MS);
         <input class="form-input" id="evShipmentId" type="text" placeholder="e.g. 12345" autocomplete="off">
       </div>
       <div class="form-group">
-        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between">
-          Event Type
-          <button type="button" onclick="loadEventTypes(gv('evApiKey'))" title="Reload event types"
-                  style="background:none;border:none;cursor:pointer;color:var(--teal);font-size:14px;padding:0;line-height:1;font-weight:600">↻</button>
-        </label>
+        <label class="form-label">Event Type</label>
+        <div id="evSuggestedHint" class="hidden" style="font-size:11px;color:var(--teal);font-weight:500;margin-bottom:6px;padding:4px 8px;background:rgba(28,74,62,.08);border-radius:6px"></div>
         <select class="form-input" id="evEventType">
-          <option value="">Loading event types…</option>
+          <option value="">— select event type —</option>
         </select>
       </div>
       <div class="form-group">
