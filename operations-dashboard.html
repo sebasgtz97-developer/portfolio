@@ -301,6 +301,31 @@ tbody tr.clickable:hover td{background:#f0fdf4 !important}
 tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
 @media(max-width:740px){.drawer{width:100%;max-height:90vh;border-radius:20px 20px 0 0;top:auto;bottom:0;left:0;transform:translateY(100%);opacity:1}.drawer.open{transform:translateY(0)}.detail-grid{grid-template-columns:1fr}}
+
+/* ── Load Event Modal ───────────────────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:502;display:flex;align-items:center;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:var(--panel);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:380px;max-width:92vw;overflow:hidden;}
+.modal-header{padding:16px 20px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:14px;font-weight:600;color:var(--tx1);}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--tx3);font-size:20px;line-height:1;padding:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:4px;}
+.modal-close:hover{background:var(--bg);color:var(--tx1);}
+.modal-body{padding:20px;}
+.modal-footer{padding:12px 20px 16px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--tx2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.form-input{width:100%;height:34px;padding:0 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx1);background:var(--panel);outline:none;transition:border-color .15s;appearance:none;}
+.form-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08);}
+select.form-input{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.ev-error{background:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:8px 10px;font-size:11px;color:var(--red);margin-top:4px;}
+.ev-error.hidden{display:none;}
+.btn-lime{background:var(--lime);color:var(--teal);border-color:transparent;font-weight:600;}
+.btn-lime:hover{background:#bdd640;border-color:transparent;}
+/* ── Toast ──────────────────────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:600;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.14);display:flex;align-items:center;gap:8px;transition:opacity .3s,transform .3s;}
+.toast.ok{background:#F0FDF4;border:1px solid #BBF7D0;color:var(--green);}
+.toast.err{background:#FEF2F2;border:1px solid #FECACA;color:var(--red);}
+.toast.out{opacity:0;transform:translateY(6px);}
 </style>
 </head>
 <body>
@@ -314,6 +339,10 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
   </div>
   <div class="hright">
     <span class="hbadge"><span class="dot"></span>Live</span>
+    <button class="btn-hdr btn-lime" onclick="openEventModal()">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg>
+      Log Event
+    </button>
     <button class="btn-hdr" id="btnRefresh" onclick="refreshData()">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/><path d="M12 2v3.5H8.5"/>
@@ -1388,11 +1417,172 @@ function mkSec(title){
 
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
 
+// ── NuvoOS Load Event ─────────────────────────────────────────────────────────
+const NUVO_API   = "https://os.nuvocargo.com";
+const LS_API_KEY = "nuvo_api_key";
+let _eventTypes  = null;
+
+function openEventModal() {
+  const savedKey = localStorage.getItem(LS_API_KEY) || "";
+  sv("evApiKey", savedKey);
+  // Pre-fill shipment ID from search if active
+  sv("evShipmentId", gv("srchShipment"));
+  // Default event time to now (truncate seconds)
+  const now = new Date();
+  now.setSeconds(0, 0);
+  sv("evEventTime", now.toISOString().slice(0, 16));
+  document.getElementById("evError").classList.add("hidden");
+  document.getElementById("eventModal").classList.remove("hidden");
+  if (!_eventTypes) loadEventTypes();
+  // Focus first empty required field
+  if (!savedKey) document.getElementById("evApiKey").focus();
+  else if (!gv("evShipmentId")) document.getElementById("evShipmentId").focus();
+}
+
+function closeEventModal() {
+  document.getElementById("eventModal").classList.add("hidden");
+  document.getElementById("evError").classList.add("hidden");
+}
+
+function handleModalOverlayClick(e) {
+  if (e.target === e.currentTarget) closeEventModal();
+}
+
+async function loadEventTypes() {
+  const key = gv("evApiKey") || localStorage.getItem(LS_API_KEY) || "";
+  if (!key) { return; }
+  try {
+    const r = await fetch(`${NUVO_API}/api/internal/active_hashes/LoadEventType`, {
+      headers: { "Authorization": `Bearer ${key}` }
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    _eventTypes = data;
+    const sel = document.getElementById("evEventType");
+    sel.innerHTML = '<option value="">Select event type…</option>' +
+      data.map(t => `<option value="${eh(String(t.id))}">${eh(t.name || t.type || t.id)}</option>`).join("");
+  } catch {
+    document.getElementById("evEventType").innerHTML = '<option value="">Could not load — enter ID manually</option>';
+  }
+}
+
+async function submitLoadEvent() {
+  const key         = gv("evApiKey");
+  const shipmentId  = gv("evShipmentId");
+  const eventTypeId = gv("evEventType");
+  const eventTimeRaw = document.getElementById("evEventTime").value;
+  const errEl = document.getElementById("evError");
+  errEl.classList.add("hidden");
+
+  if (!key)         return showEvError("API key is required.");
+  if (!shipmentId)  return showEvError("Shipment ID is required.");
+  if (!eventTypeId) return showEvError("Please select an event type.");
+  if (!eventTimeRaw) return showEvError("Event time is required.");
+
+  // Save key to localStorage for next time
+  localStorage.setItem(LS_API_KEY, key);
+
+  // Build ISO8601 timestamp with local UTC offset
+  const dt  = new Date(eventTimeRaw);
+  const off = -dt.getTimezoneOffset();
+  const sign = off >= 0 ? "+" : "-";
+  const hh   = String(Math.floor(Math.abs(off) / 60)).padStart(2, "0");
+  const mm   = String(Math.abs(off) % 60).padStart(2, "0");
+  const iso  = dt.getFullYear()                             + "-" +
+               String(dt.getMonth() + 1).padStart(2, "0")  + "-" +
+               String(dt.getDate()).padStart(2, "0")        + "T" +
+               String(dt.getHours()).padStart(2, "0")       + ":" +
+               String(dt.getMinutes()).padStart(2, "0")     + ":00" +
+               sign + hh + ":" + mm;
+
+  const btn = document.getElementById("evSubmitBtn");
+  btn.disabled = true;
+  btn.textContent = "Submitting…";
+
+  try {
+    const r = await fetch(
+      `${NUVO_API}/api/internal/shipments/${encodeURIComponent(shipmentId)}/load_event`,
+      {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${key}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ event_type_id: Number(eventTypeId), event_time: iso })
+      }
+    );
+    if (!r.ok) {
+      const body = await r.text();
+      throw new Error(`HTTP ${r.status}: ${body.slice(0, 160)}`);
+    }
+    closeEventModal();
+    showToast("Event logged successfully ✓", "ok");
+  } catch (err) {
+    showEvError(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Submit Event";
+  }
+}
+
+function showEvError(msg) {
+  const el = document.getElementById("evError");
+  el.textContent = msg;
+  el.classList.remove("hidden");
+}
+
+function showToast(msg, type) {
+  const t = document.createElement("div");
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => {
+    t.classList.add("out");
+    setTimeout(() => t.remove(), 350);
+  }, 3000);
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadViews();
 loadData();
 setInterval(loadData,REFRESH_MS);
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- ── Load Event Modal ──────────────────────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="eventModal" onclick="handleModalOverlayClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Log Load Event</span>
+      <button class="modal-close" onclick="closeEventModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">API Key <span style="font-weight:400;color:var(--tx4);text-transform:none;letter-spacing:0">— saved locally</span></label>
+        <input class="form-input" id="evApiKey" type="password" placeholder="tkn_org_…" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Shipment ID</label>
+        <input class="form-input" id="evShipmentId" type="text" placeholder="e.g. 12345" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Event Type</label>
+        <select class="form-input" id="evEventType">
+          <option value="">Loading event types…</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Event Time</label>
+        <input class="form-input" id="evEventTime" type="datetime-local">
+      </div>
+      <div id="evError" class="ev-error hidden"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-pop-cancel" onclick="closeEventModal()">Cancel</button>
+      <button class="btn-pop-ok" id="evSubmitBtn" onclick="submitLoadEvent()">Submit Event</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
