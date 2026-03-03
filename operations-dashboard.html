@@ -349,7 +349,7 @@ td.col-id{font-weight:600;color:var(--blue)}
 
 <script>
 // ── Config ───────────────────────────────────────────────────────────────────
-const SHEET_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
+const API_URL    = "/api/snowflake";
 const REFRESH_MS = 5 * 60 * 1000;
 const LS_VIEWS   = "nuvo_ops_views";
 const LS_COLS    = "nuvo_ops_col_order";
@@ -407,14 +407,16 @@ function detectCols(cols){
 
 // ── Load data ─────────────────────────────────────────────────────────────────
 async function loadData(){
-  setStatus("loading","Loading shipment data from Google Sheets…");
+  setStatus("loading","Loading shipment data from Snowflake…");
   setBtnSpinning(true);
   try{
-    const resp=await fetch(SHEET_URL+"&t="+Date.now());
+    const resp=await fetch(API_URL+"?t="+Date.now());
     if(!resp.ok)throw new Error("HTTP "+resp.status);
-    const{columns,rows}=parseCSV(await resp.text());
-    _columns=columns;
-    _allRows=rows.filter(r=>Object.values(r).some(v=>v));
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error);
+    const rows=data.rows||[];
+    _columns=rows.length?Object.keys(rows[0]):[];
+    _allRows=rows.filter(r=>Object.values(r).some(v=>v!=null&&v!==''));
     detectCols(_columns);
 
     // restore or init column order
@@ -435,8 +437,8 @@ async function loadData(){
     setStatus("ok","✅ "+n+" shipment"+(n===1?"":"s")+" loaded · last synced "+fmtTime(new Date()));
     document.getElementById("lastUpdated").textContent="Last updated: "+fmtTime(new Date());
   }catch(e){
-    setStatus("err","⚠️ Could not load data — check your connection or verify the sheet is published.");
-    document.getElementById("tableBody").innerHTML='<tr><td colspan="99"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Unable to load data</div><div class="empty-sub">Verify the sheet is published to the web.</div></div></td></tr>';
+    setStatus("err","⚠️ Could not load data — check Snowflake connection or contact your admin.");
+    document.getElementById("tableBody").innerHTML='<tr><td colspan="99"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Unable to load data</div><div class="empty-sub">Could not reach Snowflake. Check credentials or contact your admin.</div></div></td></tr>';
     console.error(e);
   }
   setBtnSpinning(false);

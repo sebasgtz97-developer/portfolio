@@ -1,0 +1,7 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "dependencies": {
+    "snowflake-sdk": "^1.14.0"
+  }
+}
