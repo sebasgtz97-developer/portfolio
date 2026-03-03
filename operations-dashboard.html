@@ -1458,7 +1458,7 @@ async function loadEventTypes(apiKey) {
   sel.innerHTML = '<option value="">Loading…</option>';
   try {
     const r = await fetch(nuvoUrl('/api/internal/active_hashes/LoadEventType'), {
-      headers: { "Authorization": `Bearer ${key}` }
+      headers: { "Authorization": `Token ${key}` }
     });
     const body = await r.text();
     console.log('[NuvoOS active_hashes]', r.status, body);
@@ -1519,7 +1519,7 @@ async function submitLoadEvent() {
       {
         method: "PATCH",
         headers: {
-          "Authorization": `Bearer ${key}`,
+          "Authorization": `Token ${key}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ event_type_id: Number(eventTypeId), event_time: iso })
