@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuvocargo — Operations Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root {
+  --teal:   #1C4A3E;
+  --lime:   #C8E64C;
+  --bg:     #F7F8F8;
+  --panel:  #FFFFFF;
+  --bd:     #E5E7EB;
+  --bd2:    #D1D5DB;
+  --tx1:    #111827;
+  --tx2:    #374151;
+  --tx3:    #6B7280;
+  --tx4:    #9CA3AF;
+  --blue:   #2563EB;
+  --red:    #DC2626;
+  --green:  #16A34A;
+  --amber:  #D97706;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;background:var(--bg);color:var(--tx1);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* Header */
+header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.hleft{display:flex;align-items:center}
+.hright{display:flex;align-items:center;gap:8px}
+.htitle{font-size:13px;font-weight:600;color:var(--tx2);margin-left:12px;padding-left:12px;border-left:1px solid var(--bd);line-height:1}
+.hbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--green);background:#F0FDF4;border:1px solid #BBF7D0;border-radius:999px;padding:3px 9px}
+.hbadge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.btn-hdr{background:var(--panel);color:var(--tx2);border:1px solid var(--bd);padding:0 14px;height:32px;border-radius:6px;font-weight:500;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-hdr:hover{background:var(--bg);border-color:var(--bd2)}
+.btn-hdr.spinning svg{animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Main */
+.main{max-width:1440px;margin:0 auto;padding:20px 20px 48px}
+
+/* Page header */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px}
+.page-title{font-size:20px;font-weight:700;color:var(--tx1);letter-spacing:-0.02em;line-height:1.2}
+.page-sub{font-size:12px;color:var(--tx3);margin-top:3px}
+.last-updated{font-size:11px;color:var(--tx4);white-space:nowrap;padding-top:4px}
+
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi-card{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.kpi-value{font-size:26px;font-weight:700;color:var(--tx1);line-height:1;letter-spacing:-0.02em}
+.kpi-value.accent{color:var(--teal)}
+.kpi-value.green{color:var(--green)}
+.kpi-value.amber{color:var(--amber)}
+.kpi-sub{font-size:11px;color:var(--tx4);margin-top:4px}
+
+/* Status bar */
+.status-bar{display:none;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:500;margin-bottom:14px}
+.status-bar.loading{display:flex;background:#FFFBEB;color:var(--amber);border:1px solid #FDE68A}
+.status-bar.ok{display:flex;background:#F0FDF4;color:var(--green);border:1px solid #BBF7D0}
+.status-bar.err{display:flex;background:#FEF2F2;color:var(--red);border:1px solid #FECACA}
+
+/* Search row */
+.search-row{display:flex;align-items:flex-end;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.srch-field{display:flex;flex-direction:column;gap:3px}
+.srch-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+.srch-iw{position:relative}
+.srch-iw svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--tx4);pointer-events:none}
+.srch-input{height:32px;padding:0 8px 0 28px;width:180px;border:1px solid var(--bd);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx1);background:var(--panel);transition:border-color .15s,box-shadow .15s}
+.srch-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08)}
+.srch-input.has-value{border-color:var(--teal);background:#F0FDF4}
+.srch-input:disabled{opacity:.4;cursor:not-allowed;background:var(--bg)}
+.search-spacer{flex:1}
+.result-count{font-size:11px;color:var(--tx4);white-space:nowrap;align-self:flex-end;padding-bottom:8px}
+
+/* Filter bar */
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;margin-bottom:10px;background:var(--panel);border:1px solid var(--bd);border-radius:8px}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+.fsep{width:1px;height:36px;background:var(--bd);flex-shrink:0;margin:0 2px}
+.fsel{height:28px;padding:0 8px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-family:inherit;color:var(--tx2);background:var(--panel);cursor:pointer;transition:border-color .15s;max-width:160px;min-width:110px}
+.fsel:focus{outline:none;border-color:var(--teal)}
+.fsel.active{border-color:var(--teal);background:#F0FDF4;color:var(--teal);font-weight:500}
+.date-pair{display:flex;align-items:center;gap:4px}
+.fdate{height:28px;padding:0 6px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-family:inherit;color:var(--tx2);background:var(--panel);transition:border-color .15s;width:130px}
+.fdate:focus{outline:none;border-color:var(--teal)}
+.fdate.active{border-color:var(--teal);background:#EFF6FF}
+.date-arrow{font-size:10px;color:var(--tx4)}
+.filter-actions{display:flex;align-items:flex-end;gap:6px;padding-bottom:1px;margin-left:auto}
+.btn-clear{height:28px;padding:0 10px;background:none;border:1px solid var(--bd);color:var(--tx3);border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn-clear:hover{border-color:var(--red);color:var(--red);background:#FEF2F2}
+.active-count{display:none;height:18px;padding:0 6px;background:var(--teal);color:#fff;border-radius:999px;font-size:10px;font-weight:600;align-items:center;justify-content:center;white-space:nowrap}
+.active-count.show{display:inline-flex}
+
+/* Multi-select */
+.msel-wrap{position:relative}
+.msel-btn{height:28px;padding:0 8px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-family:inherit;color:var(--tx2);background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:4px;min-width:110px;max-width:180px;transition:border-color .15s;white-space:nowrap}
+.msel-btn:hover{border-color:var(--bd2)}
+.msel-btn.active{border-color:var(--teal);background:#F0FDF4;color:var(--teal);font-weight:500}
+.msel-btn-label{flex:1;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.msel-chev{flex-shrink:0;opacity:.4;transition:transform .15s}
+.msel-btn[aria-expanded="true"] .msel-chev{transform:rotate(180deg)}
+.msel-drop{position:absolute;top:calc(100% + 4px);left:0;z-index:400;background:var(--panel);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:190px;max-height:230px;overflow-y:auto;padding:4px 0;display:none}
+.msel-drop.open{display:block}
+.msel-item{display:flex;align-items:center;gap:8px;padding:5px 10px;cursor:pointer;font-size:12px;color:var(--tx2);transition:background .08s;user-select:none}
+.msel-item:hover{background:var(--bg)}
+.msel-item input[type=checkbox]{accent-color:var(--teal);cursor:pointer;flex-shrink:0;width:13px;height:13px}
+.msel-divider{height:1px;background:var(--bd);margin:3px 0}
+.msel-clear-item{font-size:11px;font-weight:500;color:var(--tx3)}
+.msel-clear-item:hover{color:var(--red);background:#FEF2F2}
+
+/* Column visibility */
+.col-vis-wrap{position:relative;align-self:flex-end}
+.btn-col-vis{height:32px;padding:0 10px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-weight:500;color:var(--tx2);background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn-col-vis:hover{border-color:var(--bd2);background:var(--bg)}
+.btn-col-vis.active{border-color:var(--teal);background:#F0FDF4;color:var(--teal);font-weight:600}
+.col-hidden-badge{min-width:16px;height:16px;padding:0 4px;background:var(--teal);color:#fff;border-radius:999px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.col-vis-drop{position:absolute;top:calc(100% + 4px);right:0;z-index:400;background:var(--panel);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:210px;max-height:300px;overflow-y:auto;padding:0}
+.col-vis-drop.hidden{display:none}
+.col-vis-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 6px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--panel)}
+.col-vis-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em}
+.btn-show-all{font-size:11px;font-weight:500;color:var(--teal);background:none;border:none;cursor:pointer;padding:0;font-family:inherit}
+.btn-show-all:hover{text-decoration:underline}
+
+/* Views bar */
+.views-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;min-height:30px}
+.views-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.view-pills{display:flex;gap:6px;flex-wrap:wrap}
+.view-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 6px 3px 10px;background:#EEF2FF;border:1px solid #C7D2FE;color:#3730A3;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+.view-pill:hover{background:#E0E7FF;border-color:#A5B4FC}
+.view-pill.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.pill-del{width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.1);border:none;color:inherit;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .1s;flex-shrink:0;font-family:inherit;line-height:1}
+.pill-del:hover{background:rgba(0,0,0,.25)}
+.view-pill.active .pill-del{background:rgba(255,255,255,.2)}
+.view-pill.active .pill-del:hover{background:rgba(255,255,255,.4)}
+.views-empty{font-size:11px;color:var(--tx4);font-style:italic}
+.save-view-wrap{position:relative}
+.btn-save-view{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--panel);border:1px dashed var(--bd2);color:var(--tx3);border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-save-view:hover{border-color:var(--teal);color:var(--teal);background:#F0FDF4}
+.save-popover{position:absolute;top:calc(100% + 6px);left:0;z-index:100;background:var(--panel);border:1px solid var(--bd);border-radius:8px;padding:10px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 20px rgba(0,0,0,.1);white-space:nowrap}
+.save-popover.hidden{display:none}
+.save-popover input{height:28px;padding:0 8px;width:164px;border:1px solid var(--bd);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx1);background:var(--panel);transition:border-color .15s}
+.save-popover input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08)}
+.btn-pop-ok{height:28px;padding:0 12px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn-pop-ok:hover{background:#163d32}
+.btn-pop-cancel{height:28px;padding:0 10px;background:none;border:1px solid var(--bd);color:var(--tx3);border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-pop-cancel:hover{border-color:var(--tx3);color:var(--tx1)}
+
+/* Table */
+.table-wrap{background:var(--panel);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:#F9FAFB;border-bottom:2px solid var(--bd)}
+th{padding:0;text-align:left;font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;cursor:default;user-select:none;position:relative;transition:background .12s}
+th:hover{background:#F3F4F6;color:var(--tx1)}
+th.drag-over{background:#EFF6FF !important;outline:2px solid var(--blue);outline-offset:-2px}
+th.dragging{opacity:.3}
+.th-inner{display:flex;align-items:center;padding:9px 12px;gap:0}
+.drag-handle{cursor:grab;color:var(--tx4);font-size:13px;margin-right:6px;opacity:.3;transition:opacity .15s;line-height:1;flex-shrink:0}
+th:hover .drag-handle{opacity:.85}
+.th-sort{display:inline-flex;align-items:center;gap:4px;cursor:pointer;flex:1}
+.th-sort:hover{color:var(--tx1)}
+.sort-icon{font-size:9px;color:var(--tx4);min-width:10px;text-align:center}
+th.sorted-asc .sort-icon{color:var(--teal);opacity:1}
+th.sorted-desc .sort-icon{color:var(--teal);opacity:1}
+th.sorted-asc .sort-icon::after{content:"▲"}
+th.sorted-desc .sort-icon::after{content:"▼"}
+th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after{content:"⇅";opacity:.4}
+td{padding:9px 12px;border-bottom:1px solid var(--bd);color:var(--tx2);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#F9FAFB}
+tbody tr{transition:background .08s}
+td.col-id{font-weight:600;color:var(--teal)}
+
+/* Empty / skeleton */
+.empty-state{padding:52px 24px;text-align:center}
+.empty-icon{font-size:32px;margin-bottom:10px;opacity:.35}
+.empty-title{font-size:14px;font-weight:600;color:var(--tx2);margin-bottom:4px}
+.empty-sub{font-size:12px;color:var(--tx4)}
+.skel{height:12px;border-radius:4px;background:linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.badge-delivered{background:#F0FDF4;color:var(--green);border:1px solid #BBF7D0}
+.badge-intransit{background:#EFF6FF;color:var(--blue);border:1px solid #BFDBFE}
+.badge-pending{background:#FFFBEB;color:var(--amber);border:1px solid #FDE68A}
+.badge-exception{background:#FEF2F2;color:var(--red);border:1px solid #FECACA}
+.badge-scheduled{background:#F5F3FF;color:#6D28D9;border:1px solid #DDD6FE}
+.badge-default{background:#F9FAFB;color:var(--tx3);border:1px solid var(--bd)}
+
+/* Responsive */
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.page-header{flex-direction:column;gap:4px}}
+@media(max-width:560px){.kpi-row{grid-template-columns:1fr 1fr}.main{padding:14px 14px 32px}.srch-input{width:140px}}
+
+/* ── Shipment Detail Modal ─────────────────────────────────────────────── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;opacity:0;pointer-events:none;transition:opacity .22s ease;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.drawer-overlay.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:50%;left:50%;width:720px;max-width:96vw;max-height:88vh;background:var(--panel);z-index:501;border-radius:16px;border:1px solid var(--bd);box-shadow:0 32px 80px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;transform:translate(-50%,-46%);opacity:0;pointer-events:none;transition:transform .3s cubic-bezier(.34,1.1,.64,1),opacity .22s ease}
+.drawer.open{transform:translate(-50%,-50%);opacity:1;pointer-events:auto}
+.drawer-header{display:flex;align-items:flex-start;justify-content:space-between;padding:22px 24px 18px;border-bottom:1px solid var(--bd);flex-shrink:0;gap:16px;background:var(--panel);border-radius:16px 16px 0 0}
+.drawer-header-left{display:flex;flex-direction:column;gap:6px;min-width:0}
+.drawer-eyebrow{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.12em}
+.drawer-id{font-size:28px;font-weight:700;color:var(--teal);letter-spacing:-.03em;line-height:1}
+.drawer-close{width:34px;height:34px;border-radius:8px;background:none;border:1px solid var(--bd);color:var(--tx3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;margin-top:2px}
+.drawer-close:hover{background:#FEF2F2;border-color:#FECACA;color:var(--red)}
+.drawer-body{padding:20px 24px 32px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+
+/* Map */
+#dMap{height:210px;border-radius:10px;overflow:hidden;border:1px solid var(--bd);flex-shrink:0}
+.leaflet-container{font-family:'Inter',-apple-system,sans-serif!important}
+.leaflet-popup-content-wrapper{border-radius:8px!important;font-size:12px!important;font-family:'Inter',sans-serif!important;box-shadow:0 4px 16px rgba(0,0,0,.15)!important}
+.map-placeholder{height:210px;border-radius:10px;border:1px dashed var(--bd);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--tx4);background:var(--bg)}
+.map-placeholder svg{opacity:.3}
+
+/* Section */
+.dsec-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.dsec-title::after{content:"";flex:1;height:1px;background:var(--bd)}
+
+/* ETA hero */
+.eta-card{background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border:1px solid #BBF7D0;border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.eta-left{display:flex;flex-direction:column;gap:2px}
+.eta-label{font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.08em}
+.eta-value{font-size:16px;font-weight:700;color:#15803d;margin-top:2px}
+
+/* Route banner */
+.route-banner{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px 18px;display:flex;align-items:center}
+.rp{flex:1;min-width:0}
+.rp-label{font-size:10px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.rp-name{font-size:13px;font-weight:600;color:var(--tx1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-date{font-size:11px;color:var(--tx3);margin-top:3px}
+.rp-arrow{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:0 18px}
+.rp-arrow-head{font-size:20px;color:var(--bd2);line-height:1}
+.rp-carrier-tag{font-size:10px;font-weight:500;color:var(--tx3);white-space:nowrap;text-align:center;max-width:100px;overflow:hidden;text-overflow:ellipsis}
+
+/* Current location pill */
+.loc-pill{display:inline-flex;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:999px;font-size:11px;font-weight:600;padding:4px 10px;margin-bottom:2px}
+.loc-dot{width:7px;height:7px;border-radius:50%;background:#1C4A3E;flex-shrink:0}
+
+/* Detail grid */
+.detail-grid{background:var(--bg);border:1px solid var(--bd);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
+.detail-row{padding:11px 16px;border-bottom:1px solid var(--bd);border-right:1px solid var(--bd)}
+.detail-row:nth-child(even){border-right:none}
+.detail-row:last-child,.detail-row:nth-last-child(2):nth-child(odd){border-bottom:none}
+.dl{font-size:10px;font-weight:600;color:var(--tx4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px}
+.dv{font-size:13px;color:var(--tx1);font-weight:500;word-break:break-word;line-height:1.4}
+.dv.nuvo{color:var(--teal);font-weight:700}
+
+/* Clickable rows */
+tbody tr.clickable{cursor:pointer}
+tbody tr.clickable:hover td{background:#f0fdf4 !important}
+tbody tr.clickable:hover td.col-id{color:var(--teal)}
+
+@media(max-width:740px){.drawer{width:100%;max-height:90vh;border-radius:20px 20px 0 0;top:auto;bottom:0;left:0;transform:translateY(100%);opacity:1}.drawer.open{transform:translateY(0)}.detail-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hleft">
+    <svg width="160" height="28" viewBox="0 0 160 28" xmlns="http://www.w3.org/2000/svg" aria-label="Nuvocargo" role="img">
+      <text x="0" y="23" font-family="'Cormorant Garamond',Georgia,serif" font-size="26" font-weight="500" letter-spacing="0.3" fill="#1C4A3E">nuvocargo</text>
+    </svg>
+    <span class="htitle">Operations Dashboard</span>
+  </div>
+  <div class="hright">
+    <span class="hbadge"><span class="dot"></span>Live</span>
+    <button class="btn-hdr" id="btnRefresh" onclick="refreshData()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/><path d="M12 2v3.5H8.5"/>
+      </svg>
+      Refresh
+    </button>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Shipment Monitor</div>
+      <div class="page-sub">Real-time visibility into cross-border shipments — synced from Google Sheets</div>
+    </div>
+    <div class="last-updated" id="lastUpdated">—</div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Total Shipments</div><div class="kpi-value accent" id="kpiTotal">—</div><div class="kpi-sub" id="kpiTotalSub">In system</div></div>
+    <div class="kpi-card"><div class="kpi-label">Unique Carriers</div><div class="kpi-value" id="kpiCarriers">—</div><div class="kpi-sub" id="kpiCarriersSub">Active carriers</div></div>
+    <div class="kpi-card"><div class="kpi-label">Scheduled Today</div><div class="kpi-value green" id="kpiToday">—</div><div class="kpi-sub">Delivery appointments</div></div>
+    <div class="kpi-card"><div class="kpi-label">This Week</div><div class="kpi-value amber" id="kpiWeek">—</div><div class="kpi-sub">Upcoming deliveries</div></div>
+  </div>
+
+  <div class="status-bar loading" id="statusBar">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    Loading shipment data from Google Sheets…
+  </div>
+
+  <!-- Search row -->
+  <div class="search-row">
+    <div class="srch-field">
+      <span class="srch-label">Shipment ID</span>
+      <div class="srch-iw">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
+        <input class="srch-input" id="srchShipment" placeholder="e.g. SH-12345" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+      </div>
+    </div>
+    <div class="srch-field">
+      <span class="srch-label">Trailer #</span>
+      <div class="srch-iw">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
+        <input class="srch-input" id="srchTrailer" placeholder="e.g. AL15179" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+      </div>
+    </div>
+    <div class="srch-field">
+      <span class="srch-label">Customer Ref</span>
+      <div class="srch-iw">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
+        <input class="srch-input" id="srchRef" placeholder="Reference / PO #" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+      </div>
+    </div>
+    <div class="search-spacer"></div>
+    <div class="col-vis-wrap" id="colVisWrap">
+      <button class="btn-col-vis" id="btnColVis" onclick="toggleColDrop()">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="1" y="1" width="11" height="11" rx="1.5"/><path d="M4.5 1v11M8.5 1v11"/></svg>
+        Columns
+        <span class="col-hidden-badge" id="colHiddenBadge" style="display:none">0</span>
+      </button>
+      <div class="col-vis-drop hidden" id="colVisDrop"></div>
+    </div>
+    <span class="result-count" id="resultCount"></span>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar" id="filterBar">
+
+    <!-- Carrier multi-select -->
+    <div class="fg" id="fgCarrier">
+      <span class="fg-label">Carrier</span>
+      <div class="msel-wrap" id="mselWrapCarrier">
+        <button class="msel-btn" id="mselBtnCarrier" aria-expanded="false" onclick="toggleMsel('carrier')">
+          <span class="msel-btn-label" id="mselLabelCarrier">All carriers</span>
+          <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
+        </button>
+        <div class="msel-drop" id="mselDropCarrier"></div>
+      </div>
+    </div>
+
+    <!-- Shipper multi-select -->
+    <div class="fg" id="fgShipper" style="display:none">
+      <span class="fg-label">Shipper</span>
+      <div class="msel-wrap" id="mselWrapShipper">
+        <button class="msel-btn" id="mselBtnShipper" aria-expanded="false" onclick="toggleMsel('shipper')">
+          <span class="msel-btn-label" id="mselLabelShipper">All shippers</span>
+          <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
+        </button>
+        <div class="msel-drop" id="mselDropShipper"></div>
+      </div>
+    </div>
+
+    <!-- Last Event single-select -->
+    <div class="fg" id="fgLastEvent" style="display:none">
+      <span class="fg-label">Last Event</span>
+      <select class="fsel" id="fLastEvent" onchange="onFselChange(this);filterTable()"><option value="">All events</option></select>
+    </div>
+
+    <div class="fsep"></div>
+
+    <div class="fg" id="fgPickup" style="display:none">
+      <span class="fg-label">Pickup date</span>
+      <div class="date-pair">
+        <input type="date" class="fdate" id="fPickupFrom" onchange="onFdateChange(this);filterTable()">
+        <span class="date-arrow">→</span>
+        <input type="date" class="fdate" id="fPickupTo" onchange="onFdateChange(this);filterTable()">
+      </div>
+    </div>
+    <div class="fsep" id="fgPickupSep" style="display:none"></div>
+
+    <div class="fg" id="fgDelivery">
+      <span class="fg-label">Delivery date</span>
+      <div class="date-pair">
+        <input type="date" class="fdate" id="fDeliveryFrom" onchange="onFdateChange(this);filterTable()">
+        <span class="date-arrow">→</span>
+        <input type="date" class="fdate" id="fDeliveryTo" onchange="onFdateChange(this);filterTable()">
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <span class="active-count" id="activeCount"></span>
+      <button class="btn-clear" onclick="clearAllFilters()">Clear filters</button>
+    </div>
+  </div>
+
+  <!-- Views bar -->
+  <div class="views-bar">
+    <span class="views-label">Views</span>
+    <div class="view-pills" id="viewPills"></div>
+    <div class="save-view-wrap">
+      <button class="btn-save-view" id="btnSaveView" onclick="openSaveView()">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5.5 1v9M1 5.5h9"/></svg>
+        Save view
+      </button>
+      <div class="save-popover hidden" id="savePopover">
+        <input id="viewNameInput" placeholder="Name this view…" maxlength="32"
+               onkeydown="if(event.key==='Enter')confirmSaveView();if(event.key==='Escape')closeSaveView()">
+        <button class="btn-pop-ok" onclick="confirmSaveView()">Save</button>
+        <button class="btn-pop-cancel" onclick="closeSaveView()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table id="dataTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody">
+          <tr><td><div class="skel" style="width:70px"></div></td><td><div class="skel" style="width:150px"></div></td><td><div class="skel" style="width:90px"></div></td><td><div class="skel" style="width:115px"></div></td><td><div class="skel" style="width:80px"></div></td></tr>
+          <tr><td><div class="skel" style="width:80px"></div></td><td><div class="skel" style="width:170px"></div></td><td><div class="skel" style="width:75px"></div></td><td><div class="skel" style="width:125px"></div></td><td><div class="skel" style="width:90px"></div></td></tr>
+          <tr><td><div class="skel" style="width:65px"></div></td><td><div class="skel" style="width:140px"></div></td><td><div class="skel" style="width:100px"></div></td><td><div class="skel" style="width:108px"></div></td><td><div class="skel" style="width:85px"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Shipment Detail Drawer ─────────────────────────────────────────────── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<aside class="drawer" id="shipmentDrawer" role="dialog" aria-modal="true" aria-labelledby="dId">
+  <div class="drawer-header">
+    <div class="drawer-header-left">
+      <span class="drawer-eyebrow">Shipment Detail</span>
+      <div class="drawer-id" id="dId">—</div>
+      <div id="dStatusBadge"></div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Close detail panel">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l12 12M13 1L1 13"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<script>
+// ── Config ───────────────────────────────────────────────────────────────────
+const SHEET_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
+const REFRESH_MS = 5 * 60 * 1000;
+const LS_VIEWS   = "nuvo_ops_views";
+const LS_COLS    = "nuvo_ops_col_order";
+const LS_HIDDEN  = "nuvo_ops_hidden_cols";
+
+// ── State ────────────────────────────────────────────────────────────────────
+let _allRows  = [];
+let _columns  = [];
+let _colOrder = [];
+let _filtered = [];
+let _sortCol  = null;
+let _sortDir  = 1;
+let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, lastEvent:null, origin:null, destination:null, coords:null, locationCity:null, nextEvent:null, checkCall:null, gpsLink:null, nuvoosLink:null };
+let _selCarriers = new Set();
+let _selShippers = new Set();
+let _dragSrcIdx  = null;
+let _isDragging  = false;
+let _views       = [];
+let _activeView  = null;
+let _hiddenCols  = new Set();
+
+// ── CSV parser (handles quoted multi-line fields and escaped quotes) ──────────
+function parseCSV(text){
+  const rawRows=[];
+  let inQ=false,cur="",cells=[],i=0;
+  while(i<text.length){
+    const ch=text[i];
+    if(ch==='"'){
+      if(inQ&&text[i+1]==='"'){cur+='"';i+=2;continue;} // escaped ""
+      inQ=!inQ;
+    } else if(ch===','&&!inQ){
+      cells.push(cur);cur="";
+    } else if((ch==='\n'||ch==='\r')&&!inQ){
+      if(ch==='\r'&&text[i+1]==='\n')i++; // consume \r\n as one
+      if(cells.length||cur.trim()){cells.push(cur);rawRows.push(cells);}
+      cells=[];cur="";
+    } else {
+      cur+=ch;
+    }
+    i++;
+  }
+  if(cells.length||cur.trim()){cells.push(cur);rawRows.push(cells);}
+  if(!rawRows.length)return{columns:[],rows:[]};
+  const columns=rawRows[0].map(h=>h.trim());
+  const rows=rawRows.slice(1)
+    .filter(r=>r.some(v=>v.trim()))
+    .map(vals=>{
+      const row={};
+      columns.forEach((h,j)=>{row[h]=(vals[j]||"").trim();});
+      return row;
+    });
+  return{columns,rows};
+}
+
+// ── Detect semantic columns ───────────────────────────────────────────────────
+function detectCols(cols){
+  const find=re=>cols.find(c=>re.test(c))||null;
+  _cm.shipmentId   = find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$/i);
+  _cm.carrier      = find(/^CARRIER/i);
+  _cm.shipper      = find(/SHIPPER|CONSIGNOR|SHIP.FROM|ORIGIN.COMPANY/i);
+  _cm.trailer      = find(/TRAILER/i);
+  _cm.ref          = find(/CUSTOMER.?REF|CUST.?REF|REFERENCE|^PO.?NUM|^PO$/i);
+  _cm.pickup       = find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
+  _cm.delivery     = find(/DELIVERY|APPOINTMENT|APPT/i);
+  _cm.lastEvent    = find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$/i) || find(/^STATUS$/i);
+  _cm.origin       = find(/^ORIGIN$/i);
+  _cm.destination  = find(/DESTINAITON|^DESTINATION$/i);
+  _cm.coords       = find(/^COORDINATES_P$|^COORDINATES$/i);
+  _cm.locationCity = find(/LOCATION_CITY/i);
+  _cm.nextEvent    = find(/NEXT_EVENT_FOR_ETA|NEXT.EVENT.FOR/i);
+  _cm.checkCall    = find(/LAST_CHECK_CALL/i);
+  _cm.gpsLink      = find(/^GPS.?LINK$/i);
+  _cm.nuvoosLink   = find(/NUVOOS.*SH.*LINK|NUVOOS.*LINK|^SH.?LINK$/i);
+}
+
+// ── Load data ─────────────────────────────────────────────────────────────────
+async function loadData(){
+  setStatus("loading","Loading shipment data from Google Sheets…");
+  setBtnSpinning(true);
+  try{
+    const resp=await fetch(SHEET_URL+"&t="+Date.now());
+    if(!resp.ok)throw new Error("HTTP "+resp.status);
+    const{columns,rows}=parseCSV(await resp.text());
+    _columns=columns;
+    _allRows=rows.filter(r=>Object.values(r).some(v=>v));
+    detectCols(_columns);
+
+    // restore or init column order
+    const saved=tryJSON(localStorage.getItem(LS_COLS));
+    if(saved&&Array.isArray(saved)){
+      const valid=saved.filter(c=>_columns.includes(c));
+      const added=_columns.filter(c=>!valid.includes(c));
+      _colOrder=[...valid,...added];
+    }else{
+      _colOrder=[..._columns];
+    }
+
+    // restore hidden columns
+    const savedHidden=tryJSON(localStorage.getItem(LS_HIDDEN));
+    _hiddenCols=new Set(Array.isArray(savedHidden)?savedHidden.filter(c=>_columns.includes(c)):[]);
+    updateColVisBtn();
+
+    buildHeader();
+    buildFilters();
+    filterTable(); // also updates KPIs
+
+    const n=_allRows.length;
+    setStatus("ok","✅ "+n+" shipment"+(n===1?"":"s")+" loaded · last synced "+fmtTime(new Date()));
+    document.getElementById("lastUpdated").textContent="Last updated: "+fmtTime(new Date());
+  }catch(e){
+    setStatus("err","⚠️ Could not load data — check your connection or verify the sheet is published.");
+    document.getElementById("tableBody").innerHTML='<tr><td colspan="99"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Unable to load data</div><div class="empty-sub">Verify the sheet is published to the web.</div></div></td></tr>';
+    console.error(e);
+  }
+  setBtnSpinning(false);
+}
+
+// ── Build table header (draggable + sortable) ─────────────────────────────────
+function buildHeader(){
+  const visCols=_colOrder.filter(c=>!_hiddenCols.has(c));
+  document.getElementById("tableHead").innerHTML="<tr>"+visCols.map(col=>{
+    const idx=_colOrder.indexOf(col);
+    return`<th draggable="true" data-col="${ea(col)}" data-idx="${idx}"
+        ondragstart="dStart(event)" ondragover="dOver(event)"
+        ondrop="dDrop(event)" ondragend="dEnd(event)">
+      <div class="th-inner">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
+        <span class="th-sort" onclick="if(!_isDragging)sortBy('${ea(col)}',this.closest('th'))" title="Click to sort">
+          ${eh(col.replace(/_/g," "))}
+          <span class="sort-icon"></span>
+        </span>
+      </div>
+    </th>`;
+  }).join("")+"</tr>";
+  if(_sortCol){
+    document.querySelectorAll("th").forEach(th=>{
+      if(th.dataset.col===_sortCol)
+        th.classList.add(_sortDir===1?"sorted-asc":"sorted-desc");
+    });
+  }
+}
+
+// ── Column drag & drop ────────────────────────────────────────────────────────
+function dStart(e){
+  _isDragging=true;
+  _dragSrcIdx=parseInt(e.currentTarget.dataset.idx);
+  e.currentTarget.classList.add("dragging");
+  e.dataTransfer.effectAllowed="move";
+  e.dataTransfer.setData("text/plain",_dragSrcIdx);
+}
+function dOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect="move";
+  document.querySelectorAll("th").forEach(t=>t.classList.remove("drag-over"));
+  e.currentTarget.classList.add("drag-over");
+}
+function dDrop(e){
+  e.preventDefault();
+  const dest=parseInt(e.currentTarget.dataset.idx);
+  if(_dragSrcIdx===null||_dragSrcIdx===dest)return;
+  const moved=_colOrder.splice(_dragSrcIdx,1)[0];
+  _colOrder.splice(dest,0,moved);
+  localStorage.setItem(LS_COLS,JSON.stringify(_colOrder));
+  clearActiveView();
+  buildHeader();
+  renderTable();
+}
+function dEnd(e){
+  e.currentTarget.classList.remove("dragging");
+  document.querySelectorAll("th").forEach(t=>t.classList.remove("drag-over"));
+  setTimeout(()=>{_isDragging=false;_dragSrcIdx=null;},120);
+}
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
+function sortBy(col,th){
+  if(_sortCol===col)_sortDir=-_sortDir;
+  else{_sortCol=col;_sortDir=1;}
+  document.querySelectorAll("th").forEach(t=>t.classList.remove("sorted-asc","sorted-desc"));
+  th.classList.add(_sortDir===1?"sorted-asc":"sorted-desc");
+  filterTable();
+}
+
+// ── Build filter dropdowns ────────────────────────────────────────────────────
+function buildFilters(){
+  buildMsel("carrier", _cm.carrier, "fgCarrier", true);
+  buildMsel("shipper", _cm.shipper, "fgShipper", false);
+  buildLastEventSel();
+  showEl("fgPickup",    !!_cm.pickup);
+  showEl("fgPickupSep", !!_cm.pickup);
+  disableInput("srchShipment",!_cm.shipmentId,_cm.shipmentId?"e.g. SH-12345":"Column not in sheet");
+  disableInput("srchTrailer", !_cm.trailer,   _cm.trailer   ?"e.g. AL15179":"Column not in sheet");
+  disableInput("srchRef",     !_cm.ref,       _cm.ref       ?"Reference / PO #":"Column not in sheet");
+}
+
+const LAST_EVENT_OPTIONS=[
+  "arrived to final destination",
+  "arrived to mx border",
+  "arrived to origin",
+  "arrived to us border",
+  "cleared us customs",
+  "delivered to final destination",
+  "driver on way to origin",
+  "empty trailer picked up",
+  "picked up from mx border",
+  "picked up from origin"
+];
+
+function buildLastEventSel(){
+  const sel=document.getElementById("fLastEvent");
+  sel.innerHTML='<option value="">All events</option>'+
+    LAST_EVENT_OPTIONS.map(e=>`<option value="${eh(e)}">${eh(e.replace(/\b\w/g,c=>c.toUpperCase()))}</option>`).join("");
+  sel.dataset.col=_cm.lastEvent||"";
+  showEl("fgLastEvent",!!_cm.lastEvent);
+}
+
+// ── Multi-select ──────────────────────────────────────────────────────────────
+function buildMsel(type, col, groupId, alwaysShow){
+  showEl(groupId, col ? true : alwaysShow);
+  if(!col) return;
+  const vals=[...new Set(_allRows.map(r=>r[col]).filter(Boolean))].sort();
+  const drop=document.getElementById("mselDrop"+cap(type));
+  const placeholder=type==="carrier"?"All carriers":"All shippers";
+  drop.innerHTML=
+    `<div class="msel-item msel-clear-item" onclick="clearMsel('${type}')">Clear selection</div>
+     <div class="msel-divider"></div>`+
+    vals.map(v=>`
+      <div class="msel-item" onclick="onMselItemClick(event,'${type}','${ea(v)}')">
+        <input type="checkbox" data-val="${ea(v)}" onclick="event.stopPropagation()"
+               onchange="onMselChk('${type}','${ea(v)}',this.checked)">
+        <span>${eh(v)}</span>
+      </div>`).join("");
+}
+
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+function toggleMsel(type){
+  const drop=document.getElementById("mselDrop"+cap(type));
+  const btn =document.getElementById("mselBtn" +cap(type));
+  const isOpen=drop.classList.contains("open");
+  closeAllMsel();
+  if(!isOpen){
+    drop.classList.add("open");
+    btn.setAttribute("aria-expanded","true");
+  }
+}
+
+function closeAllMsel(){
+  ["carrier","shipper"].forEach(t=>{
+    const d=document.getElementById("mselDrop"+cap(t));
+    const b=document.getElementById("mselBtn" +cap(t));
+    if(d)d.classList.remove("open");
+    if(b)b.setAttribute("aria-expanded","false");
+  });
+}
+
+function onMselItemClick(e,type,val){
+  const chk=e.currentTarget.querySelector("input[type=checkbox]");
+  if(e.target===chk)return; // already handled by onchange
+  chk.checked=!chk.checked;
+  onMselChk(type,val,chk.checked);
+}
+
+function onMselChk(type,val,checked){
+  const set=type==="carrier"?_selCarriers:_selShippers;
+  if(checked)set.add(val); else set.delete(val);
+  refreshMselLabel(type);
+  clearActiveView();
+  filterTable();
+}
+
+function clearMsel(type){
+  const set=type==="carrier"?_selCarriers:_selShippers;
+  set.clear();
+  // uncheck all boxes in this drop
+  document.querySelectorAll(`#mselDrop${cap(type)} input[type=checkbox]`).forEach(cb=>cb.checked=false);
+  refreshMselLabel(type);
+  clearActiveView();
+  filterTable();
+}
+
+function refreshMselLabel(type){
+  const set=type==="carrier"?_selCarriers:_selShippers;
+  const placeholder=type==="carrier"?"All carriers":"All shippers";
+  const label=document.getElementById("mselLabel"+cap(type));
+  const btn  =document.getElementById("mselBtn"  +cap(type));
+  if(!label||!btn)return;
+  if(set.size===0)label.textContent=placeholder;
+  else if(set.size===1)label.textContent=[...set][0];
+  else label.textContent=set.size+" selected";
+  btn.classList.toggle("active",set.size>0);
+}
+
+function syncMselCheckboxes(type){
+  const set=type==="carrier"?_selCarriers:_selShippers;
+  document.querySelectorAll(`#mselDrop${cap(type)} input[type=checkbox]`).forEach(cb=>{
+    cb.checked=set.has(cb.dataset.val);
+  });
+  refreshMselLabel(type);
+}
+
+// ── KPIs (driven by filtered rows) ───────────────────────────────────────────
+function updateKPIs(rows){
+  const total=_allRows.length;
+  const shown=rows.length;
+  const isFiltered=shown<total;
+
+  document.getElementById("kpiTotal").textContent=shown;
+  document.getElementById("kpiTotalSub").textContent=isFiltered?`of ${total} total`:"In system";
+
+  const carriers=_cm.carrier?new Set(rows.map(r=>r[_cm.carrier]).filter(Boolean)):new Set();
+  document.getElementById("kpiCarriers").textContent=carriers.size||"—";
+  document.getElementById("kpiCarriersSub").textContent=isFiltered?"In selection":"Active carriers";
+
+  const apptCol=_cm.delivery||_cm.pickup;
+  if(apptCol){
+    const today=new Date();today.setHours(0,0,0,0);
+    const todayStr=today.toISOString().split("T")[0];
+    const weekEnd=new Date(today);weekEnd.setDate(today.getDate()+7);
+    let tod=0,wk=0;
+    rows.forEach(r=>{
+      const d=parseDate(r[apptCol]||"");
+      if(!d)return;
+      if(d.toISOString().split("T")[0]===todayStr)tod++;
+      if(d>=today&&d<=weekEnd)wk++;
+    });
+    document.getElementById("kpiToday").textContent=tod;
+    document.getElementById("kpiWeek").textContent=wk;
+  }else{
+    document.getElementById("kpiToday").textContent="—";
+    document.getElementById("kpiWeek").textContent="—";
+  }
+}
+
+// ── Filter + render ───────────────────────────────────────────────────────────
+function filterTable(){
+  updateActiveCount();
+  const sShip=gv("srchShipment").toLowerCase();
+  const sTrl =gv("srchTrailer").toLowerCase();
+  const sRef =gv("srchRef").toLowerCase();
+  const vEvt =gv("fLastEvent");
+  const pfrom=gv("fPickupFrom");
+  const pto  =gv("fPickupTo");
+  const dfrom=gv("fDeliveryFrom");
+  const dto  =gv("fDeliveryTo");
+
+  _filtered=_allRows.filter(row=>{
+    if(sShip&&_cm.shipmentId&&!(row[_cm.shipmentId]||"").toLowerCase().includes(sShip))return false;
+    if(sTrl &&_cm.trailer   &&!(row[_cm.trailer]   ||"").toLowerCase().includes(sTrl)) return false;
+    if(sRef &&_cm.ref       &&!(row[_cm.ref]        ||"").toLowerCase().includes(sRef)) return false;
+    if(_selCarriers.size&&_cm.carrier &&!_selCarriers.has(row[_cm.carrier]))  return false;
+    if(_selShippers.size&&_cm.shipper &&!_selShippers.has(row[_cm.shipper]))  return false;
+    if(vEvt&&_cm.lastEvent&&(row[_cm.lastEvent]||"").toLowerCase()!==vEvt) return false;
+    if((pfrom||pto)&&_cm.pickup){
+      const d=parseDate(row[_cm.pickup]||"");
+      if(!d)return false;
+      if(pfrom&&d<new Date(pfrom+"T00:00:00"))return false;
+      if(pto  &&d>new Date(pto  +"T23:59:59"))return false;
+    }
+    if((dfrom||dto)&&_cm.delivery){
+      const d=parseDate(row[_cm.delivery]||"");
+      if(!d)return false;
+      if(dfrom&&d<new Date(dfrom+"T00:00:00"))return false;
+      if(dto  &&d>new Date(dto  +"T23:59:59"))return false;
+    }
+    return true;
+  });
+
+  if(_sortCol){
+    _filtered.sort((a,b)=>{
+      const av=(a[_sortCol]||"").toLowerCase();
+      const bv=(b[_sortCol]||"").toLowerCase();
+      return av<bv?-_sortDir:av>bv?_sortDir:0;
+    });
+  }
+
+  updateKPIs(_filtered);
+  renderTable();
+}
+
+function renderTable(){
+  const tbody=document.getElementById("tableBody");
+  const total=_allRows.length,shown=_filtered.length;
+  document.getElementById("resultCount").textContent=
+    shown===total?`${total} shipments`:`${shown} of ${total} shipments`;
+
+  const visCols=_colOrder.filter(c=>!_hiddenCols.has(c));
+  if(!_filtered.length){
+    tbody.innerHTML=`<tr><td colspan="${visCols.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No shipments match</div><div class="empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=_filtered.map((row,i)=>{
+    const tds=visCols.map(col=>{
+      let val=row[col]||"";
+      let cls="";
+      const raw=val;
+      if(col===_cm.shipmentId){cls="col-id";val=eh(val);}
+      else if(col===_cm.lastEvent&&val)val=`<span class="badge ${badgeCls(val)}">${fmtLabel(val)}</span>`;
+      else if((col===_cm.delivery||col===_cm.pickup)&&val)val=fmtAppt(val);
+      else val=eh(val);
+      return `<td class="${cls}" title="${eh(raw)}">${val||'<span style="color:var(--tx4)">—</span>'}</td>`;
+    }).join("");
+    return`<tr class="clickable" onclick="openDrawer(${i})">${tds}</tr>`;
+  }).join("");
+}
+
+// ── Active filter count ───────────────────────────────────────────────────────
+function updateActiveCount(){
+  const textIds=["srchShipment","srchTrailer","srchRef","fLastEvent","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"];
+  let n=textIds.filter(id=>gv(id)).length;
+  n+=(_selCarriers.size>0?1:0)+(_selShippers.size>0?1:0);
+  const el=document.getElementById("activeCount");
+  el.textContent=n+" active";
+  el.classList.toggle("show",n>0);
+}
+
+// ── Clear ─────────────────────────────────────────────────────────────────────
+function clearAllFilters(){
+  ["srchShipment","srchTrailer","srchRef"].forEach(id=>{
+    const el=document.getElementById(id);el.value="";el.classList.remove("has-value");
+  });
+  ["fLastEvent"].forEach(id=>{
+    const el=document.getElementById(id);if(el){el.value="";el.classList.remove("active");}
+  });
+  ["fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
+    const el=document.getElementById(id);el.value="";el.classList.remove("active");
+  });
+  _selCarriers.clear();
+  _selShippers.clear();
+  syncMselCheckboxes("carrier");
+  syncMselCheckboxes("shipper");
+  clearActiveView();
+  filterTable();
+}
+
+// ── Input / select change helpers ─────────────────────────────────────────────
+function onSrchInput(el){el.classList.toggle("has-value",!!el.value);clearActiveView();}
+function onFselChange(el){el.classList.toggle("active",!!el.value);clearActiveView();}
+function onFdateChange(el){el.classList.toggle("active",!!el.value);clearActiveView();}
+
+// ── Views ─────────────────────────────────────────────────────────────────────
+function loadViews(){_views=tryJSON(localStorage.getItem(LS_VIEWS))||[];renderPills();}
+function saveViews(){localStorage.setItem(LS_VIEWS,JSON.stringify(_views));}
+
+function getState(){
+  return{
+    shipment:gv("srchShipment"),trailer:gv("srchTrailer"),ref:gv("srchRef"),
+    carriers:[..._selCarriers],shippers:[..._selShippers],
+    lastEvent:gv("fLastEvent"),
+    pickupFrom:gv("fPickupFrom"),pickupTo:gv("fPickupTo"),
+    deliveryFrom:gv("fDeliveryFrom"),deliveryTo:gv("fDeliveryTo"),
+    colOrder:[..._colOrder],
+    hiddenCols:[..._hiddenCols]
+  };
+}
+function applyState(s){
+  sv("srchShipment",s.shipment||"");sv("srchTrailer",s.trailer||"");sv("srchRef",s.ref||"");
+  sv("fLastEvent",s.lastEvent||"");
+  sv("fPickupFrom",s.pickupFrom||"");sv("fPickupTo",s.pickupTo||"");
+  sv("fDeliveryFrom",s.deliveryFrom||"");sv("fDeliveryTo",s.deliveryTo||"");
+  ["srchShipment","srchTrailer","srchRef"].forEach(id=>{
+    document.getElementById(id).classList.toggle("has-value",!!gv(id));
+  });
+  ["fLastEvent","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.classList.toggle("active",!!gv(id));
+  });
+  _selCarriers=new Set(Array.isArray(s.carriers)?s.carriers:[]);
+  _selShippers=new Set(Array.isArray(s.shippers)?s.shippers:[]);
+  syncMselCheckboxes("carrier");
+  syncMselCheckboxes("shipper");
+  if(s.colOrder&&s.colOrder.length){
+    const valid=s.colOrder.filter(c=>_columns.includes(c));
+    const added=_columns.filter(c=>!valid.includes(c));
+    _colOrder=[...valid,...added];
+    localStorage.setItem(LS_COLS,JSON.stringify(_colOrder));
+  }
+  if(Array.isArray(s.hiddenCols)){
+    _hiddenCols=new Set(s.hiddenCols.filter(c=>_columns.includes(c)));
+    localStorage.setItem(LS_HIDDEN,JSON.stringify([..._hiddenCols]));
+    updateColVisBtn();
+  }
+  buildHeader();
+}
+function applyView(idx){
+  if(!_views[idx])return;
+  _activeView=idx;
+  applyState(_views[idx].state);
+  filterTable();
+  renderPills();
+}
+function deleteView(idx,e){
+  e.stopPropagation();
+  _views.splice(idx,1);
+  if(_activeView===idx)_activeView=null;
+  else if(_activeView>idx)_activeView--;
+  saveViews();renderPills();
+}
+function clearActiveView(){if(_activeView!==null){_activeView=null;renderPills();}}
+
+function renderPills(){
+  const c=document.getElementById("viewPills");
+  if(!_views.length){
+    c.innerHTML='<span class="views-empty">No saved views — apply filters then click "Save view"</span>';
+    return;
+  }
+  c.innerHTML=_views.map((vw,i)=>`
+    <span class="view-pill${_activeView===i?" active":""}" onclick="applyView(${i})">
+      ${eh(vw.name)}
+      <button class="pill-del" onclick="deleteView(${i},event)" title="Delete">✕</button>
+    </span>`).join("");
+}
+
+function openSaveView(){
+  const pop=document.getElementById("savePopover");
+  pop.classList.remove("hidden");
+  const inp=document.getElementById("viewNameInput");
+  inp.value=_activeView!==null?_views[_activeView].name:"";
+  setTimeout(()=>{inp.focus();inp.select();},50);
+}
+function closeSaveView(){document.getElementById("savePopover").classList.add("hidden");}
+function confirmSaveView(){
+  const name=document.getElementById("viewNameInput").value.trim();
+  if(!name){document.getElementById("viewNameInput").focus();return;}
+  const state=getState();
+  const ex=_views.findIndex(v=>v.name.toLowerCase()===name.toLowerCase());
+  if(ex>=0){_views[ex].state=state;_activeView=ex;}
+  else{_views.push({name,state});_activeView=_views.length-1;}
+  saveViews();renderPills();closeSaveView();
+}
+
+// ── Column visibility ─────────────────────────────────────────────────────────
+function toggleColDrop(){
+  const drop=document.getElementById("colVisDrop");
+  const isOpen=!drop.classList.contains("hidden");
+  closeAllMsel();
+  closeSaveView();
+  if(isOpen){drop.classList.add("hidden");return;}
+  buildColDrop();
+  drop.classList.remove("hidden");
+}
+
+function buildColDrop(){
+  const drop=document.getElementById("colVisDrop");
+  drop.innerHTML=`<div class="col-vis-header">
+    <span class="col-vis-title">Show / hide columns</span>
+    <div style="display:flex;gap:6px">
+      <button class="btn-show-all" onclick="showAllCols()">Show all</button>
+      <button class="btn-show-all" onclick="hideAllCols()" style="background:var(--bg2);color:var(--tx2)">Hide all</button>
+    </div>
+  </div>`+
+  _colOrder.map(col=>`
+    <div class="msel-item" onclick="onColVisClick(event,'${ea(col)}')">
+      <input type="checkbox" data-col="${ea(col)}" ${_hiddenCols.has(col)?'':'checked'}
+             onclick="event.stopPropagation()"
+             onchange="toggleColVis('${ea(col)}',this.checked)">
+      <span>${eh(col.replace(/_/g,' '))}</span>
+    </div>`).join('');
+}
+
+function onColVisClick(e,col){
+  const chk=e.currentTarget.querySelector("input[type=checkbox]");
+  if(e.target===chk)return;
+  chk.checked=!chk.checked;
+  toggleColVis(col,chk.checked);
+}
+
+function toggleColVis(col,visible){
+  if(visible)_hiddenCols.delete(col); else _hiddenCols.add(col);
+  localStorage.setItem(LS_HIDDEN,JSON.stringify([..._hiddenCols]));
+  updateColVisBtn();
+  clearActiveView();
+  buildHeader();
+  renderTable();
+}
+
+function showAllCols(){
+  _hiddenCols.clear();
+  localStorage.setItem(LS_HIDDEN,"[]");
+  updateColVisBtn();
+  buildColDrop();
+  clearActiveView();
+  buildHeader();
+  renderTable();
+}
+
+function hideAllCols(){
+  _hiddenCols=new Set(_colOrder);
+  localStorage.setItem(LS_HIDDEN,JSON.stringify([..._hiddenCols]));
+  updateColVisBtn();
+  buildColDrop();
+  clearActiveView();
+  buildHeader();
+  renderTable();
+}
+
+function updateColVisBtn(){
+  const n=_hiddenCols.size;
+  document.getElementById("btnColVis").classList.toggle("active",n>0);
+  const badge=document.getElementById("colHiddenBadge");
+  badge.textContent=n;
+  badge.style.display=n>0?"inline-flex":"none";
+}
+
+// ── Close dropdowns on outside click ─────────────────────────────────────────
+document.addEventListener("click",e=>{
+  if(!e.target.closest(".msel-wrap"))closeAllMsel();
+  // col vis drop
+  if(!e.target.closest("#colVisWrap"))document.getElementById("colVisDrop").classList.add("hidden");
+  // save-view popover
+  const pop=document.getElementById("savePopover");
+  const btn=document.getElementById("btnSaveView");
+  if(!pop.classList.contains("hidden")&&!pop.contains(e.target)&&e.target!==btn&&!btn.contains(e.target))
+    closeSaveView();
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function gv(id){return(document.getElementById(id)?.value||"").trim();}
+function sv(id,val){const el=document.getElementById(id);if(el)el.value=val;}
+function showEl(id,visible){const el=document.getElementById(id);if(el)el.style.display=visible?"":"none";}
+function disableInput(id,dis,ph){const el=document.getElementById(id);if(!el)return;el.disabled=dis;if(ph)el.placeholder=ph;}
+function setStatus(cls,msg){
+  const el=document.getElementById("statusBar");
+  el.className="status-bar "+cls;
+  const ico=cls==="loading"?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>':cls==="ok"?"✅":"⚠️";
+  el.innerHTML=ico+" "+msg;
+}
+function setBtnSpinning(on){document.getElementById("btnRefresh").classList.toggle("spinning",on);}
+function refreshData(){loadData();}
+function fmtTime(d){return d.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});}
+function fmtLabel(s){return s.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());}
+function eh(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function ea(s){return String(s).replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function tryJSON(s){try{return JSON.parse(s);}catch{return null;}}
+function parseDate(raw){
+  if(!raw)return null;
+  const ymd=raw.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(ymd)return new Date(`${ymd[1]}-${ymd[2].padStart(2,"0")}-${ymd[3].padStart(2,"0")}T12:00:00`);
+  const mdy=raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(mdy)return new Date(`${mdy[3]}-${mdy[1].padStart(2,"0")}-${mdy[2].padStart(2,"0")}T12:00:00`);
+  const d=new Date(raw);return isNaN(d)?null:d;
+}
+function fmtAppt(raw){
+  const d=parseDate(raw);
+  if(!d)return eh(raw);
+  const t=raw.match(/(\d{1,2}:\d{2})(\s*(hrs?|am|pm))?/i);
+  let out=d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+  if(t)out+=" · "+t[0];
+  return out;
+}
+function badgeCls(val){
+  const v=val.toLowerCase();
+  if(/delivered|complete/i.test(v))return"badge-delivered";
+  if(/transit|moving/i.test(v))return"badge-intransit";
+  if(/pending|waiting|hold/i.test(v))return"badge-pending";
+  if(/exception|delay|issue/i.test(v))return"badge-exception";
+  if(/scheduled|booked|confirmed/i.test(v))return"badge-scheduled";
+  return"badge-default";
+}
+
+// ── Shipment Detail Modal ─────────────────────────────────────────────────────
+function openDrawer(rowIdx){
+  const row=_filtered[rowIdx];
+  if(!row)return;
+
+  const get=col=>col?row[col]||"":"";
+  const id       = get(_cm.shipmentId)||"—";
+  const status   = get(_cm.lastEvent);
+  const carrier  = get(_cm.carrier);
+  const shipper  = get(_cm.shipper);
+  const ref      = get(_cm.ref);
+  const trailer  = get(_cm.trailer);
+  const pickup   = get(_cm.pickup);
+  const delivery = get(_cm.delivery);
+  const origin   = get(_cm.origin);
+  const dest     = get(_cm.destination);
+  const coords   = get(_cm.coords);
+  const locCity  = get(_cm.locationCity);
+  const nextEvt  = get(_cm.nextEvent);
+  const checkCall= get(_cm.checkCall);
+  const gpsLink    = get(_cm.gpsLink);
+  const nuvoosLink = get(_cm.nuvoosLink);
+
+  // Header
+  document.getElementById("dId").textContent=id;
+  document.getElementById("dStatusBadge").innerHTML=status
+    ?`<span class="badge ${badgeCls(status)}" style="font-size:11px;padding:4px 12px">${fmtLabel(status)}</span>`:"";
+
+  const body=document.getElementById("drawerBody");
+  body.innerHTML="";
+
+  // ── Map ──
+  const mapDiv=document.createElement("div");
+  mapDiv.id="dMap";
+  if(!coords){
+    mapDiv.className="map-placeholder";
+    mapDiv.innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span style="font-size:12px">No GPS coordinates available</span>`;
+  }
+  body.appendChild(mapDiv);
+
+  // ── Next Event / ETA ──
+  if(nextEvt){
+    const el=document.createElement("div");
+    el.innerHTML=`<div class="eta-card">
+      <div class="eta-left">
+        <div class="eta-label">Next event / ETA</div>
+        <div class="eta-value">${eh(nextEvt)}</div>
+      </div>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+    </div>`;
+    body.appendChild(el);
+  }
+
+  // ── Route ──
+  const originLabel = origin||shipper||"—";
+  const destLabel   = dest||"—";
+  if(originLabel!=="—"||destLabel!=="—"||carrier){
+    const sec=mkSec("Route");
+    const locPill=locCity
+      ?`<div class="loc-pill"><span class="loc-dot"></span>${eh(locCity)}</div>`:"";
+    sec.innerHTML+=`<div class="route-banner">
+      <div class="rp">
+        <div class="rp-label">Origin</div>
+        <div class="rp-name" title="${eh(originLabel)}">${eh(originLabel)}</div>
+        ${pickup?`<div class="rp-date">${fmtAppt(pickup)}</div>`:""}
+      </div>
+      <div class="rp-arrow">
+        ${locPill}
+        <div class="rp-arrow-head">→</div>
+        ${carrier?`<div class="rp-carrier-tag" title="${eh(carrier)}">${eh(carrier)}</div>`:""}
+      </div>
+      <div class="rp" style="text-align:right">
+        <div class="rp-label" style="text-align:right">Destination</div>
+        <div class="rp-name" style="text-align:right" title="${eh(destLabel)}">${eh(destLabel)}</div>
+        ${delivery?`<div class="rp-date" style="text-align:right">${fmtAppt(delivery)}</div>`:""}
+      </div>
+    </div>`;
+    body.appendChild(sec);
+  }
+
+  // ── Key details (2-column grid, client view) ──
+  const details=[];
+  if(ref)       details.push(["Customer Ref",  eh(ref),           "nuvo"]);
+  if(pickup)    details.push(["Pickup",         fmtAppt(pickup),  ""]);
+  if(carrier)   details.push(["Carrier",        eh(carrier),       ""]);
+  if(delivery)  details.push(["Delivery Appt.", fmtAppt(delivery),""]);
+  if(trailer)   details.push(["Trailer #",      eh(trailer),       ""]);
+  if(checkCall) details.push(["Last Check Call",fmtAppt(checkCall)||eh(checkCall),""]);
+
+  if(details.length){
+    const sec=mkSec("Details");
+    // Ensure even count for 2-col grid
+    if(details.length%2!==0)details.push(["","","muted"]);
+    sec.innerHTML+=`<div class="detail-grid">${
+      details.map(([label,val,cls])=>`
+        <div class="detail-row">
+          <div class="dl">${label}</div>
+          <div class="dv ${cls}">${val||'<span style="color:var(--tx4)">—</span>'}</div>
+        </div>`).join("")
+    }</div>`;
+    body.appendChild(sec);
+  }
+
+  // ── Action buttons (GPS + NuvoOS) ──
+  if(gpsLink||nuvoosLink){
+    const wrap=document.createElement("div");
+    wrap.style.cssText="display:flex;gap:8px;flex-wrap:wrap";
+    if(gpsLink){
+      wrap.innerHTML+=`<a href="${eh(gpsLink)}" target="_blank" rel="noopener"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--teal);color:#fff;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s"
+        onmouseover="this.style.background='#163d32'" onmouseout="this.style.background='var(--teal)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+        View Live Tracking
+      </a>`;
+    }
+    if(nuvoosLink){
+      wrap.innerHTML+=`<a href="${eh(nuvoosLink)}" target="_blank" rel="noopener"
+        style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg2);color:var(--tx1);border:1px solid var(--brd);border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s"
+        onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        View NuvoOS
+      </a>`;
+    }
+    body.appendChild(wrap);
+  }
+
+  document.getElementById("drawerOverlay").classList.add("open");
+  document.getElementById("shipmentDrawer").classList.add("open");
+  document.body.style.overflow="hidden";
+
+  // Init map after element is in DOM
+  setTimeout(()=>initMap(coords,locCity),60);
+}
+
+function initMap(coordStr,locCity){
+  if(typeof L==="undefined")return;
+  const mapEl=document.getElementById("dMap");
+  if(!mapEl||mapEl.classList.contains("map-placeholder"))return;
+  if(window._lmap){window._lmap.remove();window._lmap=null;}
+  if(!coordStr)return;
+
+  const parts=coordStr.split(",").map(s=>parseFloat(s.trim()));
+  if(parts.length<2||isNaN(parts[0])||isNaN(parts[1]))return;
+
+  window._lmap=L.map("dMap",{zoomControl:true,scrollWheelZoom:false,attributionControl:false})
+    .setView(parts,8);
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{maxZoom:19})
+    .addTo(window._lmap);
+
+  L.control.attribution({prefix:false})
+    .addAttribution('© <a href="https://carto.com">CARTO</a>')
+    .addTo(window._lmap);
+
+  // Teal truck marker
+  const icon=L.divIcon({
+    className:"",
+    html:`<div style="width:18px;height:18px;background:#1C4A3E;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 10px rgba(28,74,62,.5)"></div>`,
+    iconSize:[18,18],iconAnchor:[9,9]
+  });
+
+  L.marker(parts,{icon}).addTo(window._lmap)
+    .bindPopup(`<b style="color:#1C4A3E;font-size:12px">${locCity||"Current Location"}</b>`)
+    .openPopup();
+}
+
+function closeDrawer(){
+  document.getElementById("drawerOverlay").classList.remove("open");
+  document.getElementById("shipmentDrawer").classList.remove("open");
+  document.body.style.overflow="";
+  if(window._lmap){window._lmap.remove();window._lmap=null;}
+}
+
+function mkSec(title){
+  const div=document.createElement("div");
+  div.innerHTML=`<div class="dsec-title">${title}</div>`;
+  return div;
+}
+
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer();});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadViews();
+loadData();
+setInterval(loadData,REFRESH_MS);
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</body>
+</html>

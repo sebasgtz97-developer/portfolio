@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 40" width="220" height="40" role="img" aria-label="Nuvocargo">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap');
+    </style>
+  </defs>
+  <text
+    x="0"
+    y="30"
+    font-family="'Cormorant Garamond', 'Georgia', serif"
+    font-size="32"
+    font-weight="500"
+    letter-spacing="0.5"
+    fill="#1C4A3E"
+  >nuvocargo</text>
+</svg>

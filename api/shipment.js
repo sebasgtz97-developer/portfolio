@@ -94,7 +94,8 @@ module.exports = async function handler(req, res) {
   try {
     const rows = await query(
       conn,
-      `SELECT SHIPMENT_ID, CARRIER, TRAILER_NUMBER, DELIVERY_APPOINTMENT
+      `SELECT SHIPMENT_ID, CARRIER, TRAILER_NUMBER, DELIVERY_APPOINTMENT,
+              DROPOFF_FACILITY_NAME, DROPOFF_FACILITY_FULL_ADDRESS
        FROM ${table}
        WHERE TRIM(UPPER(SHIPMENT_ID)) = :1
        LIMIT 1`,
@@ -109,9 +110,11 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       found:                true,
       SHIPMENT_ID:          col(r, 'SHIPMENT_ID'),
-      CARRIER:              col(r, 'CARRIER'),
-      TRAILER_NUMBER:       col(r, 'TRAILER_NUMBER'),
-      DELIVERY_APPOINTMENT: col(r, 'DELIVERY_APPOINTMENT'),
+      CARRIER:                       col(r, 'CARRIER'),
+      TRAILER_NUMBER:                col(r, 'TRAILER_NUMBER'),
+      DELIVERY_APPOINTMENT:          col(r, 'DELIVERY_APPOINTMENT'),
+      DROPOFF_FACILITY_NAME:         col(r, 'DROPOFF_FACILITY_NAME'),
+      DROPOFF_FACILITY_FULL_ADDRESS: col(r, 'DROPOFF_FACILITY_FULL_ADDRESS'),
     });
   } catch (err) {
     // If the connection went stale, clear cache so next request reconnects

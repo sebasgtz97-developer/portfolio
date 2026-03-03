@@ -2246,8 +2246,10 @@ function _applyRow(id, row){
     }
   };
 
-  if(row.CARRIER)        set("carrierName", row.CARRIER);
-  if(row.TRAILER_NUMBER) set("trailerNo",   row.TRAILER_NUMBER);
+  if(row.CARRIER)                      set("carrierName",   row.CARRIER);
+  if(row.TRAILER_NUMBER)               set("trailerNo",     row.TRAILER_NUMBER);
+  if(row.DROPOFF_FACILITY_NAME)        set("consigneeName", row.DROPOFF_FACILITY_NAME);
+  if(row.DROPOFF_FACILITY_FULL_ADDRESS) set("consigneeAddr", row.DROPOFF_FACILITY_FULL_ADDRESS);
 
   // Parse DELIVERY_APPOINTMENT into date + time
   // Supported formats: "2025-02-15 15:00", "2025-02-15T15:00:00", "02/15/2025 15:00"
@@ -2271,10 +2273,11 @@ function _applyRow(id, row){
     }
   }
 
-  const carrier = row.CARRIER || "—";
-  const trailer = row.TRAILER_NUMBER || "—";
-  const appt    = row.DELIVERY_APPOINTMENT || "—";
-  setSheetStatus("match", "🔗 Matched "+id+" — Carrier: "+carrier+" | Trailer: "+trailer+" | Appt: "+appt);
+  const carrier  = row.CARRIER || "—";
+  const trailer  = row.TRAILER_NUMBER || "—";
+  const appt     = row.DELIVERY_APPOINTMENT || "—";
+  const dropoff  = row.DROPOFF_FACILITY_NAME || "—";
+  setSheetStatus("match", "🔗 Matched "+id+" — Carrier: "+carrier+" | Trailer: "+trailer+" | Ship To: "+dropoff+" | Appt: "+appt);
   render();
 }
 </script>
