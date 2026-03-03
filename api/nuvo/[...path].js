@@ -16,13 +16,21 @@ module.exports = async function handler(req, res) {
   // Reconstruct the upstream path from the catch-all segments
   const segments = req.query.path || [];
   const upstreamPath = '/' + segments.join('/');
-  const targetUrl = `https://os.nuvocargo.com${upstreamPath}`;
+
+  // Forward any query params (excluding the internal `path` key Vercel injects)
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(req.query)) {
+    if (k !== 'path') qs.append(k, v);
+  }
+  const queryString = qs.toString();
+  const targetUrl = `https://os.nuvocargo.com${upstreamPath}${queryString ? '?' + queryString : ''}`;
 
   const fetchOptions = {
     method: req.method,
     headers: {
       'Authorization': req.headers.authorization || '',
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
     },
   };
 
@@ -34,8 +42,9 @@ module.exports = async function handler(req, res) {
     const upstream = await fetch(targetUrl, fetchOptions);
     const text = await upstream.text();
     res.setHeader('Content-Type', upstream.headers.get('content-type') || 'application/json');
+    res.setHeader('X-Upstream-URL', targetUrl);
     res.status(upstream.status).end(text);
   } catch (err) {
-    res.status(502).json({ error: 'Proxy error', message: err.message });
+    res.status(502).json({ error: 'Proxy error', message: err.message, upstream: targetUrl });
   }
 };
