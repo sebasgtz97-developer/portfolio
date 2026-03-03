@@ -1449,7 +1449,7 @@ function handleModalOverlayClick(e) {
 }
 
 async function loadEventTypes(apiKey) {
-  const key = apiKey || gv("evApiKey") || localStorage.getItem(LS_API_KEY) || "";
+  const key = (apiKey || gv("evApiKey") || localStorage.getItem(LS_API_KEY) || "").replace(/[^\x20-\x7E]/g, "").trim();
   const sel = document.getElementById("evEventType");
   if (!key) {
     sel.innerHTML = '<option value="">Enter API key above, then click ↻</option>';
@@ -1485,7 +1485,7 @@ async function loadEventTypes(apiKey) {
 }
 
 async function submitLoadEvent() {
-  const key         = gv("evApiKey");
+  const key         = gv("evApiKey").replace(/[^\x20-\x7E]/g, "").trim();
   const shipmentId  = gv("evShipmentId");
   const eventTypeId = gv("evEventType");
   const eventTimeRaw = document.getElementById("evEventTime").value;
