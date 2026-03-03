@@ -1457,10 +1457,20 @@ async function loadEventTypes(apiKey) {
   }
   sel.innerHTML = '<option value="">Loading…</option>';
   try {
-    const r = await fetch(`${NUVO_API}/api/internal/active_hashes/LoadEventType`, {
+    // Step 1: discover the exact hash name (API is case-sensitive)
+    const listR = await fetch(`${NUVO_API}/api/internal/active_hashes`, {
       headers: { "Authorization": `Bearer ${key}` }
     });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    if (!listR.ok) throw new Error(`HTTP ${listR.status} fetching hash list`);
+    const hashNames = await listR.json();
+    const hashName = hashNames.find(n => /load.?event/i.test(n));
+    if (!hashName) throw new Error(`No load event hash found. Available: ${hashNames.join(', ')}`);
+
+    // Step 2: fetch values for that hash
+    const r = await fetch(`${NUVO_API}/api/internal/active_hashes/${encodeURIComponent(hashName)}`, {
+      headers: { "Authorization": `Bearer ${key}` }
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${hashName}`);
     const data = await r.json();
     _eventTypes = data;
     sel.innerHTML = '<option value="">Select event type…</option>' +
