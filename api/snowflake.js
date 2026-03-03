@@ -5,8 +5,11 @@ snowflake.configure({ logLevel: 'ERROR' });
 const SQL = 'SELECT * FROM ANALYTICS.data_ops_snow2sheets.MONITORING_REPORT';
 
 module.exports = async (req, res) => {
+  const account = (process.env.SNOWFLAKE_ACCOUNT || '')
+    .replace(/\.snowflakecomputing\.com$/i, '');
+
   const connection = snowflake.createConnection({
-    account:   process.env.SNOWFLAKE_ACCOUNT,
+    account,
     username:  process.env.SNOWFLAKE_USERNAME,
     password:  process.env.SNOWFLAKE_PASSWORD,
     database:  process.env.SNOWFLAKE_DATABASE,
