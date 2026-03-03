@@ -1433,7 +1433,7 @@ function openEventModal() {
   sv("evEventTime", now.toISOString().slice(0, 16));
   document.getElementById("evError").classList.add("hidden");
   document.getElementById("eventModal").classList.remove("hidden");
-  if (!_eventTypes) loadEventTypes();
+  loadEventTypes(savedKey);
   // Focus first empty required field
   if (!savedKey) document.getElementById("evApiKey").focus();
   else if (!gv("evShipmentId")) document.getElementById("evShipmentId").focus();
@@ -1448,9 +1448,14 @@ function handleModalOverlayClick(e) {
   if (e.target === e.currentTarget) closeEventModal();
 }
 
-async function loadEventTypes() {
-  const key = gv("evApiKey") || localStorage.getItem(LS_API_KEY) || "";
-  if (!key) { return; }
+async function loadEventTypes(apiKey) {
+  const key = apiKey || gv("evApiKey") || localStorage.getItem(LS_API_KEY) || "";
+  const sel = document.getElementById("evEventType");
+  if (!key) {
+    sel.innerHTML = '<option value="">Enter API key above, then click ↻</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Loading…</option>';
   try {
     const r = await fetch(`${NUVO_API}/api/internal/active_hashes/LoadEventType`, {
       headers: { "Authorization": `Bearer ${key}` }
@@ -1458,11 +1463,11 @@ async function loadEventTypes() {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     _eventTypes = data;
-    const sel = document.getElementById("evEventType");
     sel.innerHTML = '<option value="">Select event type…</option>' +
       data.map(t => `<option value="${eh(String(t.id))}">${eh(t.name || t.type || t.id)}</option>`).join("");
-  } catch {
-    document.getElementById("evEventType").innerHTML = '<option value="">Could not load — enter ID manually</option>';
+  } catch(err) {
+    _eventTypes = null;
+    sel.innerHTML = `<option value="">Failed: ${eh(err.message)}</option>`;
   }
 }
 
@@ -1559,14 +1564,19 @@ setInterval(loadData,REFRESH_MS);
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">API Key <span style="font-weight:400;color:var(--tx4);text-transform:none;letter-spacing:0">— saved locally</span></label>
-        <input class="form-input" id="evApiKey" type="password" placeholder="tkn_org_…" autocomplete="off">
+        <input class="form-input" id="evApiKey" type="password" placeholder="tkn_org_…" autocomplete="off"
+               onblur="if(this.value.trim())loadEventTypes(this.value.trim())">
       </div>
       <div class="form-group">
         <label class="form-label">Shipment ID</label>
         <input class="form-input" id="evShipmentId" type="text" placeholder="e.g. 12345" autocomplete="off">
       </div>
       <div class="form-group">
-        <label class="form-label">Event Type</label>
+        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between">
+          Event Type
+          <button type="button" onclick="loadEventTypes(gv('evApiKey'))" title="Reload event types"
+                  style="background:none;border:none;cursor:pointer;color:var(--teal);font-size:14px;padding:0;line-height:1;font-weight:600">↻</button>
+        </label>
         <select class="form-input" id="evEventType">
           <option value="">Loading event types…</option>
         </select>
