@@ -25,8 +25,12 @@ let _conn = null;
 
 function connect() {
   return new Promise((resolve, reject) => {
+    // Accept full hostname or bare account identifier
+    const account = (process.env.SNOWFLAKE_ACCOUNT || '')
+      .replace(/\.snowflakecomputing\.com$/i, '');
+
     const conn = snowflake.createConnection({
-      account:   process.env.SNOWFLAKE_ACCOUNT,
+      account,
       username:  process.env.SNOWFLAKE_USERNAME,
       password:  process.env.SNOWFLAKE_PASSWORD,
       database:  process.env.SNOWFLAKE_DATABASE,
