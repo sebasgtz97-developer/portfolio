@@ -8,20 +8,24 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root {
-  --teal:   #1C4A3E;
-  --lime:   #C8E64C;
-  --bg:     #F7F8F8;
-  --panel:  #FFFFFF;
-  --bd:     #E5E7EB;
-  --bd2:    #D1D5DB;
-  --tx1:    #111827;
-  --tx2:    #374151;
-  --tx3:    #6B7280;
-  --tx4:    #9CA3AF;
-  --blue:   #2563EB;
-  --red:    #DC2626;
-  --green:  #16A34A;
-  --amber:  #D97706;
+  --teal:       #1C4A3E;
+  --teal-rgb:   28, 74, 62;
+  --lime:       #C8E64C;
+  --bg:         #F7F8F8;
+  --panel:      #FFFFFF;
+  --bd:         #E5E7EB;
+  --bd2:        #D1D5DB;
+  --tx1:        #111827;
+  --tx2:        #374151;
+  --tx3:        #6B7280;
+  --tx4:        #9CA3AF;
+  --blue:       #2563EB;
+  --blue-rgb:   37, 99, 235;
+  --red:        #DC2626;
+  --green:      #16A34A;
+  --green-rgb:  22, 163, 74;
+  --amber:      #D97706;
+  --amber-rgb:  217, 119, 6;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;background:var(--bg);color:var(--tx1);min-height:100vh;-webkit-font-smoothing:antialiased}
@@ -50,13 +54,53 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 
 /* KPIs */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.kpi-card{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:14px 16px}
-.kpi-label{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.kpi-value{font-size:26px;font-weight:700;color:var(--tx1);line-height:1;letter-spacing:-0.02em}
+.kpi-card{
+  background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:18px 20px 16px;
+  position:relative;overflow:hidden;cursor:default;
+  animation:kpiCardIn .5s cubic-bezier(.4,0,.2,1) both;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1),border-color .3s ease,box-shadow .3s ease;
+}
+.kpi-card:nth-child(1){animation-delay:.05s}
+.kpi-card:nth-child(2){animation-delay:.1s}
+.kpi-card:nth-child(3){animation-delay:.15s}
+.kpi-card:nth-child(4){animation-delay:.2s}
+@keyframes kpiCardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* Top accent line */
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .3s ease}
+/* Horizontal scan sweep */
+.kpi-card::after{content:'';position:absolute;top:0;left:-80%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);pointer-events:none}
+.kpi-card:nth-child(1)::after{animation:kpiScan 7s ease-in-out 0s infinite}
+.kpi-card:nth-child(2)::after{animation:kpiScan 7s ease-in-out 1.75s infinite}
+.kpi-card:nth-child(3)::after{animation:kpiScan 7s ease-in-out 3.5s infinite}
+.kpi-card:nth-child(4)::after{animation:kpiScan 7s ease-in-out 5.25s infinite}
+@keyframes kpiScan{0%,100%{left:-80%;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:160%;opacity:0}}
+.kpi-card:hover{transform:translateY(-5px) scale(1.01)}
+.kpi-card:hover::before{opacity:1}
+/* Per-card accent colors */
+.kpi-card-teal::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)}
+.kpi-card-teal:hover{border-color:rgba(var(--teal-rgb),.35);box-shadow:0 12px 40px -8px rgba(var(--teal-rgb),.15)}
+.kpi-card-teal:hover .kpi-icon{box-shadow:0 0 16px rgba(var(--teal-rgb),.3)}
+.kpi-card-blue::before{background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.kpi-card-blue:hover{border-color:rgba(var(--blue-rgb),.35);box-shadow:0 12px 40px -8px rgba(var(--blue-rgb),.12)}
+.kpi-card-blue:hover .kpi-icon{box-shadow:0 0 16px rgba(var(--blue-rgb),.3)}
+.kpi-card-green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.kpi-card-green:hover{border-color:rgba(var(--green-rgb),.35);box-shadow:0 12px 40px -8px rgba(var(--green-rgb),.12)}
+.kpi-card-green:hover .kpi-icon{box-shadow:0 0 16px rgba(var(--green-rgb),.3)}
+.kpi-card-amber::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+.kpi-card-amber:hover{border-color:rgba(var(--amber-rgb),.35);box-shadow:0 12px 40px -8px rgba(var(--amber-rgb),.12)}
+.kpi-card-amber:hover .kpi-icon{box-shadow:0 0 16px rgba(var(--amber-rgb),.3)}
+/* Icon box */
+.kpi-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;margin-bottom:14px;transition:box-shadow .3s ease}
+.kpi-icon-teal{background:rgba(var(--teal-rgb),.1);color:var(--teal);border:1px solid rgba(var(--teal-rgb),.18)}
+.kpi-icon-blue{background:rgba(var(--blue-rgb),.1);color:var(--blue);border:1px solid rgba(var(--blue-rgb),.18)}
+.kpi-icon-green{background:rgba(var(--green-rgb),.1);color:var(--green);border:1px solid rgba(var(--green-rgb),.18)}
+.kpi-icon-amber{background:rgba(var(--amber-rgb),.1);color:var(--amber);border:1px solid rgba(var(--amber-rgb),.18)}
+.kpi-label{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.kpi-value{font-size:28px;font-weight:700;color:var(--tx1);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;transition:color .3s ease}
 .kpi-value.accent{color:var(--teal)}
 .kpi-value.green{color:var(--green)}
 .kpi-value.amber{color:var(--amber)}
-.kpi-sub{font-size:11px;color:var(--tx4);margin-top:4px}
+.kpi-sub{font-size:11px;color:var(--tx4);margin-top:5px}
 
 /* Status bar */
 .status-bar{display:none;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;font-size:12px;font-weight:500;margin-bottom:14px}
@@ -173,7 +217,8 @@ th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after{content:"⇅";opacity:.4
 td{padding:9px 12px;border-bottom:1px solid var(--bd);color:var(--tx2);white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
 tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:#F9FAFB}
-tbody tr{transition:background .08s}
+tbody tr{transition:background .08s;animation:rowIn .18s ease both}
+@keyframes rowIn{from{opacity:0;transform:translateX(-3px)}to{opacity:1;transform:none}}
 td.col-id{font-weight:600;color:var(--teal)}
 
 /* Empty / skeleton */
@@ -289,10 +334,46 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
   </div>
 
   <div class="kpi-row">
-    <div class="kpi-card"><div class="kpi-label">Total Shipments</div><div class="kpi-value accent" id="kpiTotal">—</div><div class="kpi-sub" id="kpiTotalSub">In system</div></div>
-    <div class="kpi-card"><div class="kpi-label">Unique Carriers</div><div class="kpi-value" id="kpiCarriers">—</div><div class="kpi-sub" id="kpiCarriersSub">Active carriers</div></div>
-    <div class="kpi-card"><div class="kpi-label">Scheduled Today</div><div class="kpi-value green" id="kpiToday">—</div><div class="kpi-sub">Delivery appointments</div></div>
-    <div class="kpi-card"><div class="kpi-label">This Week</div><div class="kpi-value amber" id="kpiWeek">—</div><div class="kpi-sub">Upcoming deliveries</div></div>
+    <div class="kpi-card kpi-card-teal">
+      <div class="kpi-icon kpi-icon-teal">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 4.5L8 2 2 4.5v7L8 14l6-2.5v-7z"/><path d="M2 4.5L8 7l6-2.5"/><path d="M8 14V7"/>
+        </svg>
+      </div>
+      <div class="kpi-label">Total Shipments</div>
+      <div class="kpi-value accent" id="kpiTotal">—</div>
+      <div class="kpi-sub" id="kpiTotalSub">In system</div>
+    </div>
+    <div class="kpi-card kpi-card-blue">
+      <div class="kpi-icon kpi-icon-blue">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="4.5" width="9" height="6" rx="1"/><path d="M10 7l2.5 1.5V11H10"/><circle cx="3.5" cy="11.5" r="1.5"/><circle cx="11" cy="11.5" r="1.5"/>
+        </svg>
+      </div>
+      <div class="kpi-label">Unique Carriers</div>
+      <div class="kpi-value" id="kpiCarriers">—</div>
+      <div class="kpi-sub" id="kpiCarriersSub">Active carriers</div>
+    </div>
+    <div class="kpi-card kpi-card-green">
+      <div class="kpi-icon kpi-icon-green">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M1.5 6.5h13"/><path d="M5 1.5v2M11 1.5v2"/><circle cx="8" cy="10" r="1.5" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <div class="kpi-label">Scheduled Today</div>
+      <div class="kpi-value green" id="kpiToday">—</div>
+      <div class="kpi-sub">Delivery appointments</div>
+    </div>
+    <div class="kpi-card kpi-card-amber">
+      <div class="kpi-icon kpi-icon-amber">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M1.5 6.5h13"/><path d="M5 1.5v2M11 1.5v2"/><path d="M4.5 10.5h7"/>
+        </svg>
+      </div>
+      <div class="kpi-label">This Week</div>
+      <div class="kpi-value amber" id="kpiWeek">—</div>
+      <div class="kpi-sub">Upcoming deliveries</div>
+    </div>
   </div>
 
   <div class="status-bar loading" id="statusBar">
@@ -467,6 +548,7 @@ let _dragSrcIdx  = null;
 let _isDragging  = false;
 let _views       = [];
 let _activeView  = null;
+let _kpiFirstLoad = true;
 let _hiddenCols  = new Set();
 
 // ── CSV parser (handles quoted multi-line fields and escaped quotes) ──────────
@@ -554,6 +636,7 @@ async function loadData(){
 
     buildHeader();
     buildFilters();
+    _kpiFirstLoad = true;
     filterTable(); // also updates KPIs
 
     const n=_allRows.length;
@@ -750,17 +833,32 @@ function syncMselCheckboxes(type){
   refreshMselLabel(type);
 }
 
+// ── KPI counter animation ─────────────────────────────────────────────────────
+function animKPI(el, target) {
+  if (target === null || target === undefined) { el.textContent = "—"; return; }
+  if (!_kpiFirstLoad) { el.textContent = target; return; }
+  const dur = 900, start = performance.now();
+  function tick(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(ease * target);
+    if (t < 1) requestAnimationFrame(tick);
+    else el.textContent = target;
+  }
+  requestAnimationFrame(tick);
+}
+
 // ── KPIs (driven by filtered rows) ───────────────────────────────────────────
 function updateKPIs(rows){
   const total=_allRows.length;
   const shown=rows.length;
   const isFiltered=shown<total;
 
-  document.getElementById("kpiTotal").textContent=shown;
+  animKPI(document.getElementById("kpiTotal"), shown);
   document.getElementById("kpiTotalSub").textContent=isFiltered?`of ${total} total`:"In system";
 
   const carriers=_cm.carrier?new Set(rows.map(r=>r[_cm.carrier]).filter(Boolean)):new Set();
-  document.getElementById("kpiCarriers").textContent=carriers.size||"—";
+  animKPI(document.getElementById("kpiCarriers"), carriers.size||null);
   document.getElementById("kpiCarriersSub").textContent=isFiltered?"In selection":"Active carriers";
 
   const apptCol=_cm.delivery||_cm.pickup;
@@ -775,12 +873,13 @@ function updateKPIs(rows){
       if(d.toISOString().split("T")[0]===todayStr)tod++;
       if(d>=today&&d<=weekEnd)wk++;
     });
-    document.getElementById("kpiToday").textContent=tod;
-    document.getElementById("kpiWeek").textContent=wk;
+    animKPI(document.getElementById("kpiToday"), tod);
+    animKPI(document.getElementById("kpiWeek"), wk);
   }else{
     document.getElementById("kpiToday").textContent="—";
     document.getElementById("kpiWeek").textContent="—";
   }
+  _kpiFirstLoad = false;
 }
 
 // ── Filter + render ───────────────────────────────────────────────────────────
