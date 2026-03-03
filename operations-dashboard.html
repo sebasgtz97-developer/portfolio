@@ -1461,7 +1461,10 @@ async function loadEventTypes(apiKey) {
     const listR = await fetch(`${NUVO_API}/api/internal/active_hashes`, {
       headers: { "Authorization": `Bearer ${key}` }
     });
-    if (!listR.ok) throw new Error(`HTTP ${listR.status} fetching hash list`);
+    if (!listR.ok) {
+      const body = await listR.text().catch(() => '');
+      throw new Error(`HTTP ${listR.status} — URL: ${NUVO_API}/api/internal/active_hashes — Body: ${body.slice(0,120)}`);
+    }
     const hashNames = await listR.json();
     const hashName = hashNames.find(n => /load.?event/i.test(n));
     if (!hashName) throw new Error(`No load event hash found. Available: ${hashNames.join(', ')}`);
