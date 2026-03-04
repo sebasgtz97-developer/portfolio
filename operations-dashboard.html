@@ -362,8 +362,31 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 .bulk-count{font-weight:600;}
 .btn-bulk-log{padding:7px 16px;background:#fff;color:var(--teal);border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;}
 .btn-bulk-log:hover{background:#e0fce7;}
+.btn-bulk-email{padding:7px 16px;background:var(--lime);color:var(--teal);border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:filter .15s;display:flex;align-items:center;gap:5px;}
+.btn-bulk-email:hover{filter:brightness(1.06);}
 .btn-bulk-clear{padding:7px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s;}
 .btn-bulk-clear:hover{background:rgba(255,255,255,.25);}
+/* ── Email modal ── */
+.em-modal-box{background:var(--panel);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:540px;max-width:92vw;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;}
+.em-body{padding:16px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px;}
+.em-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.em-field{display:flex;flex-direction:column;gap:4px;}
+.em-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;}
+.em-input{height:32px;padding:0 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;color:var(--tx1);background:var(--panel);transition:border-color .15s,box-shadow .15s;width:100%;}
+.em-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08);}
+.em-textarea{resize:vertical;min-height:56px;height:64px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx2);line-height:1.5;transition:border-color .15s,box-shadow .15s;width:100%;}
+.em-textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08);}
+.em-preview{background:#F9FAFB;border:1px solid var(--bd);border-radius:8px;padding:12px 14px;font-size:11px;color:var(--tx2);line-height:1.7;font-family:'Courier New',Courier,monospace;max-height:190px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;}
+.em-ships-list{display:flex;flex-direction:column;gap:4px;max-height:90px;overflow-y:auto;}
+.em-ship-chip{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);background:#F3F4F6;border:1px solid var(--bd);border-radius:5px;padding:3px 8px;line-height:1.4;}
+.em-ship-id{font-weight:600;color:var(--blue);}
+.em-modal-footer{padding:12px 20px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;}
+.em-footer-note{font-size:11px;color:var(--tx4);}
+.em-footer-btns{display:flex;gap:8px;}
+.btn-em-cancel{height:32px;padding:0 14px;background:var(--panel);border:1px solid var(--bd);color:var(--tx2);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-em-cancel:hover{background:var(--bg);border-color:var(--bd2);}
+.btn-em-send{height:32px;padding:0 16px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .15s;}
+.btn-em-send:hover{background:#163d32;}
 </style>
 </head>
 <body>
@@ -377,6 +400,12 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
   </div>
   <div class="hright">
     <span class="hbadge"><span class="dot"></span>Live</span>
+    <button class="btn-hdr" id="btnEmail" onclick="openEmailModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+      </svg>
+      Email Update
+    </button>
     <button class="btn-hdr" id="btnRefresh" onclick="refreshData()">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/><path d="M12 2v3.5H8.5"/>
@@ -1966,6 +1995,79 @@ function showToast(msg, type) {
   }, 3000);
 }
 
+// ── Email status update ───────────────────────────────────────────────────────
+function getEmailRows(){
+  if(_selectedRows.size>0)return [..._selectedRows].map(i=>_filtered[i]).filter(Boolean);
+  return _filtered;
+}
+
+function openEmailModal(){
+  const rows=getEmailRows();
+  if(!rows.length){alert("No shipments to include. Load data first or select rows.");return;}
+  const n=rows.length;
+  const isSelective=_selectedRows.size>0;
+  document.getElementById("emSub").textContent=isSelective?"("+n+" selected)":"(all "+n+" visible)";
+  const dateStr=new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  document.getElementById("emSubject").value="Shipment Status Update — "+dateStr;
+  document.getElementById("emMsg").value="";
+  const chipsEl=document.getElementById("emShipsList");
+  chipsEl.innerHTML=rows.map(row=>{
+    const id=_cm.shipmentId?row[_cm.shipmentId]:"—";
+    const carrier=_cm.carrier?row[_cm.carrier]:"";
+    const status=_cm.lastEvent?row[_cm.lastEvent]:"";
+    return`<div class="em-ship-chip"><span class="em-ship-id">${eh(id)}</span>${carrier?`<span style="color:var(--tx3)">·</span><span>${eh(carrier)}</span>`:""
+    }${status?`<span class="badge ${badgeCls(status)}" style="margin-left:auto;font-size:10px">${fmtLabel(status)}</span>`:""}</div>`;
+  }).join("");
+  updateEmailPreview();
+  document.getElementById("emailModal").classList.remove("hidden");
+  setTimeout(()=>document.getElementById("emTo").focus(),80);
+}
+
+function closeEmailModal(){
+  document.getElementById("emailModal").classList.add("hidden");
+}
+
+function handleEmailOverlayClick(e){
+  if(e.target===document.getElementById("emailModal"))closeEmailModal();
+}
+
+function buildEmailBody(){
+  const rows=getEmailRows();
+  const dateStr=new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  const openingMsg=(document.getElementById("emMsg").value||"").trim();
+  let body="";
+  if(openingMsg)body+=openingMsg+"\n\n";
+  body+="SHIPMENT STATUS UPDATE — "+dateStr+"\n";
+  body+="━".repeat(38)+"\n\n";
+  rows.forEach((row,i)=>{
+    if(i>0)body+="\n";
+    const get=k=>(_cm[k]&&row[_cm[k]]?row[_cm[k]]:"—");
+    body+="Shipment:  "+get("shipmentId")+"\n";
+    if(_cm.carrier)body+="Carrier:   "+get("carrier")+"\n";
+    if(_cm.trailer)body+="Trailer:   "+get("trailer")+"\n";
+    if(_cm.ref)body+="Ref:       "+get("ref")+"\n";
+    if(_cm.pickup)body+="Pickup:    "+get("pickup")+"\n";
+    if(_cm.delivery)body+="Delivery:  "+get("delivery")+"\n";
+    if(_cm.lastEvent)body+="Status:    "+get("lastEvent")+"\n";
+    body+="─".repeat(28)+"\n";
+  });
+  const fromName=(document.getElementById("emFrom").value||"").trim();
+  body+="\n"+(fromName?"Best regards,\n"+fromName:"Best regards,\nNuvocargo Operations");
+  return body;
+}
+
+function updateEmailPreview(){
+  document.getElementById("emPreview").textContent=buildEmailBody();
+}
+
+function sendEmail(){
+  const to=(document.getElementById("emTo").value||"").trim();
+  const subject=(document.getElementById("emSubject").value||"").trim();
+  const body=buildEmailBody();
+  const mailto="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+  window.location.href=mailto;
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadGeoCache();
 loadViews();
@@ -1978,7 +2080,64 @@ setInterval(loadData,REFRESH_MS);
 <div class="bulk-bar" id="bulkBar">
   <span class="bulk-count" id="bulkCount">0 selected</span>
   <button class="btn-bulk-log" onclick="openBulkEventModal()">Log Event</button>
+  <button class="btn-bulk-email" onclick="openEmailModal()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+    </svg>
+    Email Update
+  </button>
   <button class="btn-bulk-clear" onclick="clearSelection()">Clear selection</button>
+</div>
+
+<!-- ── Email Status Update Modal ─────────────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="emailModal" onclick="handleEmailOverlayClick(event)">
+  <div class="em-modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Send Shipment Status Update</span>
+      <span class="modal-sub" id="emSub" style="font-size:11px;color:var(--tx3);margin-left:8px;"></span>
+      <button class="modal-close" onclick="closeEmailModal()" aria-label="Close">&times;</button>
+    </div>
+    <div class="em-body">
+      <div class="em-field">
+        <span class="em-label">Shipments included</span>
+        <div class="em-ships-list" id="emShipsList"></div>
+      </div>
+      <div class="em-row2">
+        <div class="em-field">
+          <label class="em-label" for="emTo">To (recipient email)</label>
+          <input class="em-input" id="emTo" type="email" placeholder="client@example.com" oninput="updateEmailPreview()">
+        </div>
+        <div class="em-field">
+          <label class="em-label" for="emFrom">Your name (optional)</label>
+          <input class="em-input" id="emFrom" type="text" placeholder="Your name" oninput="updateEmailPreview()">
+        </div>
+      </div>
+      <div class="em-field">
+        <label class="em-label" for="emSubject">Subject</label>
+        <input class="em-input" id="emSubject" type="text" oninput="updateEmailPreview()">
+      </div>
+      <div class="em-field">
+        <label class="em-label" for="emMsg">Opening message (optional)</label>
+        <textarea class="em-textarea" id="emMsg" placeholder="Hi [client name], please find below the latest status for your shipments..." oninput="updateEmailPreview()"></textarea>
+      </div>
+      <div class="em-field">
+        <span class="em-label">Email preview</span>
+        <div class="em-preview" id="emPreview"></div>
+      </div>
+    </div>
+    <div class="em-modal-footer">
+      <span class="em-footer-note">Opens in your default email client</span>
+      <div class="em-footer-btns">
+        <button class="btn-em-cancel" onclick="closeEmailModal()">Cancel</button>
+        <button class="btn-em-send" onclick="sendEmail()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Open in Email
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ── Load Event Modal ──────────────────────────────────────────────────────── -->
