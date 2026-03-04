@@ -56,10 +56,15 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 .kpi-card{
   background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:18px 20px 16px;
-  position:relative;overflow:hidden;cursor:default;
+  position:relative;overflow:hidden;cursor:pointer;
   animation:kpiCardIn .5s cubic-bezier(.4,0,.2,1) both;
   transition:transform .35s cubic-bezier(.34,1.56,.64,1),border-color .3s ease,box-shadow .3s ease;
 }
+.kpi-card.kpi-active{border-width:1.5px}
+.kpi-card-teal.kpi-active{border-color:var(--teal);box-shadow:0 8px 32px -6px rgba(var(--teal-rgb),.2);background:rgba(var(--teal-rgb),.04)}
+.kpi-card-blue.kpi-active{border-color:var(--blue);box-shadow:0 8px 32px -6px rgba(var(--blue-rgb),.18);background:rgba(var(--blue-rgb),.04)}
+.kpi-card-green.kpi-active{border-color:var(--green);box-shadow:0 8px 32px -6px rgba(var(--green-rgb),.18);background:rgba(var(--green-rgb),.04)}
+.kpi-card-amber.kpi-active{border-color:var(--amber);box-shadow:0 8px 32px -6px rgba(var(--amber-rgb),.18);background:rgba(var(--amber-rgb),.04)}
 .kpi-card:nth-child(1){animation-delay:.05s}
 .kpi-card:nth-child(2){animation-delay:.1s}
 .kpi-card:nth-child(3){animation-delay:.15s}
@@ -385,7 +390,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
   </div>
 
   <div class="kpi-row">
-    <div class="kpi-card kpi-card-teal">
+    <div class="kpi-card kpi-card-teal" id="kpiCardTotal" onclick="toggleKpiFilter('total')">
       <div class="kpi-icon kpi-icon-teal">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 4.5L8 2 2 4.5v7L8 14l6-2.5v-7z"/><path d="M2 4.5L8 7l6-2.5"/><path d="M8 14V7"/>
@@ -395,17 +400,17 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
       <div class="kpi-value accent" id="kpiTotal">—</div>
       <div class="kpi-sub" id="kpiTotalSub">In system</div>
     </div>
-    <div class="kpi-card kpi-card-blue">
+    <div class="kpi-card kpi-card-blue" id="kpiCardLive" onclick="toggleKpiFilter('live')">
       <div class="kpi-icon kpi-icon-blue">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="1" y="4.5" width="9" height="6" rx="1"/><path d="M10 7l2.5 1.5V11H10"/><circle cx="3.5" cy="11.5" r="1.5"/><circle cx="11" cy="11.5" r="1.5"/>
+          <circle cx="8" cy="9" r="2"/><path d="M5.1 6.5a4.1 4.1 0 0 0 0 5"/><path d="M10.9 6.5a4.1 4.1 0 0 1 0 5"/><path d="M2.8 4a7.5 7.5 0 0 0 0 10"/><path d="M13.2 4a7.5 7.5 0 0 1 0 10"/>
         </svg>
       </div>
-      <div class="kpi-label">Unique Carriers</div>
+      <div class="kpi-label">Live Shipments</div>
       <div class="kpi-value" id="kpiCarriers">—</div>
-      <div class="kpi-sub" id="kpiCarriersSub">Active carriers</div>
+      <div class="kpi-sub" id="kpiCarriersSub">In transit</div>
     </div>
-    <div class="kpi-card kpi-card-green">
+    <div class="kpi-card kpi-card-green" id="kpiCardToday" onclick="toggleKpiFilter('today')">
       <div class="kpi-icon kpi-icon-green">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M1.5 6.5h13"/><path d="M5 1.5v2M11 1.5v2"/><circle cx="8" cy="10" r="1.5" fill="currentColor" stroke="none"/>
@@ -415,7 +420,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
       <div class="kpi-value green" id="kpiToday">—</div>
       <div class="kpi-sub">Delivery appointments</div>
     </div>
-    <div class="kpi-card kpi-card-amber">
+    <div class="kpi-card kpi-card-amber" id="kpiCardWeek" onclick="toggleKpiFilter('week')">
       <div class="kpi-icon kpi-icon-amber">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M1.5 6.5h13"/><path d="M5 1.5v2M11 1.5v2"/><path d="M4.5 10.5h7"/>
@@ -622,6 +627,7 @@ let _kpiFirstLoad = true;
 let _hiddenCols  = new Set();
 let _selectedRows = new Set(); // indices into _filtered
 let _bulkMode     = false;
+let _kpiFilter    = null; // 'live' | 'today' | 'week' | 'total' | null
 
 // ── CSV parser (handles quoted multi-line fields and escaped quotes) ──────────
 function parseCSV(text){
@@ -931,6 +937,19 @@ function animKPI(el, target) {
   requestAnimationFrame(tick);
 }
 
+// ── KPI card filter toggle ────────────────────────────────────────────────────
+function toggleKpiFilter(type){
+  _kpiFilter = _kpiFilter === type ? null : type;
+  ["kpiCardTotal","kpiCardLive","kpiCardToday","kpiCardWeek"].forEach(id=>{
+    document.getElementById(id).classList.remove("kpi-active");
+  });
+  if(_kpiFilter==="total")  document.getElementById("kpiCardTotal").classList.add("kpi-active");
+  if(_kpiFilter==="live")   document.getElementById("kpiCardLive").classList.add("kpi-active");
+  if(_kpiFilter==="today")  document.getElementById("kpiCardToday").classList.add("kpi-active");
+  if(_kpiFilter==="week")   document.getElementById("kpiCardWeek").classList.add("kpi-active");
+  filterTable();
+}
+
 // ── KPIs (driven by filtered rows) ───────────────────────────────────────────
 function updateKPIs(rows){
   const total=_allRows.length;
@@ -940,9 +959,13 @@ function updateKPIs(rows){
   animKPI(document.getElementById("kpiTotal"), shown);
   document.getElementById("kpiTotalSub").textContent=isFiltered?`of ${total} total`:"In system";
 
-  const carriers=_cm.carrier?new Set(rows.map(r=>r[_cm.carrier]).filter(Boolean)):new Set();
-  animKPI(document.getElementById("kpiCarriers"), carriers.size||null);
-  document.getElementById("kpiCarriersSub").textContent=isFiltered?"In selection":"Active carriers";
+  const liveRows=rows.filter(r=>{
+    if(!_cm.lastEvent)return true;
+    const ev=(r[_cm.lastEvent]||"").trim().toLowerCase();
+    return ev!=="arrived to destination"&&ev!=="delivered to destination";
+  });
+  animKPI(document.getElementById("kpiCarriers"), liveRows.length||null);
+  document.getElementById("kpiCarriersSub").textContent=isFiltered?"In selection":"In transit";
 
   const apptCol=_cm.delivery||_cm.pickup;
   if(apptCol){
@@ -980,6 +1003,25 @@ function filterTable(){
   const sv2=v=>String(v??'').toLowerCase(); // safe string coerce + lowercase
 
   _filtered=_allRows.filter(row=>{
+    // ── KPI card filters ──
+    if(_kpiFilter==="live"){
+      const ev=_cm.lastEvent?(row[_cm.lastEvent]||"").trim().toLowerCase():"";
+      if(ev==="arrived to destination"||ev==="delivered to destination")return false;
+    }
+    if(_kpiFilter==="today"||_kpiFilter==="week"){
+      const apptCol=_cm.delivery||_cm.pickup;
+      if(!apptCol)return false;
+      const d=parseDate(row[apptCol]||"");
+      if(!d)return false;
+      const today=new Date();today.setHours(0,0,0,0);
+      const todayStr=today.toISOString().split("T")[0];
+      if(_kpiFilter==="today"&&d.toISOString().split("T")[0]!==todayStr)return false;
+      if(_kpiFilter==="week"){
+        const weekEnd=new Date(today);weekEnd.setDate(today.getDate()+7);
+        if(d<today||d>weekEnd)return false;
+      }
+    }
+    // ── Text / multiselect filters ──
     if(sShip){if(_cm.shipmentId){if(!sv2(row[_cm.shipmentId]).includes(sShip))return false;}else{if(!Object.values(row).some(v=>sv2(v).includes(sShip)))return false;}}
     if(sTrl &&_cm.trailer   &&!sv2(row[_cm.trailer]).includes(sTrl))   return false;
     if(sRef &&_cm.ref       &&!sv2(row[_cm.ref]).includes(sRef))       return false;
@@ -1122,6 +1164,10 @@ function clearAllFilters(){
   syncMselCheckboxes("shipper");
   syncMselCheckboxes("lastEvent");
   syncMselCheckboxes("opsRep");
+  _kpiFilter=null;
+  ["kpiCardTotal","kpiCardLive","kpiCardToday","kpiCardWeek"].forEach(id=>{
+    document.getElementById(id).classList.remove("kpi-active");
+  });
   clearActiveView();
   filterTable();
 }
