@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nuvocargo — Operations Dashboard</title>
+<title>Nuvocargo — Operations Board</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -246,6 +246,13 @@ td.col-id{font-weight:600;color:var(--teal)}
 /* Responsive */
 @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.page-header{flex-direction:column;gap:4px}}
 @media(max-width:560px){.kpi-row{grid-template-columns:1fr 1fr}.main{padding:14px 14px 32px}.srch-input{width:140px}}
+@media(max-width:520px){
+  header{padding:0 12px;gap:8px}
+  .hleft{flex:1;min-width:0;overflow:hidden}
+  .htitle{display:none}
+  .hright{flex-shrink:0}
+  .hbadge{padding:3px 7px}
+}
 
 /* ── Shipment Detail Modal ─────────────────────────────────────────────── */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;opacity:0;pointer-events:none;transition:opacity .22s ease;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
@@ -363,10 +370,8 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 
 <header>
   <div class="hleft">
-    <svg width="160" height="28" viewBox="0 0 160 28" xmlns="http://www.w3.org/2000/svg" aria-label="Nuvocargo" role="img">
-      <text x="0" y="23" font-family="'Cormorant Garamond',Georgia,serif" font-size="26" font-weight="500" letter-spacing="0.3" fill="#1C4A3E">nuvocargo</text>
-    </svg>
-    <span class="htitle">Operations Dashboard</span>
+    <img src="assets/nuvocargo-logo.svg" alt="Nuvocargo" height="28" style="display:block">
+    <span class="htitle">Operations Board</span>
   </div>
   <div class="hright">
     <span class="hbadge"><span class="dot"></span>Live</span>
@@ -950,6 +955,13 @@ function toggleKpiFilter(type){
   filterTable();
 }
 
+// ── Completed shipment check (handles underscore & space variants) ────────────
+function isCompletedShipment(ev){
+  const n=ev.replace(/_/g," ");
+  return n==="arrived to destination"||n==="delivered to destination"||
+         n==="arrived to final destination"||n==="delivered to final destination";
+}
+
 // ── KPIs (driven by filtered rows) ───────────────────────────────────────────
 function updateKPIs(rows){
   const total=_allRows.length;
@@ -962,7 +974,7 @@ function updateKPIs(rows){
   const liveRows=rows.filter(r=>{
     if(!_cm.lastEvent)return false;
     const ev=(r[_cm.lastEvent]||"").trim().toLowerCase();
-    return ev!==""&&ev!=="arrived to destination"&&ev!=="delivered to destination";
+    return ev!==""&&!isCompletedShipment(ev);
   });
   animKPI(document.getElementById("kpiCarriers"), liveRows.length||null);
   document.getElementById("kpiCarriersSub").textContent=isFiltered?"In selection":"In transit";
@@ -1006,7 +1018,7 @@ function filterTable(){
     // ── KPI card filters ──
     if(_kpiFilter==="live"){
       const ev=_cm.lastEvent?(row[_cm.lastEvent]||"").trim().toLowerCase():"";
-      if(ev===""||ev==="arrived to destination"||ev==="delivered to destination")return false;
+      if(ev===""||isCompletedShipment(ev))return false;
     }
     if(_kpiFilter==="today"||_kpiFilter==="week"){
       const apptCol=_cm.delivery||_cm.pickup;
@@ -1764,11 +1776,53 @@ function setModalTime(){
 }
 
 function buildEventTypeSelect(suggestedId) {
-  const sel = document.getElementById("evEventType");
-  sel.innerHTML = '<option value="">— select event type —</option>' +
+  const drop = document.getElementById("evTypeDrop");
+  const lbl  = document.getElementById("evTypeBtnLabel");
+  const btn  = document.getElementById("evTypeBtnEl");
+  drop.innerHTML =
+    '<div class="msel-search-wrap"><input class="msel-search" type="text" placeholder="Search event…" oninput="filterEvTypeItems(this)" onclick="event.stopPropagation()"></div>' +
+    '<div class="msel-divider"></div>' +
     LOAD_EVENT_TYPES.map(t =>
-      `<option value="${t.id}"${t.id === suggestedId ? " selected" : ""}>${t.id} — ${fmtLabel(t.name)}</option>`
+      `<div class="msel-item ev-type-item" data-id="${t.id}" onclick="selectEvType(${t.id},'${t.name}')">
+        <span>${t.id} — ${fmtLabel(t.name)}</span>
+        ${t.id === suggestedId ? '<span style="margin-left:auto;font-size:10px;color:var(--teal);font-weight:600;white-space:nowrap">Suggested</span>' : ''}
+      </div>`
     ).join("");
+  if (suggestedId) {
+    const evtName = LOAD_EVENT_TYPES.find(e => e.id === suggestedId)?.name || "";
+    sv("evEventType", String(suggestedId));
+    lbl.textContent = `${suggestedId} — ${fmtLabel(evtName)}`;
+    btn.classList.add("active");
+  } else {
+    sv("evEventType", "");
+    lbl.textContent = "— select event type —";
+    btn.classList.remove("active");
+  }
+}
+
+function toggleEvTypeDrop(e) {
+  e.stopPropagation();
+  const drop = document.getElementById("evTypeDrop");
+  const btn  = document.getElementById("evTypeBtnEl");
+  const isOpen = drop.classList.contains("open");
+  drop.classList.toggle("open", !isOpen);
+  btn.setAttribute("aria-expanded", !isOpen);
+  if (!isOpen) setTimeout(() => drop.querySelector(".msel-search")?.focus(), 50);
+}
+
+function selectEvType(id, name) {
+  sv("evEventType", String(id));
+  document.getElementById("evTypeBtnLabel").textContent = `${id} — ${fmtLabel(name)}`;
+  document.getElementById("evTypeBtnEl").classList.add("active");
+  document.getElementById("evTypeDrop").classList.remove("open");
+  document.getElementById("evTypeBtnEl").setAttribute("aria-expanded", "false");
+}
+
+function filterEvTypeItems(input) {
+  const q = input.value.toLowerCase();
+  document.querySelectorAll("#evTypeDrop .ev-type-item").forEach(item => {
+    item.classList.toggle("msel-hidden", !!(q && !item.textContent.toLowerCase().includes(q)));
+  });
 }
 
 function openEventModal(shipmentId, lastEventName) {
@@ -1801,10 +1855,16 @@ function openEventModal(shipmentId, lastEventName) {
 function closeEventModal() {
   document.getElementById("eventModal").classList.add("hidden");
   document.getElementById("evError").classList.add("hidden");
+  document.getElementById("evTypeDrop")?.classList.remove("open");
+  document.getElementById("evTypeBtnEl")?.setAttribute("aria-expanded","false");
 }
 
 function handleModalOverlayClick(e) {
   if (e.target === e.currentTarget) closeEventModal();
+  if (!e.target.closest("#evTypeWrap")) {
+    document.getElementById("evTypeDrop")?.classList.remove("open");
+    document.getElementById("evTypeBtnEl")?.setAttribute("aria-expanded","false");
+  }
 }
 
 async function submitLoadEvent() {
@@ -1943,9 +2003,16 @@ setInterval(loadData,REFRESH_MS);
       <div class="form-group">
         <label class="form-label">Event Type</label>
         <div id="evSuggestedHint" class="hidden" style="font-size:11px;color:var(--teal);font-weight:500;margin-bottom:6px;padding:4px 8px;background:rgba(28,74,62,.08);border-radius:6px"></div>
-        <select class="form-input" id="evEventType">
-          <option value="">— select event type —</option>
-        </select>
+        <div class="msel-wrap" id="evTypeWrap">
+          <button type="button" class="msel-btn" id="evTypeBtnEl" aria-expanded="false"
+                  onclick="toggleEvTypeDrop(event)"
+                  style="width:100%;max-width:none;height:34px;font-size:12px;border-radius:6px">
+            <span class="msel-btn-label" id="evTypeBtnLabel">— select event type —</span>
+            <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
+          </button>
+          <div class="msel-drop" id="evTypeDrop" style="width:100%;min-width:100%"></div>
+        </div>
+        <input type="hidden" id="evEventType" value="">
       </div>
       <div class="form-group">
         <label class="form-label">Event Time</label>
