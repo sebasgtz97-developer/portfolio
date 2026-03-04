@@ -960,9 +960,9 @@ function updateKPIs(rows){
   document.getElementById("kpiTotalSub").textContent=isFiltered?`of ${total} total`:"In system";
 
   const liveRows=rows.filter(r=>{
-    if(!_cm.lastEvent)return true;
+    if(!_cm.lastEvent)return false;
     const ev=(r[_cm.lastEvent]||"").trim().toLowerCase();
-    return ev!=="arrived to destination"&&ev!=="delivered to destination";
+    return ev!==""&&ev!=="arrived to destination"&&ev!=="delivered to destination";
   });
   animKPI(document.getElementById("kpiCarriers"), liveRows.length||null);
   document.getElementById("kpiCarriersSub").textContent=isFiltered?"In selection":"In transit";
@@ -1006,7 +1006,7 @@ function filterTable(){
     // ── KPI card filters ──
     if(_kpiFilter==="live"){
       const ev=_cm.lastEvent?(row[_cm.lastEvent]||"").trim().toLowerCase():"";
-      if(ev==="arrived to destination"||ev==="delivered to destination")return false;
+      if(ev===""||ev==="arrived to destination"||ev==="delivered to destination")return false;
     }
     if(_kpiFilter==="today"||_kpiFilter==="week"){
       const apptCol=_cm.delivery||_cm.pickup;
