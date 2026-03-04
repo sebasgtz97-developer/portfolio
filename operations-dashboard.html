@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nuvocargo — Operations Board</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root {
@@ -28,7 +28,7 @@
   --amber-rgb:  217, 119, 6;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:13px;background:var(--bg);color:var(--tx1);min-height:100vh;-webkit-font-smoothing:antialiased}
+body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;background:var(--bg);color:var(--tx1);min-height:100vh;-webkit-font-smoothing:antialiased}
 
 /* Header */
 header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
@@ -269,8 +269,8 @@ td.col-id{font-weight:600;color:var(--teal)}
 
 /* Map */
 #dMap{height:210px;border-radius:10px;overflow:hidden;border:1px solid var(--bd);flex-shrink:0}
-.leaflet-container{font-family:'Inter',-apple-system,sans-serif!important}
-.leaflet-popup-content-wrapper{border-radius:8px!important;font-size:12px!important;font-family:'Inter',sans-serif!important;box-shadow:0 4px 16px rgba(0,0,0,.15)!important}
+.leaflet-container{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif!important}
+.leaflet-popup-content-wrapper{border-radius:8px!important;font-size:12px!important;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif!important;box-shadow:0 4px 16px rgba(0,0,0,.15)!important}
 .map-placeholder{height:210px;border-radius:10px;border:1px dashed var(--bd);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:var(--tx4);background:var(--bg)}
 .map-placeholder svg{opacity:.3}
 
@@ -2100,8 +2100,8 @@ function buildEmailHtml(){
     </table>`;
   }).join("");
 
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{font-family:'Inter',Arial,Helvetica,sans-serif!important;}</style></head>
-<body style="margin:0;padding:0;background:#F4F5F5;font-family:'Inter',Arial,Helvetica,sans-serif;">
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif!important;}</style></head>
+<body style="margin:0;padding:0;background:#F4F5F5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F5;"><tr><td align="center" style="padding:32px 16px;">
 <table cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 <!-- HEADER -->
@@ -2111,38 +2111,38 @@ function buildEmailHtml(){
       <td style="width:32px;height:32px;background:#C8E64C;border-radius:6px;text-align:center;vertical-align:middle;">
       </td>
       <td style="padding-left:10px;">
-        <div style="font-size:16px;font-weight:700;color:#FFFFFF;letter-spacing:-.02em;font-family:'Inter',Arial,sans-serif;line-height:1.1;">Nuvocargo</div>
-        <div style="font-size:9px;color:#4A6660;letter-spacing:.12em;text-transform:uppercase;font-family:'Inter',Arial,sans-serif;margin-top:2px;">Operations &middot; AI Platform</div>
+        <div style="font-size:16px;font-weight:700;color:#FFFFFF;letter-spacing:-.02em;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;line-height:1.1;">Nuvocargo</div>
+        <div style="font-size:9px;color:#4A6660;letter-spacing:.12em;text-transform:uppercase;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;margin-top:2px;">Operations &middot; AI Platform</div>
       </td>
     </tr></table></td>
     <td align="right" style="vertical-align:top;">
-      <span style="display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:4px 11px;font-size:9px;font-weight:600;color:#FFFFFF;font-family:'Inter',Arial,sans-serif;letter-spacing:.06em;"><span style="color:#EF4444;">&#9679;</span> LIVE UPDATE</span>
+      <span style="display:inline-block;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:4px 11px;font-size:9px;font-weight:600;color:#FFFFFF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.06em;"><span style="color:#EF4444;">&#9679;</span> LIVE UPDATE</span>
     </td>
   </tr></table>
   <div style="margin-top:22px;">
-    <div style="font-size:21px;font-weight:700;color:#FFFFFF;letter-spacing:-.03em;line-height:1.2;font-family:'Inter',Arial,sans-serif;">Shipment Status Update</div>
-    <div style="font-size:12px;color:#6B8A85;margin-top:5px;font-family:'Inter',Arial,sans-serif;">${dateStr} &nbsp;&#183;&nbsp; ${n} shipment${n===1?"":"s"} tracked</div>
+    <div style="font-size:21px;font-weight:700;color:#FFFFFF;letter-spacing:-.03em;line-height:1.2;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">Shipment Status Update</div>
+    <div style="font-size:12px;color:#6B8A85;margin-top:5px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">${dateStr} &nbsp;&#183;&nbsp; ${n} shipment${n===1?"":"s"} tracked</div>
   </div>
   <div style="margin-top:18px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.5) 0%,rgba(255,255,255,0.04) 100%);"></div>
 </td></tr>
 ${openingMsg?`<!-- OPENING MESSAGE -->
 <tr><td style="background:#FFFFFF;padding:20px 36px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB;border-bottom:1px solid #F3F4F6;">
-  <p style="margin:0;font-size:14px;color:#374151;line-height:1.65;font-family:'Inter',Arial,sans-serif;">${eh(openingMsg).replace(/\n/g,"<br>")}</p>
+  <p style="margin:0;font-size:14px;color:#374151;line-height:1.65;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">${eh(openingMsg).replace(/\n/g,"<br>")}</p>
 </td></tr>`:""}
 <!-- SHIPMENTS -->
 <tr><td style="background:#F9FAFB;padding:20px 36px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB;">
-  <div style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;font-family:'Inter',Arial,sans-serif;">Shipment Details</div>
+  <div style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">Shipment Details</div>
   ${cardsHtml}
 </td></tr>
 <!-- FOOTER -->
 <tr><td style="background:#FFFFFF;border-radius:0 0 12px 12px;padding:16px 36px;border:1px solid #E5E7EB;border-top:1px solid #F3F4F6;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
     <td>
-      <div style="font-size:11px;color:#9CA3AF;font-family:'Inter',Arial,sans-serif;margin-bottom:2px;">Best regards,</div>
-      <div style="font-size:13px;font-weight:600;color:#111F1C;font-family:'Inter',Arial,sans-serif;">${eh(fromName||"Nuvocargo Operations")}</div>
+      <div style="font-size:11px;color:#9CA3AF;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;margin-bottom:2px;">Best regards,</div>
+      <div style="font-size:13px;font-weight:600;color:#111F1C;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">${eh(fromName||"Nuvocargo Operations")}</div>
     </td>
     <td align="right" style="vertical-align:bottom;">
-      <div style="font-size:9px;color:#D1D5DB;letter-spacing:.08em;text-transform:uppercase;font-family:'Inter',Arial,sans-serif;">Powered by Nuvocargo AI</div>
+      <div style="font-size:9px;color:#D1D5DB;letter-spacing:.08em;text-transform:uppercase;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">Powered by Nuvocargo AI</div>
     </td>
   </tr></table>
 </td></tr>
