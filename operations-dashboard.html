@@ -182,6 +182,57 @@ td.col-id{font-weight:600;color:var(--blue)}
 /* Responsive */
 @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.page-header{flex-direction:column;gap:4px}}
 @media(max-width:560px){.kpi-row{grid-template-columns:1fr 1fr}.main{padding:14px 14px 32px}.srch-input{width:140px}}
+
+/* ── Row selection ── */
+.th-sel{width:36px;padding:0 !important;cursor:default;user-select:none}
+.th-sel .th-inner{padding:9px 0 9px 12px;justify-content:flex-start}
+.col-sel{width:36px;padding:9px 0 9px 12px !important}
+.row-chk{width:14px;height:14px;accent-color:var(--teal);cursor:pointer;display:block;margin:0;flex-shrink:0}
+tbody tr.row-selected td{background:#F0FDF4}
+tbody tr.row-selected:hover td{background:#DCFCE7}
+
+/* ── Selection bar ── */
+.sel-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);z-index:500;background:var(--teal);color:#fff;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 6px 28px rgba(0,0,0,.25);font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;white-space:nowrap}
+.sel-bar.visible{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
+.sel-count{font-size:12px;font-weight:600;opacity:.85;padding-right:2px}
+.sel-sep{width:1px;height:18px;background:rgba(255,255,255,.22);flex-shrink:0}
+.sel-actions{display:flex;gap:7px}
+.btn-sel-email{height:30px;padding:0 13px;background:var(--lime);color:var(--teal);border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:filter .15s}
+.btn-sel-email:hover{filter:brightness(1.07)}
+.btn-sel-clear{height:30px;padding:0 11px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.2);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .12s}
+.btn-sel-clear:hover{background:rgba(255,255,255,.22)}
+
+/* ── Email modal ── */
+.modal-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .18s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.email-modal{background:var(--panel);border-radius:12px;width:560px;max-width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.18);transform:scale(.97) translateY(6px);transition:transform .18s}
+.modal-overlay.open .email-modal{transform:scale(1) translateY(0)}
+.em-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid var(--bd);gap:12px}
+.em-title{font-size:14px;font-weight:700;color:var(--tx1);line-height:1.2}
+.em-sub{font-size:11px;color:var(--tx3);margin-top:3px}
+.em-close{width:28px;height:28px;flex-shrink:0;border:none;background:none;color:var(--tx3);cursor:pointer;border-radius:6px;font-size:17px;display:flex;align-items:center;justify-content:center;transition:background .12s;padding:0;font-family:inherit;line-height:1;margin-top:-2px}
+.em-close:hover{background:var(--bg);color:var(--tx1)}
+.em-body{padding:16px 20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:12px}
+.em-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.em-field{display:flex;flex-direction:column;gap:4px}
+.em-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+.em-input{height:32px;padding:0 10px;border:1px solid var(--bd);border-radius:6px;font-size:13px;font-family:inherit;color:var(--tx1);background:var(--panel);transition:border-color .15s,box-shadow .15s;width:100%}
+.em-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08)}
+.em-textarea{resize:vertical;min-height:56px;height:64px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx2);line-height:1.5;transition:border-color .15s,box-shadow .15s;width:100%}
+.em-textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08)}
+.em-preview-wrap{display:flex;flex-direction:column;gap:4px}
+.em-preview{background:#F9FAFB;border:1px solid var(--bd);border-radius:8px;padding:12px 14px;font-size:11px;color:var(--tx2);line-height:1.7;font-family:'Courier New',Courier,monospace;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.em-footer{padding:12px 20px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
+.em-footer-note{font-size:11px;color:var(--tx4)}
+.em-footer-btns{display:flex;gap:8px}
+.btn-em-cancel{height:32px;padding:0 14px;background:var(--panel);border:1px solid var(--bd);color:var(--tx2);border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-em-cancel:hover{background:var(--bg);border-color:var(--bd2)}
+.btn-em-send{height:32px;padding:0 16px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .15s}
+.btn-em-send:hover{background:#163d32}
+.em-shipments-list{display:flex;flex-direction:column;gap:4px;max-height:96px;overflow-y:auto}
+.em-shipment-chip{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);background:#F3F4F6;border:1px solid var(--bd);border-radius:5px;padding:3px 8px;line-height:1.4}
+.em-ship-id{font-weight:600;color:var(--blue)}
+.em-ship-status{margin-left:auto;font-size:10px}
 </style>
 </head>
 <body>
@@ -195,6 +246,12 @@ td.col-id{font-weight:600;color:var(--blue)}
   </div>
   <div class="hright">
     <span class="hbadge"><span class="dot"></span>Live</span>
+    <button class="btn-hdr" id="btnEmail" onclick="openEmailModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+      </svg>
+      Email Update
+    </button>
     <button class="btn-hdr" id="btnRefresh" onclick="refreshData()">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/><path d="M12 2v3.5H8.5"/>
@@ -347,6 +404,77 @@ td.col-id{font-weight:600;color:var(--blue)}
 
 </div>
 
+<!-- ── Selection bar ── -->
+<div class="sel-bar" id="selBar">
+  <span class="sel-count" id="selCount">0 selected</span>
+  <div class="sel-sep"></div>
+  <div class="sel-actions">
+    <button class="btn-sel-email" onclick="openEmailModal()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+      </svg>
+      Send Email Update
+    </button>
+    <button class="btn-sel-clear" onclick="clearSelection()">Clear</button>
+  </div>
+</div>
+
+<!-- ── Email modal ── -->
+<div class="modal-overlay" id="emailOverlay" onclick="onOverlayClick(event)">
+  <div class="email-modal" id="emailModal">
+    <div class="em-header">
+      <div>
+        <div class="em-title">Send Shipment Status Update</div>
+        <div class="em-sub" id="emSub">Loading…</div>
+      </div>
+      <button class="em-close" onclick="closeEmailModal()" title="Close">✕</button>
+    </div>
+    <div class="em-body">
+      <!-- Shipments chips -->
+      <div class="em-field">
+        <span class="em-label">Shipments included</span>
+        <div class="em-shipments-list" id="emShipsList"></div>
+      </div>
+      <!-- To + Subject -->
+      <div class="em-row2">
+        <div class="em-field">
+          <label class="em-label" for="emTo">To (recipient email)</label>
+          <input class="em-input" id="emTo" type="email" placeholder="client@example.com" oninput="updateEmailPreview()">
+        </div>
+        <div class="em-field">
+          <label class="em-label" for="emFrom">Your name (optional)</label>
+          <input class="em-input" id="emFrom" type="text" placeholder="e.g. Nuvocargo Ops" oninput="updateEmailPreview()">
+        </div>
+      </div>
+      <div class="em-field">
+        <label class="em-label" for="emSubject">Subject</label>
+        <input class="em-input" id="emSubject" type="text" oninput="updateEmailPreview()">
+      </div>
+      <div class="em-field">
+        <label class="em-label" for="emMsg">Opening message (optional)</label>
+        <textarea class="em-textarea" id="emMsg" placeholder="Hi,&#10;Here is the latest status update for your shipments." oninput="updateEmailPreview()"></textarea>
+      </div>
+      <!-- Preview -->
+      <div class="em-preview-wrap">
+        <span class="em-label">Email preview</span>
+        <div class="em-preview" id="emPreview"></div>
+      </div>
+    </div>
+    <div class="em-footer">
+      <span class="em-footer-note">Opens in your default email client</span>
+      <div class="em-footer-btns">
+        <button class="btn-em-cancel" onclick="closeEmailModal()">Cancel</button>
+        <button class="btn-em-send" onclick="sendEmail()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+          </svg>
+          Open in Email
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── Config ───────────────────────────────────────────────────────────────────
 const SHEET_URL  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vShMUaAz1A6mRd8AR2f60R7bc2qI0W9MYL0Bxvu-SyH8t_uxzlFjLtrl6KsZVZQGBpcynNtvYtnizc9/pub?gid=0&single=true&output=csv";
@@ -368,6 +496,7 @@ let _dragSrcIdx  = null;
 let _isDragging  = false;
 let _views       = [];
 let _activeView  = null;
+let _selectedIds = new Set();
 
 // ── CSV parser ───────────────────────────────────────────────────────────────
 function splitCSVLine(line){
@@ -414,7 +543,8 @@ async function loadData(){
     if(!resp.ok)throw new Error("HTTP "+resp.status);
     const{columns,rows}=parseCSV(await resp.text());
     _columns=columns;
-    _allRows=rows.filter(r=>Object.values(r).some(v=>v));
+    _allRows=rows.filter(r=>Object.values(r).some(v=>v)).map((r,i)=>({...r,_rid:i}));
+    _selectedIds.clear();
     detectCols(_columns);
 
     // restore or init column order
@@ -444,7 +574,8 @@ async function loadData(){
 
 // ── Build table header (draggable + sortable) ─────────────────────────────────
 function buildHeader(){
-  document.getElementById("tableHead").innerHTML="<tr>"+_colOrder.map((col,idx)=>`
+  const selTh=`<th class="th-sel"><div class="th-inner"><input type="checkbox" class="row-chk" id="selAllChk" onclick="toggleSelectAll()" title="Select / deselect all visible"></div></th>`;
+  document.getElementById("tableHead").innerHTML="<tr>"+selTh+_colOrder.map((col,idx)=>`
     <th draggable="true" data-col="${ea(col)}" data-idx="${idx}"
         ondragstart="dStart(event)" ondragover="dOver(event)"
         ondrop="dDrop(event)" ondragend="dEnd(event)">
@@ -701,10 +832,14 @@ function renderTable(){
     shown===total?`${total} shipments`:`${shown} of ${total} shipments`;
 
   if(!_filtered.length){
-    tbody.innerHTML=`<tr><td colspan="${_colOrder.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No shipments match</div><div class="empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="${(_colOrder.length||5)+1}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No shipments match</div><div class="empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
+    updateSelBar();
     return;
   }
   tbody.innerHTML=_filtered.map(row=>{
+    const rid=row._rid;
+    const sel=_selectedIds.has(rid);
+    const selTd=`<td class="col-sel"><input type="checkbox" class="row-chk"${sel?" checked":""} onclick="toggleRowSel(${rid})" title="Select shipment"></td>`;
     const tds=_colOrder.map(col=>{
       let val=row[col]||"";
       let cls="";
@@ -715,8 +850,9 @@ function renderTable(){
       else val=eh(val);
       return `<td class="${cls}" title="${eh(raw)}">${val||'<span style="color:var(--tx4)">—</span>'}</td>`;
     }).join("");
-    return`<tr>${tds}</tr>`;
+    return`<tr class="${sel?"row-selected":""}">${selTd}${tds}</tr>`;
   }).join("");
+  updateSelBar();
 }
 
 // ── Active filter count ───────────────────────────────────────────────────────
@@ -744,6 +880,7 @@ function clearAllFilters(){
   _selShippers.clear();
   syncMselCheckboxes("carrier");
   syncMselCheckboxes("shipper");
+  clearSelection();
   clearActiveView();
   filterTable();
 }
@@ -890,6 +1027,148 @@ function badgeCls(val){
   if(/exception|delay|issue/i.test(v))return"badge-exception";
   if(/scheduled|booked|confirmed/i.test(v))return"badge-scheduled";
   return"badge-default";
+}
+
+// ── Row selection ─────────────────────────────────────────────────────────────
+function toggleRowSel(rid){
+  if(_selectedIds.has(rid))_selectedIds.delete(rid);
+  else _selectedIds.add(rid);
+  // update only this row and the select-all checkbox without full re-render
+  const rows=document.querySelectorAll("#tableBody tr");
+  rows.forEach(tr=>{
+    const chk=tr.querySelector(".row-chk");
+    if(!chk)return;
+    const onclick=chk.getAttribute("onclick")||"";
+    const m=onclick.match(/toggleRowSel\((\d+)\)/);
+    if(!m)return;
+    const r=parseInt(m[1]);
+    if(r===rid){
+      chk.checked=_selectedIds.has(rid);
+      tr.classList.toggle("row-selected",_selectedIds.has(rid));
+    }
+  });
+  updateSelBar();
+}
+
+function toggleSelectAll(){
+  const visRids=_filtered.map(r=>r._rid);
+  const allSel=visRids.every(id=>_selectedIds.has(id));
+  if(allSel){visRids.forEach(id=>_selectedIds.delete(id));}
+  else{visRids.forEach(id=>_selectedIds.add(id));}
+  renderTable();
+}
+
+function clearSelection(){
+  _selectedIds.clear();
+  updateSelBar();
+  // uncheck all row checkboxes without full re-render
+  document.querySelectorAll("#tableBody .row-chk").forEach(chk=>{chk.checked=false;});
+  document.querySelectorAll("#tableBody tr.row-selected").forEach(tr=>tr.classList.remove("row-selected"));
+  const allChk=document.getElementById("selAllChk");
+  if(allChk){allChk.checked=false;allChk.indeterminate=false;}
+}
+
+function updateSelBar(){
+  const n=_selectedIds.size;
+  const bar=document.getElementById("selBar");
+  const cnt=document.getElementById("selCount");
+  cnt.textContent=n===1?"1 shipment selected":n+" shipments selected";
+  bar.classList.toggle("visible",n>0);
+  // update select-all checkbox state
+  const allChk=document.getElementById("selAllChk");
+  if(allChk){
+    const vis=_filtered.length;
+    const numSel=_filtered.filter(r=>_selectedIds.has(r._rid)).length;
+    if(numSel===0){allChk.checked=false;allChk.indeterminate=false;}
+    else if(numSel===vis){allChk.checked=true;allChk.indeterminate=false;}
+    else{allChk.checked=false;allChk.indeterminate=true;}
+  }
+}
+
+// ── Email modal ───────────────────────────────────────────────────────────────
+function getEmailRows(){
+  // use selected rows if any, otherwise all visible (filtered)
+  if(_selectedIds.size>0)return _allRows.filter(r=>_selectedIds.has(r._rid));
+  return _filtered;
+}
+
+function openEmailModal(){
+  const rows=getEmailRows();
+  if(!rows.length){
+    alert("No shipments to include. Load data first or select rows.");
+    return;
+  }
+  const n=rows.length;
+  const isSelective=_selectedIds.size>0;
+  document.getElementById("emSub").textContent=isSelective?n+" shipment"+(n===1?"":"s")+" selected":"All "+n+" visible shipment"+(n===1?"":"s");
+
+  // default subject
+  const dateStr=new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  document.getElementById("emSubject").value="Shipment Status Update — "+dateStr;
+
+  // build shipment chips
+  const chipsEl=document.getElementById("emShipsList");
+  chipsEl.innerHTML=rows.map(row=>{
+    const id=_cm.shipmentId?row[_cm.shipmentId]:"—";
+    const carrier=_cm.carrier?row[_cm.carrier]:"";
+    const status=_cm.lastEvent?row[_cm.lastEvent]:"";
+    return`<div class="em-shipment-chip">
+      <span class="em-ship-id">${eh(id)}</span>
+      ${carrier?`<span style="color:var(--tx3)">·</span><span>${eh(carrier)}</span>`:""}
+      ${status?`<span class="em-ship-status badge ${badgeCls(status)}">${fmtLabel(status)}</span>`:""}
+    </div>`;
+  }).join("");
+
+  updateEmailPreview();
+  document.getElementById("emailOverlay").classList.add("open");
+  setTimeout(()=>document.getElementById("emTo").focus(),80);
+}
+
+function closeEmailModal(){
+  document.getElementById("emailOverlay").classList.remove("open");
+}
+
+function onOverlayClick(e){
+  if(e.target===document.getElementById("emailOverlay"))closeEmailModal();
+}
+
+function buildEmailBody(openingMsg){
+  const rows=getEmailRows();
+  const dateStr=new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  const fromName=(document.getElementById("emFrom").value||"").trim();
+  let body="";
+  if(openingMsg)body+=openingMsg+"\n\n";
+  body+="SHIPMENT STATUS UPDATE — "+dateStr+"\n";
+  body+="━".repeat(38)+"\n\n";
+  rows.forEach((row,i)=>{
+    if(i>0)body+="\n";
+    const id=_cm.shipmentId?row[_cm.shipmentId]:"";
+    if(id)body+="Shipment:   "+id+"\n";
+    if(_cm.carrier&&row[_cm.carrier])   body+="Carrier:    "+row[_cm.carrier]+"\n";
+    if(_cm.trailer&&row[_cm.trailer])   body+="Trailer:    "+row[_cm.trailer]+"\n";
+    if(_cm.ref&&row[_cm.ref])           body+="Reference:  "+row[_cm.ref]+"\n";
+    if(_cm.pickup&&row[_cm.pickup])     body+="Pickup:     "+row[_cm.pickup]+"\n";
+    if(_cm.delivery&&row[_cm.delivery]) body+="Delivery:   "+row[_cm.delivery]+"\n";
+    if(_cm.lastEvent&&row[_cm.lastEvent])body+="Status:     "+row[_cm.lastEvent]+"\n";
+    body+="─".repeat(32)+"\n";
+  });
+  body+="\nPlease reach out with any questions.\n";
+  if(fromName)body+="\nBest regards,\n"+fromName;
+  return body;
+}
+
+function updateEmailPreview(){
+  const openingMsg=(document.getElementById("emMsg").value||"").trim();
+  document.getElementById("emPreview").textContent=buildEmailBody(openingMsg);
+}
+
+function sendEmail(){
+  const to=(document.getElementById("emTo").value||"").trim();
+  const subject=(document.getElementById("emSubject").value||"").trim();
+  const openingMsg=(document.getElementById("emMsg").value||"").trim();
+  const body=buildEmailBody(openingMsg);
+  const mailto="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+  window.location.href=mailto;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
