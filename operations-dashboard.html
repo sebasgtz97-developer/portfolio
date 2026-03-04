@@ -326,6 +326,25 @@ select.form-input{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg
 .toast.ok{background:#F0FDF4;border:1px solid #BBF7D0;color:var(--green);}
 .toast.err{background:#FEF2F2;border:1px solid #FECACA;color:var(--red);}
 .toast.out{opacity:0;transform:translateY(6px);}
+
+/* ── Row selection & bulk actions ───────────────────────────────────────────── */
+.th-check,.td-check{width:32px;min-width:32px;padding:0 8px !important;text-align:center !important;}
+.td-check input[type=checkbox]{cursor:pointer;accent-color:var(--teal);width:14px;height:14px;}
+.th-check input[type=checkbox]{cursor:pointer;accent-color:var(--teal);width:14px;height:14px;}
+.th-actions{width:80px;min-width:80px;text-align:center !important;}
+.td-actions{width:80px;min-width:80px;text-align:center;padding:4px 6px !important;}
+tbody tr.row-selected td{background:#f0fdf4 !important;}
+.btn-row-log{padding:4px 8px;background:var(--lime);color:#0f2d14;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.btn-row-log:hover{background:#a3e635;}
+
+/* ── Bulk action bar ────────────────────────────────────────────────────────── */
+.bulk-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);z-index:550;background:var(--teal);color:#fff;border-radius:12px 12px 0 0;padding:12px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 -4px 24px rgba(0,0,0,.18);transition:transform .22s cubic-bezier(.2,.8,.2,1);font-size:13px;font-weight:500;}
+.bulk-bar.visible{transform:translateX(-50%) translateY(0);}
+.bulk-count{font-weight:600;}
+.btn-bulk-log{padding:7px 16px;background:#fff;color:var(--teal);border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;}
+.btn-bulk-log:hover{background:#e0fce7;}
+.btn-bulk-clear{padding:7px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s;}
+.btn-bulk-clear:hover{background:rgba(255,255,255,.25);}
 </style>
 </head>
 <body>
@@ -579,6 +598,8 @@ let _views       = [];
 let _activeView  = null;
 let _kpiFirstLoad = true;
 let _hiddenCols  = new Set();
+let _selectedRows = new Set(); // indices into _filtered
+let _bulkMode     = false;
 
 // ── CSV parser (handles quoted multi-line fields and escaped quotes) ──────────
 function parseCSV(text){
@@ -682,7 +703,11 @@ async function loadData(){
 // ── Build table header (draggable + sortable) ─────────────────────────────────
 function buildHeader(){
   const visCols=_colOrder.filter(c=>!_hiddenCols.has(c));
-  document.getElementById("tableHead").innerHTML="<tr>"+visCols.map(col=>{
+  const allSel = _selectedRows.size === _filtered.length && _filtered.length > 0;
+  const partSel = _selectedRows.size > 0 && _selectedRows.size < _filtered.length;
+  document.getElementById("tableHead").innerHTML="<tr>"+
+    `<th class="th-check"><input type="checkbox" id="selectAllChk" ${allSel?"checked":""} onclick="event.stopPropagation()" onchange="toggleSelectAll(this.checked)" title="Select all"></th>`+
+    visCols.map(col=>{
     const idx=_colOrder.indexOf(col);
     return`<th draggable="true" data-col="${ea(col)}" data-idx="${idx}"
         ondragstart="dStart(event)" ondragover="dOver(event)"
@@ -695,7 +720,12 @@ function buildHeader(){
         </span>
       </div>
     </th>`;
-  }).join("")+"</tr>";
+  }).join("")+
+    `<th class="th-actions">Actions</th>`+
+  "</tr>";
+  // Restore indeterminate state after innerHTML
+  const chk = document.getElementById("selectAllChk");
+  if (chk) chk.indeterminate = partSel;
   if(_sortCol){
     document.querySelectorAll("th").forEach(th=>{
       if(th.dataset.col===_sortCol)
@@ -913,6 +943,8 @@ function updateKPIs(rows){
 
 // ── Filter + render ───────────────────────────────────────────────────────────
 function filterTable(){
+  _selectedRows.clear();
+  updateBulkBar();
   updateActiveCount();
   const sShip=gv("srchShipment").toLowerCase();
   const sTrl =gv("srchTrailer").toLowerCase();
@@ -957,6 +989,54 @@ function filterTable(){
   renderTable();
 }
 
+// ── Row selection & bulk actions ──────────────────────────────────────────────
+function toggleRowSelect(i, checked) {
+  if (checked) _selectedRows.add(i); else _selectedRows.delete(i);
+  const rows = document.querySelectorAll("#tableBody tr");
+  if (rows[i]) rows[i].classList.toggle("row-selected", checked);
+  const total = _filtered.length, sel = _selectedRows.size;
+  const chk = document.getElementById("selectAllChk");
+  if (chk) { chk.checked = sel === total && total > 0; chk.indeterminate = sel > 0 && sel < total; }
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+  _selectedRows.clear();
+  if (checked) _filtered.forEach((_, i) => _selectedRows.add(i));
+  updateBulkBar();
+  renderTable();
+}
+
+function clearSelection() {
+  _selectedRows.clear();
+  updateBulkBar();
+  renderTable();
+}
+
+function updateBulkBar() {
+  const n = _selectedRows.size;
+  const bar = document.getElementById("bulkBar");
+  if (!bar) return;
+  bar.classList.toggle("visible", n > 0);
+  document.getElementById("bulkCount").textContent = `${n} shipment${n === 1 ? "" : "s"} selected`;
+}
+
+function openBulkEventModal() {
+  _bulkMode = true;
+  const n = _selectedRows.size;
+  document.getElementById("evModalTitle").textContent = `Log Event for ${n} Shipment${n === 1 ? "" : "s"}`;
+  document.getElementById("evShipmentGroup").style.display = "none";
+  const savedKey = localStorage.getItem(LS_API_KEY) || "";
+  sv("evApiKey", savedKey);
+  const now = new Date(); now.setSeconds(0, 0);
+  sv("evEventTime", now.toISOString().slice(0, 16));
+  document.getElementById("evError").classList.add("hidden");
+  document.getElementById("eventModal").classList.remove("hidden");
+  buildEventTypeSelect(null);
+  document.getElementById("evSuggestedHint").classList.add("hidden");
+  if (!savedKey) document.getElementById("evApiKey").focus();
+}
+
 function renderTable(){
   const tbody=document.getElementById("tableBody");
   const total=_allRows.length,shown=_filtered.length;
@@ -979,7 +1059,12 @@ function renderTable(){
       else val=eh(val);
       return `<td class="${cls}" title="${eh(raw)}">${val||'<span style="color:var(--tx4)">—</span>'}</td>`;
     }).join("");
-    return`<tr class="clickable" onclick="openDrawer(${i})">${tds}</tr>`;
+    const sid = eh(row[_cm.shipmentId]||"");
+    const lastEvt = row[_cm.lastEvent]||"";
+    const sel = _selectedRows.has(i);
+    const chkTd=`<td class="td-check" onclick="event.stopPropagation()"><input type="checkbox" ${sel?"checked":""} onchange="toggleRowSelect(${i},this.checked)" onclick="event.stopPropagation()"></td>`;
+    const actTd=`<td class="td-actions" onclick="event.stopPropagation()"><button class="btn-row-log" onclick="openEventModal('${sid}','${eh(lastEvt)}')">+ Log</button></td>`;
+    return`<tr class="clickable${sel?" row-selected":""}" onclick="openDrawer(${i})">${chkTd}${tds}${actTd}</tr>`;
   }).join("");
 }
 
@@ -1468,6 +1553,9 @@ function buildEventTypeSelect(suggestedId) {
 }
 
 function openEventModal(shipmentId, lastEventName) {
+  _bulkMode = false;
+  document.getElementById("evModalTitle").textContent = "Log Load Event";
+  document.getElementById("evShipmentGroup").style.display = "";
   const savedKey = localStorage.getItem(LS_API_KEY) || "";
   sv("evApiKey", savedKey);
   sv("evShipmentId", shipmentId != null ? String(shipmentId) : gv("srchShipment"));
@@ -1511,7 +1599,7 @@ async function submitLoadEvent() {
   errEl.classList.add("hidden");
 
   if (!key)         return showEvError("API key is required.");
-  if (!shipmentId)  return showEvError("Shipment ID is required.");
+  if (!_bulkMode && !shipmentId)  return showEvError("Shipment ID is required.");
   if (!eventTypeId) return showEvError("Please select an event type.");
   if (!eventTimeRaw) return showEvError("Event time is required.");
 
@@ -1533,8 +1621,33 @@ async function submitLoadEvent() {
 
   const btn = document.getElementById("evSubmitBtn");
   btn.disabled = true;
-  btn.textContent = "Submitting…";
 
+  if (_bulkMode) {
+    const indices = [..._selectedRows];
+    let success = 0, fail = 0;
+    for (let idx = 0; idx < indices.length; idx++) {
+      btn.textContent = `Submitting ${idx + 1}/${indices.length}…`;
+      const row = _filtered[indices[idx]];
+      const sid = row[_cm.shipmentId];
+      try {
+        const r = await fetch(
+          nuvoUrl(`/api/internal/shipments/${sid}/load_event`),
+          { method: "PATCH", headers: { "Authorization": `Token ${key}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ event_type_id: Number(eventTypeId), event_time: iso }) }
+        );
+        if (!r.ok) fail++; else success++;
+      } catch { fail++; }
+    }
+    btn.disabled = false;
+    btn.textContent = "Submit Event";
+    closeEventModal();
+    clearSelection();
+    if (fail === 0) showToast(`Event logged for ${success} shipment${success === 1 ? "" : "s"} ✓`, "ok");
+    else showToast(`${success} succeeded, ${fail} failed`, "err");
+    return;
+  }
+
+  btn.textContent = "Submitting…";
   try {
     const r = await fetch(
       nuvoUrl(`/api/internal/shipments/${shipmentId}/load_event`),
@@ -1585,11 +1698,18 @@ setInterval(loadData,REFRESH_MS);
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- ── Bulk Action Bar ────────────────────────────────────────────────────────── -->
+<div class="bulk-bar" id="bulkBar">
+  <span class="bulk-count" id="bulkCount">0 selected</span>
+  <button class="btn-bulk-log" onclick="openBulkEventModal()">Log Event</button>
+  <button class="btn-bulk-clear" onclick="clearSelection()">Clear selection</button>
+</div>
+
 <!-- ── Load Event Modal ──────────────────────────────────────────────────────── -->
 <div class="modal-overlay hidden" id="eventModal" onclick="handleModalOverlayClick(event)">
   <div class="modal-box">
     <div class="modal-header">
-      <span class="modal-title">Log Load Event</span>
+      <span class="modal-title" id="evModalTitle">Log Load Event</span>
       <button class="modal-close" onclick="closeEventModal()" aria-label="Close">&times;</button>
     </div>
     <div class="modal-body">
@@ -1598,7 +1718,7 @@ setInterval(loadData,REFRESH_MS);
         <input class="form-input" id="evApiKey" type="password" placeholder="tkn_org_…" autocomplete="off"
                onblur="if(this.value.trim())loadEventTypes(this.value.trim())">
       </div>
-      <div class="form-group">
+      <div class="form-group" id="evShipmentGroup">
         <label class="form-label">Shipment ID</label>
         <input class="form-input" id="evShipmentId" type="text" placeholder="e.g. 12345" autocomplete="off">
       </div>
