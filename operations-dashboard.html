@@ -334,8 +334,15 @@ select.form-input{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg
 .th-actions{width:80px;min-width:80px;text-align:center !important;}
 .td-actions{width:80px;min-width:80px;text-align:center;padding:4px 6px !important;}
 tbody tr.row-selected td{background:#f0fdf4 !important;}
-.btn-row-log{padding:4px 8px;background:var(--lime);color:#0f2d14;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s;}
-.btn-row-log:hover{background:#a3e635;}
+.btn-row-log{padding:4px 8px;background:#357261;color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.btn-row-log:hover{background:#2a5c4d;}
+
+/* ── Msel search ─────────────────────────────────────────────────────────────── */
+.msel-search-wrap{padding:6px 8px 4px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--panel);z-index:1;}
+.msel-search{width:100%;height:26px;padding:0 8px;border:1px solid var(--bd);border-radius:5px;font-size:11px;font-family:inherit;color:var(--tx1);background:var(--bg);outline:none;box-sizing:border-box;}
+.msel-search:focus{border-color:var(--teal);}
+.msel-item.msel-hidden{display:none;}
+.ev-tz-label{font-size:10px;color:var(--tx4);font-weight:500;white-space:nowrap;padding-left:6px;}
 
 /* ── Bulk action bar ────────────────────────────────────────────────────────── */
 .bulk-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);z-index:550;background:var(--teal);color:#fff;border-radius:12px 12px 0 0;padding:12px 20px;display:flex;align-items:center;gap:16px;box-shadow:0 -4px 24px rgba(0,0,0,.18);transition:transform .22s cubic-bezier(.2,.8,.2,1);font-size:13px;font-weight:500;}
@@ -491,10 +498,28 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
       </div>
     </div>
 
-    <!-- Last Event single-select -->
+    <!-- Last Event multi-select -->
     <div class="fg" id="fgLastEvent" style="display:none">
       <span class="fg-label">Last Event</span>
-      <select class="fsel" id="fLastEvent" onchange="onFselChange(this);filterTable()"><option value="">All events</option></select>
+      <div class="msel-wrap" id="mselWrapLastEvent">
+        <button class="msel-btn" id="mselBtnLastEvent" aria-expanded="false" onclick="toggleMsel('lastEvent')">
+          <span class="msel-btn-label" id="mselLabelLastEvent">All events</span>
+          <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
+        </button>
+        <div class="msel-drop" id="mselDropLastEvent"></div>
+      </div>
+    </div>
+
+    <!-- Ops Rep multi-select -->
+    <div class="fg" id="fgOpsRep" style="display:none">
+      <span class="fg-label">Ops Rep</span>
+      <div class="msel-wrap" id="mselWrapOpsRep">
+        <button class="msel-btn" id="mselBtnOpsRep" aria-expanded="false" onclick="toggleMsel('opsRep')">
+          <span class="msel-btn-label" id="mselLabelOpsRep">All reps</span>
+          <svg class="msel-chev" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 3.5l3 3 3-3"/></svg>
+        </button>
+        <div class="msel-drop" id="mselDropOpsRep"></div>
+      </div>
     </div>
 
     <div class="fsep"></div>
@@ -589,9 +614,11 @@ let _colOrder = [];
 let _filtered = [];
 let _sortCol  = null;
 let _sortDir  = 1;
-let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, lastEvent:null, origin:null, destination:null, coords:null, locationCity:null, nextEvent:null, checkCall:null, gpsLink:null, nuvoosLink:null };
-let _selCarriers = new Set();
-let _selShippers = new Set();
+let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, lastEvent:null, origin:null, destination:null, coords:null, locationCity:null, nextEvent:null, checkCall:null, gpsLink:null, nuvoosLink:null, opsRep:null };
+let _selCarriers  = new Set();
+let _selShippers  = new Set();
+let _selLastEvents = new Set();
+let _selOpsReps    = new Set();
 let _dragSrcIdx  = null;
 let _isDragging  = false;
 let _views       = [];
@@ -653,6 +680,7 @@ function detectCols(cols){
   _cm.checkCall    = find(/LAST_CHECK_CALL/i);
   _cm.gpsLink      = find(/^GPS.?LINK$/i);
   _cm.nuvoosLink   = find(/NUVOOS.*SH.*LINK|NUVOOS.*LINK|^SH.?LINK$/i);
+  _cm.opsRep       = find(/CUSTOMER.?OPS.?REP|OPS.?REP.?NAME|OPERATIONS.?REP/i);
 }
 
 // ── Load data ─────────────────────────────────────────────────────────────────
@@ -776,9 +804,10 @@ function sortBy(col,th){
 
 // ── Build filter dropdowns ────────────────────────────────────────────────────
 function buildFilters(){
-  buildMsel("carrier", _cm.carrier, "fgCarrier", true);
-  buildMsel("shipper", _cm.shipper, "fgShipper", false);
-  buildLastEventSel();
+  buildMsel("carrier",   _cm.carrier,   "fgCarrier",   true);
+  buildMsel("shipper",   _cm.shipper,   "fgShipper",   false);
+  buildMsel("lastEvent", _cm.lastEvent, "fgLastEvent",  false);
+  buildMsel("opsRep",    _cm.opsRep,    "fgOpsRep",     false);
   showEl("fgPickup",    !!_cm.pickup);
   showEl("fgPickupSep", !!_cm.pickup);
   disableInput("srchShipment",!_cm.shipmentId,_cm.shipmentId?"e.g. SH-12345":"Column not in sheet");
@@ -786,36 +815,26 @@ function buildFilters(){
   disableInput("srchRef",     !_cm.ref,       _cm.ref       ?"Reference / PO #":"Column not in sheet");
 }
 
-const LAST_EVENT_OPTIONS=[
-  "arrived to final destination",
-  "arrived to mx border",
-  "arrived to origin",
-  "arrived to us border",
-  "cleared us customs",
-  "delivered to final destination",
-  "driver on way to origin",
-  "empty trailer picked up",
-  "picked up from mx border",
-  "picked up from origin"
-];
-
-function buildLastEventSel(){
-  const sel=document.getElementById("fLastEvent");
-  sel.innerHTML='<option value="">All events</option>'+
-    LAST_EVENT_OPTIONS.map(e=>`<option value="${eh(e)}">${eh(e.replace(/\b\w/g,c=>c.toUpperCase()))}</option>`).join("");
-  sel.dataset.col=_cm.lastEvent||"";
-  showEl("fgLastEvent",!!_cm.lastEvent);
-}
 
 // ── Multi-select ──────────────────────────────────────────────────────────────
+const _MSEL_TYPES = {
+  carrier:   { set: ()=>_selCarriers,   placeholder:"All carriers" },
+  shipper:   { set: ()=>_selShippers,   placeholder:"All shippers" },
+  lastEvent: { set: ()=>_selLastEvents, placeholder:"All events"   },
+  opsRep:    { set: ()=>_selOpsReps,    placeholder:"All reps"     }
+};
+function getMselSet(type){ return _MSEL_TYPES[type]?.set() || new Set(); }
+function getMselPlaceholder(type){ return _MSEL_TYPES[type]?.placeholder || "All"; }
+
 function buildMsel(type, col, groupId, alwaysShow){
   showEl(groupId, col ? true : alwaysShow);
   if(!col) return;
-  const vals=[...new Set(_allRows.map(r=>r[col]).filter(Boolean))].sort();
+  const vals=[...new Set(_allRows.map(r=>String(r[col]??"")).filter(Boolean))].sort();
   const drop=document.getElementById("mselDrop"+cap(type));
-  const placeholder=type==="carrier"?"All carriers":"All shippers";
+  if(!drop) return;
   drop.innerHTML=
     `<div class="msel-item msel-clear-item" onclick="clearMsel('${type}')">Clear selection</div>
+     <div class="msel-search-wrap"><input class="msel-search" type="text" placeholder="Search…" oninput="filterMselItems(this,'${type}')" onclick="event.stopPropagation()"></div>
      <div class="msel-divider"></div>`+
     vals.map(v=>`
       <div class="msel-item" onclick="onMselItemClick(event,'${type}','${ea(v)}')">
@@ -823,6 +842,14 @@ function buildMsel(type, col, groupId, alwaysShow){
                onchange="onMselChk('${type}','${ea(v)}',this.checked)">
         <span>${eh(v)}</span>
       </div>`).join("");
+}
+
+function filterMselItems(input, type){
+  const q=input.value.toLowerCase();
+  document.querySelectorAll(`#mselDrop${cap(type)} .msel-item:not(.msel-clear-item)`).forEach(item=>{
+    const label=(item.querySelector("span")?.textContent||"").toLowerCase();
+    item.classList.toggle("msel-hidden", !!(q && !label.includes(q)));
+  });
 }
 
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
@@ -835,27 +862,29 @@ function toggleMsel(type){
   if(!isOpen){
     drop.classList.add("open");
     btn.setAttribute("aria-expanded","true");
+    // Focus search box
+    setTimeout(()=>drop.querySelector(".msel-search")?.focus(), 50);
   }
 }
 
 function closeAllMsel(){
-  ["carrier","shipper"].forEach(t=>{
+  Object.keys(_MSEL_TYPES).forEach(t=>{
     const d=document.getElementById("mselDrop"+cap(t));
     const b=document.getElementById("mselBtn" +cap(t));
-    if(d)d.classList.remove("open");
+    if(d){ d.classList.remove("open"); d.querySelectorAll(".msel-item").forEach(i=>i.classList.remove("msel-hidden")); const s=d.querySelector(".msel-search"); if(s)s.value=""; }
     if(b)b.setAttribute("aria-expanded","false");
   });
 }
 
 function onMselItemClick(e,type,val){
   const chk=e.currentTarget.querySelector("input[type=checkbox]");
-  if(e.target===chk)return; // already handled by onchange
+  if(e.target===chk)return;
   chk.checked=!chk.checked;
   onMselChk(type,val,chk.checked);
 }
 
 function onMselChk(type,val,checked){
-  const set=type==="carrier"?_selCarriers:_selShippers;
+  const set=getMselSet(type);
   if(checked)set.add(val); else set.delete(val);
   refreshMselLabel(type);
   clearActiveView();
@@ -863,9 +892,7 @@ function onMselChk(type,val,checked){
 }
 
 function clearMsel(type){
-  const set=type==="carrier"?_selCarriers:_selShippers;
-  set.clear();
-  // uncheck all boxes in this drop
+  getMselSet(type).clear();
   document.querySelectorAll(`#mselDrop${cap(type)} input[type=checkbox]`).forEach(cb=>cb.checked=false);
   refreshMselLabel(type);
   clearActiveView();
@@ -873,19 +900,18 @@ function clearMsel(type){
 }
 
 function refreshMselLabel(type){
-  const set=type==="carrier"?_selCarriers:_selShippers;
-  const placeholder=type==="carrier"?"All carriers":"All shippers";
+  const set=getMselSet(type);
   const label=document.getElementById("mselLabel"+cap(type));
   const btn  =document.getElementById("mselBtn"  +cap(type));
   if(!label||!btn)return;
-  if(set.size===0)label.textContent=placeholder;
+  if(set.size===0)label.textContent=getMselPlaceholder(type);
   else if(set.size===1)label.textContent=[...set][0];
   else label.textContent=set.size+" selected";
   btn.classList.toggle("active",set.size>0);
 }
 
 function syncMselCheckboxes(type){
-  const set=type==="carrier"?_selCarriers:_selShippers;
+  const set=getMselSet(type);
   document.querySelectorAll(`#mselDrop${cap(type)} input[type=checkbox]`).forEach(cb=>{
     cb.checked=set.has(cb.dataset.val);
   });
@@ -949,19 +975,20 @@ function filterTable(){
   const sShip=gv("srchShipment").toLowerCase();
   const sTrl =gv("srchTrailer").toLowerCase();
   const sRef =gv("srchRef").toLowerCase();
-  const vEvt =gv("fLastEvent");
   const pfrom=gv("fPickupFrom");
   const pto  =gv("fPickupTo");
   const dfrom=gv("fDeliveryFrom");
   const dto  =gv("fDeliveryTo");
+  const sv2=v=>String(v??'').toLowerCase(); // safe string coerce + lowercase
 
   _filtered=_allRows.filter(row=>{
-    if(sShip&&_cm.shipmentId&&!(row[_cm.shipmentId]||"").toLowerCase().includes(sShip))return false;
-    if(sTrl &&_cm.trailer   &&!(row[_cm.trailer]   ||"").toLowerCase().includes(sTrl)) return false;
-    if(sRef &&_cm.ref       &&!(row[_cm.ref]        ||"").toLowerCase().includes(sRef)) return false;
-    if(_selCarriers.size&&_cm.carrier &&!_selCarriers.has(row[_cm.carrier]))  return false;
-    if(_selShippers.size&&_cm.shipper &&!_selShippers.has(row[_cm.shipper]))  return false;
-    if(vEvt&&_cm.lastEvent&&(row[_cm.lastEvent]||"").toLowerCase()!==vEvt) return false;
+    if(sShip&&_cm.shipmentId&&!sv2(row[_cm.shipmentId]).includes(sShip))return false;
+    if(sTrl &&_cm.trailer   &&!sv2(row[_cm.trailer]).includes(sTrl))   return false;
+    if(sRef &&_cm.ref       &&!sv2(row[_cm.ref]).includes(sRef))       return false;
+    if(_selCarriers.size &&_cm.carrier   &&!_selCarriers.has(String(row[_cm.carrier]??"")))  return false;
+    if(_selShippers.size &&_cm.shipper   &&!_selShippers.has(String(row[_cm.shipper]??"")))  return false;
+    if(_selLastEvents.size&&_cm.lastEvent&&!_selLastEvents.has(String(row[_cm.lastEvent]??""))) return false;
+    if(_selOpsReps.size  &&_cm.opsRep   &&!_selOpsReps.has(String(row[_cm.opsRep]??"")))    return false;
     if((pfrom||pto)&&_cm.pickup){
       const d=parseDate(row[_cm.pickup]||"");
       if(!d)return false;
@@ -1028,8 +1055,7 @@ function openBulkEventModal() {
   document.getElementById("evShipmentGroup").style.display = "none";
   const savedKey = localStorage.getItem(LS_API_KEY) || "";
   sv("evApiKey", savedKey);
-  const now = new Date(); now.setSeconds(0, 0);
-  sv("evEventTime", now.toISOString().slice(0, 16));
+  setModalTime();
   document.getElementById("evError").classList.add("hidden");
   document.getElementById("eventModal").classList.remove("hidden");
   buildEventTypeSelect(null);
@@ -1070,9 +1096,9 @@ function renderTable(){
 
 // ── Active filter count ───────────────────────────────────────────────────────
 function updateActiveCount(){
-  const textIds=["srchShipment","srchTrailer","srchRef","fLastEvent","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"];
+  const textIds=["srchShipment","srchTrailer","srchRef","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"];
   let n=textIds.filter(id=>gv(id)).length;
-  n+=(_selCarriers.size>0?1:0)+(_selShippers.size>0?1:0);
+  n+=(_selCarriers.size>0?1:0)+(_selShippers.size>0?1:0)+(_selLastEvents.size>0?1:0)+(_selOpsReps.size>0?1:0);
   const el=document.getElementById("activeCount");
   el.textContent=n+" active";
   el.classList.toggle("show",n>0);
@@ -1083,16 +1109,14 @@ function clearAllFilters(){
   ["srchShipment","srchTrailer","srchRef"].forEach(id=>{
     const el=document.getElementById(id);el.value="";el.classList.remove("has-value");
   });
-  ["fLastEvent"].forEach(id=>{
-    const el=document.getElementById(id);if(el){el.value="";el.classList.remove("active");}
-  });
   ["fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
     const el=document.getElementById(id);el.value="";el.classList.remove("active");
   });
-  _selCarriers.clear();
-  _selShippers.clear();
+  _selCarriers.clear();  _selShippers.clear();  _selLastEvents.clear();  _selOpsReps.clear();
   syncMselCheckboxes("carrier");
   syncMselCheckboxes("shipper");
+  syncMselCheckboxes("lastEvent");
+  syncMselCheckboxes("opsRep");
   clearActiveView();
   filterTable();
 }
@@ -1110,7 +1134,7 @@ function getState(){
   return{
     shipment:gv("srchShipment"),trailer:gv("srchTrailer"),ref:gv("srchRef"),
     carriers:[..._selCarriers],shippers:[..._selShippers],
-    lastEvent:gv("fLastEvent"),
+    lastEvents:[..._selLastEvents],opsReps:[..._selOpsReps],
     pickupFrom:gv("fPickupFrom"),pickupTo:gv("fPickupTo"),
     deliveryFrom:gv("fDeliveryFrom"),deliveryTo:gv("fDeliveryTo"),
     colOrder:[..._colOrder],
@@ -1119,19 +1143,22 @@ function getState(){
 }
 function applyState(s){
   sv("srchShipment",s.shipment||"");sv("srchTrailer",s.trailer||"");sv("srchRef",s.ref||"");
-  sv("fLastEvent",s.lastEvent||"");
   sv("fPickupFrom",s.pickupFrom||"");sv("fPickupTo",s.pickupTo||"");
   sv("fDeliveryFrom",s.deliveryFrom||"");sv("fDeliveryTo",s.deliveryTo||"");
   ["srchShipment","srchTrailer","srchRef"].forEach(id=>{
     document.getElementById(id).classList.toggle("has-value",!!gv(id));
   });
-  ["fLastEvent","fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
+  ["fPickupFrom","fPickupTo","fDeliveryFrom","fDeliveryTo"].forEach(id=>{
     const el=document.getElementById(id);if(el)el.classList.toggle("active",!!gv(id));
   });
-  _selCarriers=new Set(Array.isArray(s.carriers)?s.carriers:[]);
-  _selShippers=new Set(Array.isArray(s.shippers)?s.shippers:[]);
+  _selCarriers  =new Set(Array.isArray(s.carriers)  ?s.carriers  :[]);
+  _selShippers  =new Set(Array.isArray(s.shippers)  ?s.shippers  :[]);
+  _selLastEvents=new Set(Array.isArray(s.lastEvents)?s.lastEvents:[]);
+  _selOpsReps   =new Set(Array.isArray(s.opsReps)   ?s.opsReps   :[]);
   syncMselCheckboxes("carrier");
   syncMselCheckboxes("shipper");
+  syncMselCheckboxes("lastEvent");
+  syncMselCheckboxes("opsRep");
   if(s.colOrder&&s.colOrder.length){
     const valid=s.colOrder.filter(c=>_columns.includes(c));
     const added=_columns.filter(c=>!valid.includes(c));
@@ -1445,10 +1472,10 @@ function openDrawer(rowIdx){
   }
   const _logBtn=document.createElement("button");
   _logBtn.type="button";
-  _logBtn.style.cssText="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--lime);color:#0f2d14;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s";
+  _logBtn.style.cssText="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#357261;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s";
   _logBtn.innerHTML=`<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg> Log Event`;
-  _logBtn.onmouseover=()=>_logBtn.style.background="#a3e635";
-  _logBtn.onmouseout=()=>_logBtn.style.background="var(--lime)";
+  _logBtn.onmouseover=()=>_logBtn.style.background="#2a5c4d";
+  _logBtn.onmouseout=()=>_logBtn.style.background="#357261";
   _logBtn.onclick=()=>openEventModal(id==="—"?"":id, status);
   wrap.appendChild(_logBtn);
   body.appendChild(wrap);
@@ -1544,6 +1571,18 @@ function getNextEventId(lastEventName) {
   return EVENT_SEQUENCE[idx + 1];
 }
 
+function localDatetimeValue(d){
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function setModalTime(){
+  const now=new Date(); now.setSeconds(0,0);
+  sv("evEventTime", localDatetimeValue(now));
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const label=document.getElementById("evTimezoneLabel");
+  if(label) label.textContent=tz;
+}
+
 function buildEventTypeSelect(suggestedId) {
   const sel = document.getElementById("evEventType");
   sel.innerHTML = '<option value="">— select event type —</option>' +
@@ -1559,9 +1598,7 @@ function openEventModal(shipmentId, lastEventName) {
   const savedKey = localStorage.getItem(LS_API_KEY) || "";
   sv("evApiKey", savedKey);
   sv("evShipmentId", shipmentId != null ? String(shipmentId) : gv("srchShipment"));
-  const now = new Date();
-  now.setSeconds(0, 0);
-  sv("evEventTime", now.toISOString().slice(0, 16));
+  setModalTime();
   document.getElementById("evError").classList.add("hidden");
   document.getElementById("eventModal").classList.remove("hidden");
 
@@ -1731,7 +1768,10 @@ setInterval(loadData,REFRESH_MS);
       </div>
       <div class="form-group">
         <label class="form-label">Event Time</label>
-        <input class="form-input" id="evEventTime" type="datetime-local">
+        <div style="display:flex;align-items:center;gap:0">
+          <input class="form-input" id="evEventTime" type="datetime-local" style="flex:1">
+          <span class="ev-tz-label" id="evTimezoneLabel"></span>
+        </div>
       </div>
       <div id="evError" class="ev-error hidden"></div>
     </div>
