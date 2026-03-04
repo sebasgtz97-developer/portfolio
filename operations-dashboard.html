@@ -47,7 +47,7 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 .main{max-width:1440px;margin:0 auto;padding:20px 20px 48px}
 
 /* Page header */
-.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:12px}
+.page-header{display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;gap:12px}
 .page-title{font-size:20px;font-weight:700;color:var(--tx1);letter-spacing:-0.02em;line-height:1.2}
 .page-sub{font-size:12px;color:var(--tx3);margin-top:3px}
 .last-updated{font-size:11px;color:var(--tx4);white-space:nowrap;padding-top:4px}
@@ -317,8 +317,8 @@ tbody tr.clickable:hover td.col-id{color:var(--teal)}
 /* ── Load Event Modal ───────────────────────────────────────────────────────── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:502;display:flex;align-items:center;justify-content:center;}
 .modal-overlay.hidden{display:none;}
-.modal-box{background:var(--panel);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:380px;max-width:92vw;overflow:hidden;}
-.modal-header{padding:16px 20px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.modal-box{background:var(--panel);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:380px;max-width:92vw;overflow:visible;}
+.modal-header{padding:16px 20px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;border-radius:10px 10px 0 0;}
 .modal-title{font-size:14px;font-weight:600;color:var(--tx1);}
 .modal-close{background:none;border:none;cursor:pointer;color:var(--tx3);font-size:20px;line-height:1;padding:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:4px;}
 .modal-close:hover{background:var(--bg);color:var(--tx1);}
@@ -370,7 +370,9 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 
 <header>
   <div class="hleft">
-    <img src="assets/nuvocargo-logo.svg" alt="Nuvocargo" height="28" style="display:block">
+    <svg width="160" height="28" viewBox="0 0 160 28" xmlns="http://www.w3.org/2000/svg" aria-label="Nuvocargo" role="img">
+      <text x="0" y="23" font-family="'Cormorant Garamond',Georgia,serif" font-size="26" font-weight="500" letter-spacing="0.3" fill="#1C4A3E">nuvocargo</text>
+    </svg>
     <span class="htitle">Operations Board</span>
   </div>
   <div class="hright">
@@ -387,10 +389,6 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 <div class="main">
 
   <div class="page-header">
-    <div>
-      <div class="page-title">Shipment Monitor</div>
-      <div class="page-sub">Real-time visibility into cross-border shipments — synced from Snowflake</div>
-    </div>
     <div class="last-updated" id="lastUpdated">—</div>
   </div>
 
