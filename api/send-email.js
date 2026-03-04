@@ -7,7 +7,7 @@
 //   SMTP_PASS  — your email password or app-specific password
 //
 // POST /api/send-email
-// Body: { to, subject, body }
+// Body: { to, subject, html } — or legacy { to, subject, body } for plain-text fallback
 
 const nodemailer = require('nodemailer');
 
@@ -19,9 +19,9 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { to, subject, body } = req.body || {};
-  if (!to || !subject || !body) {
-    return res.status(400).json({ error: 'Missing required fields: to, subject, body' });
+  const { to, subject, html, body } = req.body || {};
+  if (!to || !subject || (!html && !body)) {
+    return res.status(400).json({ error: 'Missing required fields: to, subject, html' });
   }
 
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
@@ -41,7 +41,7 @@ module.exports = async function handler(req, res) {
       from: SMTP_USER,
       to,
       subject,
-      text: body,
+      ...(html ? { html, text: 'Please view this email in an HTML-capable client.' } : { text: body }),
     });
     res.status(200).json({ ok: true });
   } catch (err) {
