@@ -596,7 +596,10 @@ const API_URL    = "/api/snowflake";
 const REFRESH_MS = 5 * 60 * 1000;
 const LS_VIEWS   = "nuvo_ops_views";
 const LS_COLS    = "nuvo_ops_col_order";
-const LS_HIDDEN  = "nuvo_ops_hidden_cols";
+const LS_GEO        = "nuvo_geo_cache";
+const ETA_COL       = "__eta_destination__";
+const AVG_SPEED_KMH = 88; // ~55 mph average truck speed
+const LS_HIDDEN     = "nuvo_ops_hidden_cols";
 
 // ── State ────────────────────────────────────────────────────────────────────
 let _allRows  = [];
@@ -606,8 +609,9 @@ let _filtered = [];
 let _sortCol  = null;
 let _sortDir  = 1;
 let _cm = { shipmentId:null, carrier:null, shipper:null, trailer:null, ref:null, pickup:null, delivery:null, lastEvent:null, origin:null, destination:null, coords:null, locationCity:null, nextEvent:null, checkCall:null, gpsLink:null, nuvoosLink:null, opsRep:null };
-let _selCarriers  = new Set();
-let _selShippers  = new Set();
+let _geoCache      = {};
+let _selCarriers   = new Set();
+let _selShippers   = new Set();
 let _selLastEvents = new Set();
 let _selOpsReps    = new Set();
 let _dragSrcIdx  = null;
@@ -690,7 +694,7 @@ async function loadData(){
     // restore or init column order
     const saved=tryJSON(localStorage.getItem(LS_COLS));
     if(saved&&Array.isArray(saved)){
-      const valid=saved.filter(c=>_columns.includes(c));
+      const valid=saved.filter(c=>_columns.includes(c)||c===ETA_COL);
       const added=_columns.filter(c=>!valid.includes(c));
       _colOrder=[...valid,...added];
     }else{
@@ -702,10 +706,17 @@ async function loadData(){
     _hiddenCols=new Set(Array.isArray(savedHidden)?savedHidden.filter(c=>_columns.includes(c)):[]);
     updateColVisBtn();
 
+    // Add virtual ETA column if the required source columns are present
+    if(_cm.coords&&_cm.destination&&!_colOrder.includes(ETA_COL)){
+      _colOrder.push(ETA_COL);
+      localStorage.setItem(LS_COLS,JSON.stringify(_colOrder));
+    }
+
     buildHeader();
     buildFilters();
     _kpiFirstLoad = true;
     filterTable(); // also updates KPIs
+    geocodeDestinations(); // async — fills geo cache then re-renders
 
     document.getElementById("lastUpdated").textContent="Last updated: "+fmtTime(new Date());
   }catch(e){
@@ -731,7 +742,7 @@ function buildHeader(){
       <div class="th-inner">
         <span class="drag-handle" title="Drag to reorder">⠿</span>
         <span class="th-sort" onclick="if(!_isDragging)sortBy('${ea(col)}',this.closest('th'))" title="Click to sort">
-          ${eh(col.replace(/_/g," "))}
+          ${eh(colLabel(col))}
           <span class="sort-icon"></span>
         </span>
       </div>
@@ -993,6 +1004,12 @@ function filterTable(){
 
   if(_sortCol){
     _filtered.sort((a,b)=>{
+      if(_sortCol===ETA_COL){
+        const ae=computeEta(a),be=computeEta(b);
+        const an=typeof ae==="number"?ae:ae==="arrived"?-1:Infinity;
+        const bn=typeof be==="number"?be:be==="arrived"?-1:Infinity;
+        return(an-bn)*_sortDir;
+      }
       const av=(a[_sortCol]||"").toLowerCase();
       const bv=(b[_sortCol]||"").toLowerCase();
       return av<bv?-_sortDir:av>bv?_sortDir:0;
@@ -1063,6 +1080,7 @@ function renderTable(){
   }
   tbody.innerHTML=_filtered.map((row,i)=>{
     const tds=visCols.map(col=>{
+      if(col===ETA_COL) return renderEtaCell(row);
       let val=row[col]||"";
       let cls="";
       const raw=val;
@@ -1333,6 +1351,95 @@ function badgeCls(val){
   if(/exception|delay|issue/i.test(v))return"badge-exception";
   if(/scheduled|booked|confirmed/i.test(v))return"badge-scheduled";
   return"badge-default";
+}
+
+// ── ETA helpers ───────────────────────────────────────────────────────────────
+function colLabel(col){
+  if(col===ETA_COL)return"ETA to Dest.";
+  return col.replace(/_/g," ");
+}
+
+function parseCoords(str){
+  if(!str)return null;
+  const m=str.match(/(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
+  if(!m)return null;
+  const lat=parseFloat(m[1]),lon=parseFloat(m[2]);
+  if(isNaN(lat)||isNaN(lon))return null;
+  return{lat,lon};
+}
+
+function haversineKm(lat1,lon1,lat2,lon2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.asin(Math.sqrt(a));
+}
+
+function fmtEta(hours){
+  if(hours<1)return Math.round(hours*60)+"m";
+  const h=Math.floor(hours),m=Math.round((hours-h)*60);
+  return m===0?h+"h":h+"h "+m+"m";
+}
+
+function computeEta(row){
+  if(!_cm.coords||!_cm.destination)return null;
+  const lastCoords=parseCoords(row[_cm.coords]||"");
+  if(!lastCoords)return null;
+  const destAddr=(row[_cm.destination]||"").trim();
+  if(!destAddr)return null;
+  const destCoords=_geoCache[destAddr];
+  if(destCoords===undefined)return"calculating";
+  if(destCoords===null)return null;
+  const distKm=haversineKm(lastCoords.lat,lastCoords.lon,destCoords.lat,destCoords.lon);
+  if(distKm<5)return"arrived";
+  return(distKm*1.35)/AVG_SPEED_KMH; // road factor ~1.35x
+}
+
+function renderEtaCell(row){
+  const eta=computeEta(row);
+  let content;
+  if(eta==="calculating"){
+    content='<span style="color:var(--tx4);font-style:italic;font-size:11px">Calculating…</span>';
+  }else if(eta==="arrived"){
+    content='<span style="color:var(--green);font-weight:600;font-size:11px">Arrived</span>';
+  }else if(typeof eta==="number"){
+    const color=eta<=24?"--green":eta<=48?"--amber":"--tx3";
+    content=`<span style="color:var(${color});font-weight:600;font-size:11px">${fmtEta(eta)}</span>`;
+  }else{
+    content='<span style="color:var(--tx4)">—</span>';
+  }
+  return`<td title="Estimated driving time to destination (straight-line × 1.35 road factor at 55 mph avg)">${content}</td>`;
+}
+
+function loadGeoCache(){_geoCache=tryJSON(localStorage.getItem(LS_GEO))||{};}
+function saveGeoCache(){localStorage.setItem(LS_GEO,JSON.stringify(_geoCache));}
+
+async function geocodeAddress(addr){
+  if(!addr)return null;
+  if(_geoCache[addr]!==undefined)return _geoCache[addr];
+  try{
+    const url="https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(addr);
+    const resp=await fetch(url,{headers:{"Accept":"application/json","User-Agent":"NuvocargoDashboard/1.0"}});
+    const data=await resp.json();
+    if(data&&data.length){
+      const result={lat:parseFloat(data[0].lat),lon:parseFloat(data[0].lon)};
+      _geoCache[addr]=result;saveGeoCache();return result;
+    }
+  }catch(e){}
+  _geoCache[addr]=null;saveGeoCache();return null;
+}
+
+async function geocodeDestinations(){
+  if(!_cm.destination)return;
+  const addrs=[...new Set(_allRows.map(r=>(r[_cm.destination]||"").trim()).filter(Boolean))];
+  let changed=false;
+  for(const addr of addrs){
+    if(_geoCache[addr]===undefined){
+      await geocodeAddress(addr);
+      changed=true;
+      await new Promise(r=>setTimeout(r,1100)); // Nominatim rate limit: 1 req/sec
+    }
+  }
+  if(changed)renderTable();
 }
 
 // ── Shipment Detail Modal ─────────────────────────────────────────────────────
@@ -1716,6 +1823,7 @@ function showToast(msg, type) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+loadGeoCache();
 loadViews();
 loadData();
 setInterval(loadData,REFRESH_MS);
