@@ -174,9 +174,9 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 .views-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;min-height:30px}
 .views-label{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
 .view-pills{display:flex;gap:6px;flex-wrap:wrap}
-.view-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 6px 3px 10px;background:#EEF2FF;border:1px solid #C7D2FE;color:#3730A3;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
-.view-pill:hover{background:#E0E7FF;border-color:#A5B4FC}
-.view-pill.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.view-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 6px 3px 10px;background:#EEF4FF;border:1px solid #BFDBFE;color:#2563EB;border-radius:999px;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+.view-pill:hover{background:#DBEAFE;border-color:#93C5FD}
+.view-pill.active{background:#5991F1;border-color:#5991F1;color:#fff}
 .pill-del{width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.1);border:none;color:inherit;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .1s;flex-shrink:0;font-family:inherit;line-height:1}
 .pill-del:hover{background:rgba(0,0,0,.25)}
 .view-pill.active .pill-del{background:rgba(255,255,255,.2)}
@@ -297,7 +297,7 @@ td.col-id{font-weight:600;color:var(--teal)}
 
 /* Clickable rows */
 tbody tr.clickable{cursor:pointer}
-tbody tr.clickable:hover td{background:#f0fdf4 !important}
+tbody tr.clickable:hover td{background:#F3F4F6 !important}
 tbody tr.clickable:hover td.col-id{color:var(--teal)}
 
 @media(max-width:740px){.drawer{width:100%;max-height:90vh;border-radius:20px 20px 0 0;top:auto;bottom:0;left:0;transform:translateY(100%);opacity:1}.drawer.open{transform:translateY(0)}.detail-grid{grid-template-columns:1fr}}
@@ -365,10 +365,6 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
   </div>
   <div class="hright">
     <span class="hbadge"><span class="dot"></span>Live</span>
-    <button class="btn-hdr btn-lime" onclick="openEventModal()">
-      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg>
-      Log Event
-    </button>
     <button class="btn-hdr" id="btnRefresh" onclick="refreshData()">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/><path d="M12 2v3.5H8.5"/>
@@ -429,11 +425,6 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
       <div class="kpi-value amber" id="kpiWeek">—</div>
       <div class="kpi-sub">Upcoming deliveries</div>
     </div>
-  </div>
-
-  <div class="status-bar loading" id="statusBar">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-    Loading shipment data from Google Sheets…
   </div>
 
   <!-- Search row -->
@@ -664,7 +655,7 @@ function parseCSV(text){
 // ── Detect semantic columns ───────────────────────────────────────────────────
 function detectCols(cols){
   const find=re=>cols.find(c=>re.test(c))||null;
-  _cm.shipmentId   = find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$/i);
+  _cm.shipmentId   = find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$|^SH.?ID$|^LOAD.?ID$|^BOOKING.?ID$|^ORDER.?ID$|^TRACKING.?ID$/i);
   _cm.carrier      = find(/^CARRIER/i);
   _cm.shipper      = find(/SHIPPER|CONSIGNOR|SHIP.FROM|ORIGIN.COMPANY/i);
   _cm.trailer      = find(/TRAILER/i);
@@ -685,7 +676,6 @@ function detectCols(cols){
 
 // ── Load data ─────────────────────────────────────────────────────────────────
 async function loadData(){
-  setStatus("loading","Loading shipment data from Snowflake…");
   setBtnSpinning(true);
   try{
     const resp=await fetch(API_URL+"?t="+Date.now());
@@ -717,11 +707,8 @@ async function loadData(){
     _kpiFirstLoad = true;
     filterTable(); // also updates KPIs
 
-    const n=_allRows.length;
-    setStatus("ok","✅ "+n+" shipment"+(n===1?"":"s")+" loaded · last synced "+fmtTime(new Date()));
     document.getElementById("lastUpdated").textContent="Last updated: "+fmtTime(new Date());
   }catch(e){
-    setStatus("err","⚠️ Could not load data — check Snowflake connection or contact your admin.");
     document.getElementById("tableBody").innerHTML='<tr><td colspan="99"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Unable to load data</div><div class="empty-sub">Could not reach Snowflake. Check credentials or contact your admin.</div></div></td></tr>';
     console.error(e);
   }
@@ -735,6 +722,7 @@ function buildHeader(){
   const partSel = _selectedRows.size > 0 && _selectedRows.size < _filtered.length;
   document.getElementById("tableHead").innerHTML="<tr>"+
     `<th class="th-check"><input type="checkbox" id="selectAllChk" ${allSel?"checked":""} onclick="event.stopPropagation()" onchange="toggleSelectAll(this.checked)" title="Select all"></th>`+
+    `<th class="th-actions">Actions</th>`+
     visCols.map(col=>{
     const idx=_colOrder.indexOf(col);
     return`<th draggable="true" data-col="${ea(col)}" data-idx="${idx}"
@@ -749,7 +737,6 @@ function buildHeader(){
       </div>
     </th>`;
   }).join("")+
-    `<th class="th-actions">Actions</th>`+
   "</tr>";
   // Restore indeterminate state after innerHTML
   const chk = document.getElementById("selectAllChk");
@@ -810,7 +797,7 @@ function buildFilters(){
   buildMsel("opsRep",    _cm.opsRep,    "fgOpsRep",     false);
   showEl("fgPickup",    !!_cm.pickup);
   showEl("fgPickupSep", !!_cm.pickup);
-  disableInput("srchShipment",!_cm.shipmentId,_cm.shipmentId?"e.g. SH-12345":"Column not in sheet");
+  disableInput("srchShipment",false,_cm.shipmentId?"e.g. SH-12345":"Search all columns");
   disableInput("srchTrailer", !_cm.trailer,   _cm.trailer   ?"e.g. AL15179":"Column not in sheet");
   disableInput("srchRef",     !_cm.ref,       _cm.ref       ?"Reference / PO #":"Column not in sheet");
 }
@@ -982,7 +969,7 @@ function filterTable(){
   const sv2=v=>String(v??'').toLowerCase(); // safe string coerce + lowercase
 
   _filtered=_allRows.filter(row=>{
-    if(sShip&&_cm.shipmentId&&!sv2(row[_cm.shipmentId]).includes(sShip))return false;
+    if(sShip){if(_cm.shipmentId){if(!sv2(row[_cm.shipmentId]).includes(sShip))return false;}else{if(!Object.values(row).some(v=>sv2(v).includes(sShip)))return false;}}
     if(sTrl &&_cm.trailer   &&!sv2(row[_cm.trailer]).includes(sTrl))   return false;
     if(sRef &&_cm.ref       &&!sv2(row[_cm.ref]).includes(sRef))       return false;
     if(_selCarriers.size &&_cm.carrier   &&!_selCarriers.has(String(row[_cm.carrier]??"")))  return false;
@@ -1090,7 +1077,7 @@ function renderTable(){
     const sel = _selectedRows.has(i);
     const chkTd=`<td class="td-check" onclick="event.stopPropagation()"><input type="checkbox" ${sel?"checked":""} onchange="toggleRowSelect(${i},this.checked)" onclick="event.stopPropagation()"></td>`;
     const actTd=`<td class="td-actions" onclick="event.stopPropagation()"><button class="btn-row-log" onclick="openEventModal('${sid}','${eh(lastEvt)}')">+ Log</button></td>`;
-    return`<tr class="clickable${sel?" row-selected":""}" onclick="openDrawer(${i})">${chkTd}${tds}${actTd}</tr>`;
+    return`<tr class="clickable${sel?" row-selected":""}" onclick="openDrawer(${i})">${chkTd}${actTd}${tds}</tr>`;
   }).join("");
 }
 
