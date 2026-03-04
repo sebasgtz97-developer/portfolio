@@ -376,7 +376,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 .em-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08);}
 .em-textarea{resize:vertical;min-height:56px;height:64px;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx2);line-height:1.5;transition:border-color .15s,box-shadow .15s;width:100%;}
 .em-textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(28,74,62,.08);}
-.em-preview{border:1px solid var(--bd);border-radius:8px;overflow:hidden;height:260px;background:#0D1F1C;}
+.em-preview{border:1px solid var(--bd);border-radius:8px;overflow:hidden;height:260px;background:#F4F5F5;}
 .em-preview iframe{width:100%;height:260px;border:none;display:block;}
 .em-ships-list{display:flex;flex-direction:column;gap:4px;max-height:90px;overflow-y:auto;}
 .em-ship-chip{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);background:#F3F4F6;border:1px solid var(--bd);border-radius:5px;padding:3px 8px;line-height:1.4;}
@@ -2044,12 +2044,12 @@ function buildEmailHtml(){
     const get=k=>(_cm[k]&&row[_cm[k]]?row[_cm[k]]:"—");
     const shipId=_cm.shipmentId?get("shipmentId"):"—";
     const status=_cm.lastEvent?get("lastEvent"):null;
-    let badgeBg="#1E3D2F",badgeColor="#4ADE80",badgeBd="rgba(74,222,128,0.25)";
+    let badgeBg="#DCFCE7",badgeColor="#15803D",badgeBd="#BBF7D0";
     if(status){
       const sv=status.toLowerCase();
-      if(/delivered|complete/i.test(sv)){badgeBg="#1A3A2A";badgeColor="#4ADE80";badgeBd="rgba(74,222,128,0.3)";}
-      else if(/transit|moving/i.test(sv)){badgeBg="#1A2D4A";badgeColor="#60A5FA";badgeBd="rgba(96,165,250,0.3)";}
-      else if(/pending|waiting|hold/i.test(sv)){badgeBg="#3A2D1A";badgeColor="#FBB040";badgeBd="rgba(251,176,64,0.3)";}
+      if(/delivered|complete/i.test(sv)){badgeBg="#DCFCE7";badgeColor="#15803D";badgeBd="#BBF7D0";}
+      else if(/transit|moving/i.test(sv)){badgeBg="#DBEAFE";badgeColor="#1D4ED8";badgeBd="#BFDBFE";}
+      else if(/pending|waiting|hold/i.test(sv)){badgeBg="#FEF9C3";badgeColor="#A16207";badgeBd="#FDE68A";}
     }
     const fields=[
       _cm.carrier&&row[_cm.carrier]?["CARRIER",row[_cm.carrier]]:null,
@@ -2065,73 +2065,73 @@ function buildEmailHtml(){
       const [la,va]=fields[i];const pair=fields[i+1];
       fieldHtml+=`<tr>
         <td width="50%" style="padding-bottom:14px;vertical-align:top;">
-          <div style="font-size:9px;font-weight:600;color:#6B9E8C;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">${la}</div>
-          <div style="font-size:13px;color:#E2EDE9;font-weight:500;line-height:1.4;">${eh(va)}</div>
+          <div style="font-size:9px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">${la}</div>
+          <div style="font-size:13px;color:#111827;font-weight:500;line-height:1.4;">${eh(va)}</div>
         </td>
         ${pair?`<td width="50%" style="padding-bottom:14px;vertical-align:top;">
-          <div style="font-size:9px;font-weight:600;color:#6B9E8C;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">${pair[0]}</div>
-          <div style="font-size:13px;color:#E2EDE9;font-weight:500;line-height:1.4;">${eh(pair[1])}</div>
+          <div style="font-size:9px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">${pair[0]}</div>
+          <div style="font-size:13px;color:#111827;font-weight:500;line-height:1.4;">${eh(pair[1])}</div>
         </td>`:"<td width='50%'></td>"}
       </tr>`;
     }
-    return `<table width="100%" cellpadding="0" cellspacing="0" style="background:#1A3830;border:1px solid #2D6B5A;border-radius:12px;margin-bottom:12px;">
-      <tr><td style="padding:14px 20px 12px;border-bottom:1px solid rgba(45,107,90,0.6);">
+    return `<table width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:10px;margin-bottom:10px;">
+      <tr><td style="padding:14px 20px 12px;border-bottom:1px solid #F3F4F6;border-left:3px solid #111F1C;border-radius:10px 0 0 0;">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td><span style="font-family:'Courier New',Courier,monospace;font-size:15px;font-weight:700;color:#FFFFFF;letter-spacing:.02em;">${eh(shipId)}</span></td>
-          ${status?`<td align="right"><span style="display:inline-block;background:${badgeBg};border:1px solid ${badgeBd};border-radius:20px;padding:3px 10px;font-size:10px;font-weight:600;color:${badgeColor};text-transform:uppercase;letter-spacing:.06em;">${eh(fmtLabel(status))}</span></td>`:""}
+          <td><span style="font-family:'Courier New',Courier,monospace;font-size:14px;font-weight:700;color:#111F1C;letter-spacing:.04em;">${eh(shipId)}</span></td>
+          ${status?`<td align="right"><span style="display:inline-block;background:${badgeBg};border:1px solid ${badgeBd};border-radius:20px;padding:2px 10px;font-size:10px;font-weight:600;color:${badgeColor};text-transform:uppercase;letter-spacing:.05em;">${eh(fmtLabel(status))}</span></td>`:""}
         </tr></table>
       </td></tr>
-      <tr><td style="padding:16px 20px ${gps?"8px":"16px"};">
+      <tr><td style="padding:14px 20px ${gps?"8px":"14px"};">
         <table width="100%" cellpadding="0" cellspacing="0">${fieldHtml}</table>
-        ${gps?`<a href="${ea(gps)}" style="display:inline-block;margin-bottom:10px;font-size:11px;font-weight:600;color:#C8E64C;text-decoration:none;background:rgba(200,230,76,0.1);border:1px solid rgba(200,230,76,0.28);border-radius:6px;padding:5px 12px;">&#8599;&nbsp;View Live GPS Tracking</a>`:""}
+        ${gps?`<a href="${ea(gps)}" style="display:inline-block;margin-bottom:10px;font-size:11px;font-weight:600;color:#111F1C;text-decoration:none;background:#F3F4F6;border:1px solid #D1D5DB;border-radius:6px;padding:5px 12px;">&#8599;&nbsp;View Live GPS Tracking</a>`:""}
       </td></tr>
     </table>`;
   }).join("");
 
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0D1F1C;font-family:Arial,Helvetica,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0D1F1C;"><tr><td align="center" style="padding:32px 16px;">
+<body style="margin:0;padding:0;background:#F4F5F5;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F5F5;"><tr><td align="center" style="padding:32px 16px;">
 <table cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
 <!-- HEADER -->
-<tr><td style="background:#1C4A3E;border-radius:16px 16px 0 0;padding:28px 36px 24px;border:1px solid #2D6B5A;border-bottom:none;">
+<tr><td style="background:#111F1C;border-radius:12px 12px 0 0;padding:28px 36px 24px;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
     <td><table cellpadding="0" cellspacing="0"><tr>
-      <td style="width:34px;height:34px;background:#C8E64C;border-radius:8px;text-align:center;vertical-align:middle;">
-        <span style="font-size:15px;font-weight:800;color:#1C4A3E;font-family:Arial,sans-serif;line-height:34px;">N</span>
+      <td style="width:32px;height:32px;background:#C8E64C;border-radius:6px;text-align:center;vertical-align:middle;">
+        <span style="font-size:14px;font-weight:800;color:#111F1C;font-family:Arial,sans-serif;line-height:32px;">N</span>
       </td>
       <td style="padding-left:10px;">
-        <div style="font-size:17px;font-weight:700;color:#FFFFFF;letter-spacing:-.02em;font-family:Arial,sans-serif;line-height:1.1;">Nuvocargo</div>
-        <div style="font-size:9px;color:#6B9E8C;letter-spacing:.1em;text-transform:uppercase;font-family:Arial,sans-serif;margin-top:2px;">Operations &middot; AI Platform</div>
+        <div style="font-size:16px;font-weight:700;color:#FFFFFF;letter-spacing:-.02em;font-family:Arial,sans-serif;line-height:1.1;">Nuvocargo</div>
+        <div style="font-size:9px;color:#4A6660;letter-spacing:.12em;text-transform:uppercase;font-family:Arial,sans-serif;margin-top:2px;">Operations &middot; AI Platform</div>
       </td>
     </tr></table></td>
     <td align="right" style="vertical-align:top;">
-      <span style="display:inline-block;background:rgba(200,230,76,0.12);border:1px solid rgba(200,230,76,0.35);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:600;color:#C8E64C;font-family:Arial,sans-serif;">&#9679; LIVE UPDATE</span>
+      <span style="display:inline-block;background:rgba(200,230,76,0.1);border:1px solid rgba(200,230,76,0.3);border-radius:20px;padding:4px 11px;font-size:9px;font-weight:600;color:#C8E64C;font-family:Arial,sans-serif;letter-spacing:.06em;">&#9679; LIVE UPDATE</span>
     </td>
   </tr></table>
-  <div style="margin-top:24px;">
-    <div style="font-size:22px;font-weight:700;color:#FFFFFF;letter-spacing:-.03em;line-height:1.2;font-family:Arial,sans-serif;">Shipment Status Update</div>
-    <div style="font-size:12px;color:#A8C5BC;margin-top:6px;letter-spacing:.02em;font-family:Arial,sans-serif;">${dateStr} &nbsp;&#183;&nbsp; ${n} shipment${n===1?"":"s"} tracked</div>
+  <div style="margin-top:22px;">
+    <div style="font-size:21px;font-weight:700;color:#FFFFFF;letter-spacing:-.03em;line-height:1.2;font-family:Arial,sans-serif;">Shipment Status Update</div>
+    <div style="font-size:12px;color:#6B8A85;margin-top:5px;font-family:Arial,sans-serif;">${dateStr} &nbsp;&#183;&nbsp; ${n} shipment${n===1?"":"s"} tracked</div>
   </div>
-  <div style="margin-top:20px;height:2px;background:linear-gradient(90deg,#C8E64C 0%,rgba(200,230,76,0.06) 100%);border-radius:1px;"></div>
+  <div style="margin-top:18px;height:1px;background:linear-gradient(90deg,#C8E64C 0%,rgba(200,230,76,0.05) 100%);"></div>
 </td></tr>
 ${openingMsg?`<!-- OPENING MESSAGE -->
-<tr><td style="background:#162E27;padding:20px 36px;border-left:1px solid #2D6B5A;border-right:1px solid #2D6B5A;border-bottom:1px solid rgba(45,107,90,0.5);">
-  <p style="margin:0;font-size:14px;color:#D4E8E0;line-height:1.65;font-family:Arial,sans-serif;">${eh(openingMsg).replace(/\n/g,"<br>")}</p>
+<tr><td style="background:#FFFFFF;padding:20px 36px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB;border-bottom:1px solid #F3F4F6;">
+  <p style="margin:0;font-size:14px;color:#374151;line-height:1.65;font-family:Arial,sans-serif;">${eh(openingMsg).replace(/\n/g,"<br>")}</p>
 </td></tr>`:""}
 <!-- SHIPMENTS -->
-<tr><td style="background:#0F261F;padding:24px 36px;border-left:1px solid #2D6B5A;border-right:1px solid #2D6B5A;">
-  <div style="font-size:9px;font-weight:600;color:#4A7A6A;text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px;font-family:Arial,sans-serif;">Shipment Details</div>
+<tr><td style="background:#F9FAFB;padding:20px 36px;border-left:1px solid #E5E7EB;border-right:1px solid #E5E7EB;">
+  <div style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;font-family:Arial,sans-serif;">Shipment Details</div>
   ${cardsHtml}
 </td></tr>
 <!-- FOOTER -->
-<tr><td style="background:#0A1A16;border-radius:0 0 16px 16px;padding:18px 36px;border:1px solid #2D6B5A;border-top:1px solid rgba(45,107,90,0.5);">
+<tr><td style="background:#FFFFFF;border-radius:0 0 12px 12px;padding:16px 36px;border:1px solid #E5E7EB;border-top:1px solid #F3F4F6;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
     <td>
-      <div style="font-size:11px;color:#6B9E8C;font-family:Arial,sans-serif;margin-bottom:2px;">Best regards,</div>
-      <div style="font-size:13px;font-weight:600;color:#FFFFFF;font-family:Arial,sans-serif;">${eh(fromName||"Nuvocargo Operations")}</div>
+      <div style="font-size:11px;color:#9CA3AF;font-family:Arial,sans-serif;margin-bottom:2px;">Best regards,</div>
+      <div style="font-size:13px;font-weight:600;color:#111F1C;font-family:Arial,sans-serif;">${eh(fromName||"Nuvocargo Operations")}</div>
     </td>
     <td align="right" style="vertical-align:bottom;">
-      <div style="font-size:9px;color:#2D5A4A;letter-spacing:.08em;text-transform:uppercase;font-family:Arial,sans-serif;">Powered by Nuvocargo AI</div>
+      <div style="font-size:9px;color:#D1D5DB;letter-spacing:.08em;text-transform:uppercase;font-family:Arial,sans-serif;">Powered by Nuvocargo AI</div>
     </td>
   </tr></table>
 </td></tr>
