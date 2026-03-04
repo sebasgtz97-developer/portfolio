@@ -362,8 +362,8 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 .bulk-count{font-weight:600;}
 .btn-bulk-log{padding:7px 16px;background:#fff;color:var(--teal);border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;}
 .btn-bulk-log:hover{background:#e0fce7;}
-.btn-bulk-email{padding:7px 16px;background:var(--lime);color:var(--teal);border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:filter .15s;display:flex;align-items:center;gap:5px;}
-.btn-bulk-email:hover{filter:brightness(1.06);}
+.btn-bulk-email{padding:7px 16px;background:#fff;color:var(--teal);border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:5px;}
+.btn-bulk-email:hover{background:#e0fce7;}
 .btn-bulk-clear{padding:7px 12px;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s;}
 .btn-bulk-clear:hover{background:rgba(255,255,255,.25);}
 /* ── Email modal ── */
@@ -2048,7 +2048,9 @@ function buildEmailBody(){
     if(_cm.ref)body+="Ref:       "+get("ref")+"\n";
     if(_cm.pickup)body+="Pickup:    "+get("pickup")+"\n";
     if(_cm.delivery)body+="Delivery:  "+get("delivery")+"\n";
+    if(_cm.locationCity)body+="Location:  "+get("locationCity")+"\n";
     if(_cm.lastEvent)body+="Status:    "+get("lastEvent")+"\n";
+    if(_cm.gpsLink&&row[_cm.gpsLink])body+="GPS:       "+row[_cm.gpsLink]+"\n";
     body+="─".repeat(28)+"\n";
   });
   const fromName=(document.getElementById("emFrom").value||"").trim();
@@ -2060,12 +2062,28 @@ function updateEmailPreview(){
   document.getElementById("emPreview").textContent=buildEmailBody();
 }
 
-function sendEmail(){
+async function sendEmail(){
   const to=(document.getElementById("emTo").value||"").trim();
   const subject=(document.getElementById("emSubject").value||"").trim();
+  if(!to){alert("Please enter a recipient email address.");document.getElementById("emTo").focus();return;}
   const body=buildEmailBody();
-  const mailto="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
-  window.location.href=mailto;
+  const btn=document.getElementById("btnEmSend");
+  const note=document.getElementById("emFooterNote");
+  btn.disabled=true;
+  btn.textContent="Sending…";
+  note.textContent="";
+  try{
+    const r=await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to,subject,body})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.message||data.error||"Unknown error");
+    closeEmailModal();
+    showToast("Email sent to "+to,"success");
+  }catch(err){
+    note.style.color="var(--red,#e53e3e)";
+    note.textContent="Error: "+err.message;
+    btn.disabled=false;
+    btn.textContent="Send Email";
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -2126,14 +2144,14 @@ setInterval(loadData,REFRESH_MS);
       </div>
     </div>
     <div class="em-modal-footer">
-      <span class="em-footer-note">Opens in your default email client</span>
+      <span class="em-footer-note" id="emFooterNote"></span>
       <div class="em-footer-btns">
         <button class="btn-em-cancel" onclick="closeEmailModal()">Cancel</button>
-        <button class="btn-em-send" onclick="sendEmail()">
+        <button class="btn-em-send" id="btnEmSend" onclick="sendEmail()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
-          Open in Email
+          Send Email
         </button>
       </div>
     </div>
