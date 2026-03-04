@@ -2007,10 +2007,9 @@ function openEmailModal(){
   const n=rows.length;
   const isSelective=_selectedRows.size>0;
   document.getElementById("emSub").textContent=isSelective?"("+n+" selected)":"(all "+n+" visible)";
-  // default subject
   const dateStr=new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
   document.getElementById("emSubject").value="Shipment Status Update — "+dateStr;
-  // build chips
+  document.getElementById("emMsg").value="";
   const chipsEl=document.getElementById("emShipsList");
   chipsEl.innerHTML=rows.map(row=>{
     const id=_cm.shipmentId?row[_cm.shipmentId]:"—";
@@ -2032,42 +2031,41 @@ function handleEmailOverlayClick(e){
   if(e.target===document.getElementById("emailModal"))closeEmailModal();
 }
 
-function buildEmailBody(openingMsg){
+function buildEmailBody(){
   const rows=getEmailRows();
   const dateStr=new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
-  const fromName=(document.getElementById("emFrom").value||"").trim();
+  const openingMsg=(document.getElementById("emMsg").value||"").trim();
   let body="";
   if(openingMsg)body+=openingMsg+"\n\n";
   body+="SHIPMENT STATUS UPDATE — "+dateStr+"\n";
   body+="━".repeat(38)+"\n\n";
   rows.forEach((row,i)=>{
     if(i>0)body+="\n";
-    const id=_cm.shipmentId?row[_cm.shipmentId]:"";
-    if(id)              body+="Shipment:   "+id+"\n";
-    if(_cm.carrier&&row[_cm.carrier])   body+="Carrier:    "+row[_cm.carrier]+"\n";
-    if(_cm.trailer&&row[_cm.trailer])   body+="Trailer:    "+row[_cm.trailer]+"\n";
-    if(_cm.ref&&row[_cm.ref])           body+="Reference:  "+row[_cm.ref]+"\n";
-    if(_cm.pickup&&row[_cm.pickup])     body+="Pickup:     "+row[_cm.pickup]+"\n";
-    if(_cm.delivery&&row[_cm.delivery]) body+="Delivery:   "+row[_cm.delivery]+"\n";
-    if(_cm.lastEvent&&row[_cm.lastEvent])body+="Status:     "+row[_cm.lastEvent]+"\n";
-    body+="─".repeat(32)+"\n";
+    const get=k=>(_cm[k]&&row[_cm[k]]?row[_cm[k]]:"—");
+    body+="Shipment:  "+get("shipmentId")+"\n";
+    if(_cm.carrier)body+="Carrier:   "+get("carrier")+"\n";
+    if(_cm.trailer)body+="Trailer:   "+get("trailer")+"\n";
+    if(_cm.ref)body+="Ref:       "+get("ref")+"\n";
+    if(_cm.pickup)body+="Pickup:    "+get("pickup")+"\n";
+    if(_cm.delivery)body+="Delivery:  "+get("delivery")+"\n";
+    if(_cm.lastEvent)body+="Status:    "+get("lastEvent")+"\n";
+    body+="─".repeat(28)+"\n";
   });
-  body+="\nPlease reach out with any questions.\n";
-  if(fromName)body+="\nBest regards,\n"+fromName;
+  const fromName=(document.getElementById("emFrom").value||"").trim();
+  body+="\n"+(fromName?"Best regards,\n"+fromName:"Best regards,\nNuvocargo Operations");
   return body;
 }
 
 function updateEmailPreview(){
-  const openingMsg=(document.getElementById("emMsg").value||"").trim();
-  document.getElementById("emPreview").textContent=buildEmailBody(openingMsg);
+  document.getElementById("emPreview").textContent=buildEmailBody();
 }
 
 function sendEmail(){
   const to=(document.getElementById("emTo").value||"").trim();
   const subject=(document.getElementById("emSubject").value||"").trim();
-  const openingMsg=(document.getElementById("emMsg").value||"").trim();
-  const body=buildEmailBody(openingMsg);
-  window.location.href="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+  const body=buildEmailBody();
+  const mailto="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+  window.location.href=mailto;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -2083,7 +2081,7 @@ setInterval(loadData,REFRESH_MS);
   <span class="bulk-count" id="bulkCount">0 selected</span>
   <button class="btn-bulk-log" onclick="openBulkEventModal()">Log Event</button>
   <button class="btn-bulk-email" onclick="openEmailModal()">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
     </svg>
     Email Update
@@ -2091,7 +2089,7 @@ setInterval(loadData,REFRESH_MS);
   <button class="btn-bulk-clear" onclick="clearSelection()">Clear selection</button>
 </div>
 
-<!-- ── Email Modal ───────────────────────────────────────────────────────────── -->
+<!-- ── Email Status Update Modal ─────────────────────────────────────────────── -->
 <div class="modal-overlay hidden" id="emailModal" onclick="handleEmailOverlayClick(event)">
   <div class="em-modal-box">
     <div class="modal-header">
@@ -2100,12 +2098,10 @@ setInterval(loadData,REFRESH_MS);
       <button class="modal-close" onclick="closeEmailModal()" aria-label="Close">&times;</button>
     </div>
     <div class="em-body">
-      <!-- Shipment chips -->
       <div class="em-field">
         <span class="em-label">Shipments included</span>
         <div class="em-ships-list" id="emShipsList"></div>
       </div>
-      <!-- To + From -->
       <div class="em-row2">
         <div class="em-field">
           <label class="em-label" for="emTo">To (recipient email)</label>
@@ -2113,20 +2109,17 @@ setInterval(loadData,REFRESH_MS);
         </div>
         <div class="em-field">
           <label class="em-label" for="emFrom">Your name (optional)</label>
-          <input class="em-input" id="emFrom" type="text" placeholder="e.g. Nuvocargo Ops" oninput="updateEmailPreview()">
+          <input class="em-input" id="emFrom" type="text" placeholder="Your name" oninput="updateEmailPreview()">
         </div>
       </div>
-      <!-- Subject -->
       <div class="em-field">
         <label class="em-label" for="emSubject">Subject</label>
         <input class="em-input" id="emSubject" type="text" oninput="updateEmailPreview()">
       </div>
-      <!-- Opening message -->
       <div class="em-field">
         <label class="em-label" for="emMsg">Opening message (optional)</label>
-        <textarea class="em-textarea" id="emMsg" placeholder="Hi,&#10;Here is the latest status update for your shipments." oninput="updateEmailPreview()"></textarea>
+        <textarea class="em-textarea" id="emMsg" placeholder="Hi [client name], please find below the latest status for your shipments..." oninput="updateEmailPreview()"></textarea>
       </div>
-      <!-- Preview -->
       <div class="em-field">
         <span class="em-label">Email preview</span>
         <div class="em-preview" id="emPreview"></div>
@@ -2137,8 +2130,8 @@ setInterval(loadData,REFRESH_MS);
       <div class="em-footer-btns">
         <button class="btn-em-cancel" onclick="closeEmailModal()">Cancel</button>
         <button class="btn-em-send" onclick="sendEmail()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
           Open in Email
         </button>
