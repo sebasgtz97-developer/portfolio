@@ -168,9 +168,12 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 .btn-col-vis:hover{border-color:var(--bd2);background:var(--bg)}
 .btn-col-vis.active{border-color:var(--teal);background:#F0FDF4;color:var(--teal);font-weight:600}
 .col-hidden-badge{min-width:16px;height:16px;padding:0 4px;background:var(--teal);color:#fff;border-radius:999px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
-.col-vis-drop{position:absolute;top:calc(100% + 4px);right:0;z-index:400;background:var(--panel);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:210px;max-height:300px;overflow-y:auto;padding:0}
+.col-vis-drop{position:absolute;top:calc(100% + 4px);right:0;z-index:400;background:var(--panel);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:220px;max-height:320px;overflow-y:auto;padding:0}
 .col-vis-drop.hidden{display:none}
 .col-vis-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 6px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--panel)}
+.col-vis-search-wrap{padding:6px 8px 4px;border-bottom:1px solid var(--bd);position:sticky;top:38px;background:var(--panel);z-index:1}
+.col-vis-search{width:100%;height:26px;padding:0 8px;border:1px solid var(--bd);border-radius:5px;font-size:11px;font-family:inherit;color:var(--tx1);background:var(--bg);outline:none;box-sizing:border-box}
+.col-vis-search:focus{border-color:var(--teal)}
 .col-vis-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em}
 .btn-show-all{font-size:11px;font-weight:500;color:var(--teal);background:none;border:none;cursor:pointer;padding:0;font-family:inherit}
 .btn-show-all:hover{text-decoration:underline}
@@ -225,6 +228,7 @@ tbody tr:hover td{background:#F9FAFB}
 tbody tr{transition:background .08s;animation:rowIn .18s ease both}
 @keyframes rowIn{from{opacity:0;transform:translateX(-3px)}to{opacity:1;transform:none}}
 td.col-id{font-weight:600;color:var(--teal)}
+[data-theme="dark"] td.col-id{color:var(--tx1)}
 
 /* Empty / skeleton */
 .empty-state{padding:52px 24px;text-align:center}
@@ -395,31 +399,68 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 .btn-page:hover:not(:disabled){background:var(--bg);border-color:var(--bd2);}
 .btn-page:disabled{opacity:.35;cursor:not-allowed;}
 .page-info{font-size:12px;color:var(--tx3);white-space:nowrap;}
+
+/* ── Dark mode ───────────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1117;--panel:#161B22;--bd:#21262D;--bd2:#30363D;
+    --tx1:#E6EDF3;--tx2:#C9D1D9;--tx3:#8B949E;--tx4:#484F58;
+  }
+  :root:not([data-theme="light"]) td.col-id{color:var(--tx1)}
+}
+[data-theme="dark"]{
+  --bg:#0D1117;--panel:#161B22;--bd:#21262D;--bd2:#30363D;
+  --tx1:#E6EDF3;--tx2:#C9D1D9;--tx3:#8B949E;--tx4:#484F58;
+}
+[data-theme="dark"] .kpi-card::after,
+:root:not([data-theme="light"]) .kpi-card::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)}
+[data-theme="dark"] tbody tr.clickable:hover td,
+html:not([data-theme="light"]) @media(prefers-color-scheme:dark) tbody tr.clickable:hover td{background:#21262D!important}
+[data-theme="dark"] tbody tr.row-selected td{background:rgba(22,163,74,.12)!important}
+[data-theme="dark"] .msel-drop{background:var(--panel);border-color:var(--bd)}
+[data-theme="dark"] .em-preview{background:#1a1d24}
+[data-theme="dark"] .drawer{background:var(--panel)}
+[data-theme="dark"] .detail-grid{background:var(--bg)}
+[data-theme="dark"] .modal-box,[data-theme="dark"] .em-modal-box{background:var(--panel)}
+[data-theme="dark"] .save-popover{background:var(--panel);border-color:var(--bd)}
+
+/* Dark mode hover fix for clickable rows */
+[data-theme="dark"] tbody tr.clickable:hover td{background:#21262D!important}
+
+/* ── Theme/Lang toggle buttons in header ──────────────────────────────────────── */
+.btn-ctrl{display:inline-flex;align-items:center;justify-content:center;background:var(--panel);color:var(--tx3);border:1px solid var(--bd);height:32px;padding:0 10px;border-radius:6px;font-weight:500;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;gap:4px;white-space:nowrap;}
+.btn-ctrl:hover{background:var(--bg);border-color:var(--bd2);color:var(--tx1);}
+.btn-ctrl svg{width:13px;height:13px;}
 </style>
 </head>
+<script>(function(){var s=localStorage.getItem('nuvo_theme');if(s)document.documentElement.dataset.theme=s;})()</script>
 <body>
 
 <header>
   <div class="hleft">
-    <svg width="160" height="28" viewBox="0 0 160 28" xmlns="http://www.w3.org/2000/svg" aria-label="Nuvocargo" role="img">
-      <text x="0" y="23" font-family="'Cormorant Garamond',Georgia,serif" font-size="26" font-weight="500" letter-spacing="0.3" fill="#1C4A3E">nuvocargo</text>
+    <svg width="124" height="34" viewBox="0 0 124 34" xmlns="http://www.w3.org/2000/svg" aria-label="Nuvocargo" role="img">
+      <text x="0" y="26" font-family="'Cormorant Garamond',Georgia,serif" font-size="26" font-weight="500" letter-spacing="0.3" fill="#1C4A3E">nuvocargo</text>
     </svg>
-    <span class="htitle">Operations Board</span>
+    <span class="htitle" data-i18n="header.title">Operations Board</span>
   </div>
   <div class="hright">
-    <span class="hbadge"><span class="dot"></span>Live</span>
+    <span class="hbadge"><span class="dot"></span><span data-i18n="header.live">Live</span></span>
     <button class="btn-hdr" id="btnEmail" onclick="openEmailModal()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
       </svg>
-      Email Update
+      <span data-i18n="header.email">Email Update</span>
     </button>
     <button class="btn-hdr" id="btnRefresh" onclick="refreshData()">
       <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11.5 2A5.5 5.5 0 1 0 12 6.5"/><path d="M12 2v3.5H8.5"/>
       </svg>
-      Refresh
+      <span data-i18n="header.refresh">Refresh</span>
     </button>
+    <button class="btn-ctrl" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 8.5a6 6 0 0 1-7-7 5.5 5.5 0 1 0 7 7z"/></svg>
+    </button>
+    <button class="btn-ctrl" id="langToggle" onclick="toggleLang()" title="Switch language / Cambiar idioma">EN</button>
   </div>
 </header>
 
@@ -436,9 +477,9 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
           <path d="M14 4.5L8 2 2 4.5v7L8 14l6-2.5v-7z"/><path d="M2 4.5L8 7l6-2.5"/><path d="M8 14V7"/>
         </svg>
       </div>
-      <div class="kpi-label">Total Shipments</div>
+      <div class="kpi-label" data-i18n="kpi.total.label">Total Shipments</div>
       <div class="kpi-value accent" id="kpiTotal">—</div>
-      <div class="kpi-sub" id="kpiTotalSub">In system</div>
+      <div class="kpi-sub" id="kpiTotalSub" data-i18n="kpi.total.sub">In system</div>
     </div>
     <div class="kpi-card kpi-card-blue" id="kpiCardLive" onclick="toggleKpiFilter('live')">
       <div class="kpi-icon kpi-icon-blue">
@@ -446,9 +487,9 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
           <circle cx="8" cy="9" r="2"/><path d="M5.1 6.5a4.1 4.1 0 0 0 0 5"/><path d="M10.9 6.5a4.1 4.1 0 0 1 0 5"/><path d="M2.8 4a7.5 7.5 0 0 0 0 10"/><path d="M13.2 4a7.5 7.5 0 0 1 0 10"/>
         </svg>
       </div>
-      <div class="kpi-label">Live Shipments</div>
+      <div class="kpi-label" data-i18n="kpi.live.label">Live Shipments</div>
       <div class="kpi-value" id="kpiCarriers">—</div>
-      <div class="kpi-sub" id="kpiCarriersSub">In transit</div>
+      <div class="kpi-sub" id="kpiCarriersSub" data-i18n="kpi.live.sub">In transit</div>
     </div>
     <div class="kpi-card kpi-card-green" id="kpiCardToday" onclick="toggleKpiFilter('today')">
       <div class="kpi-icon kpi-icon-green">
@@ -456,9 +497,9 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
           <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M1.5 6.5h13"/><path d="M5 1.5v2M11 1.5v2"/><circle cx="8" cy="10" r="1.5" fill="currentColor" stroke="none"/>
         </svg>
       </div>
-      <div class="kpi-label">Scheduled Today</div>
+      <div class="kpi-label" data-i18n="kpi.today.label">Scheduled Today</div>
       <div class="kpi-value green" id="kpiToday">—</div>
-      <div class="kpi-sub">Delivery appointments</div>
+      <div class="kpi-sub" data-i18n="kpi.today.sub">Delivery appointments</div>
     </div>
     <div class="kpi-card kpi-card-amber" id="kpiCardWeek" onclick="toggleKpiFilter('week')">
       <div class="kpi-icon kpi-icon-amber">
@@ -466,30 +507,30 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
           <rect x="1.5" y="2.5" width="13" height="12" rx="1.5"/><path d="M1.5 6.5h13"/><path d="M5 1.5v2M11 1.5v2"/><path d="M4.5 10.5h7"/>
         </svg>
       </div>
-      <div class="kpi-label">This Week</div>
+      <div class="kpi-label" data-i18n="kpi.week.label">This Week</div>
       <div class="kpi-value amber" id="kpiWeek">—</div>
-      <div class="kpi-sub">Upcoming deliveries</div>
+      <div class="kpi-sub" data-i18n="kpi.week.sub">Upcoming deliveries</div>
     </div>
   </div>
 
   <!-- Search row -->
   <div class="search-row">
     <div class="srch-field">
-      <span class="srch-label">Shipment ID</span>
+      <span class="srch-label" data-i18n="srch.shipment">Shipment ID</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
         <input class="srch-input" id="srchShipment" placeholder="e.g. SH-12345" autocomplete="off" oninput="onSrchInput(this);filterTableDebounced()">
       </div>
     </div>
     <div class="srch-field">
-      <span class="srch-label">Trailer #</span>
+      <span class="srch-label" data-i18n="srch.trailer">Trailer #</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
         <input class="srch-input" id="srchTrailer" placeholder="e.g. AL15179" autocomplete="off" oninput="onSrchInput(this);filterTableDebounced()">
       </div>
     </div>
     <div class="srch-field">
-      <span class="srch-label">Customer Ref</span>
+      <span class="srch-label" data-i18n="srch.ref">Customer Ref</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
         <input class="srch-input" id="srchRef" placeholder="Reference / PO #" autocomplete="off" oninput="onSrchInput(this);filterTableDebounced()">
@@ -499,7 +540,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
     <div class="col-vis-wrap" id="colVisWrap">
       <button class="btn-col-vis" id="btnColVis" onclick="toggleColDrop()">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="1" y="1" width="11" height="11" rx="1.5"/><path d="M4.5 1v11M8.5 1v11"/></svg>
-        Columns
+        <span data-i18n="btn.columns">Columns</span>
         <span class="col-hidden-badge" id="colHiddenBadge" style="display:none">0</span>
       </button>
       <div class="col-vis-drop hidden" id="colVisDrop"></div>
@@ -512,7 +553,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 
     <!-- Carrier multi-select -->
     <div class="fg" id="fgCarrier">
-      <span class="fg-label">Carrier</span>
+      <span class="fg-label" data-i18n="filter.carrier">Carrier</span>
       <div class="msel-wrap" id="mselWrapCarrier">
         <button class="msel-btn" id="mselBtnCarrier" aria-expanded="false" onclick="toggleMsel('carrier')">
           <span class="msel-btn-label" id="mselLabelCarrier">All carriers</span>
@@ -524,7 +565,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 
     <!-- Shipper multi-select -->
     <div class="fg" id="fgShipper" style="display:none">
-      <span class="fg-label">Shipper</span>
+      <span class="fg-label" data-i18n="filter.shipper">Shipper</span>
       <div class="msel-wrap" id="mselWrapShipper">
         <button class="msel-btn" id="mselBtnShipper" aria-expanded="false" onclick="toggleMsel('shipper')">
           <span class="msel-btn-label" id="mselLabelShipper">All shippers</span>
@@ -536,7 +577,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 
     <!-- Last Event multi-select -->
     <div class="fg" id="fgLastEvent" style="display:none">
-      <span class="fg-label">Last Event</span>
+      <span class="fg-label" data-i18n="filter.lastEvent">Last Event</span>
       <div class="msel-wrap" id="mselWrapLastEvent">
         <button class="msel-btn" id="mselBtnLastEvent" aria-expanded="false" onclick="toggleMsel('lastEvent')">
           <span class="msel-btn-label" id="mselLabelLastEvent">All events</span>
@@ -548,7 +589,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 
     <!-- Ops Rep multi-select -->
     <div class="fg" id="fgOpsRep" style="display:none">
-      <span class="fg-label">Ops Rep</span>
+      <span class="fg-label" data-i18n="filter.opsRep">Ops Rep</span>
       <div class="msel-wrap" id="mselWrapOpsRep">
         <button class="msel-btn" id="mselBtnOpsRep" aria-expanded="false" onclick="toggleMsel('opsRep')">
           <span class="msel-btn-label" id="mselLabelOpsRep">All reps</span>
@@ -561,7 +602,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
     <div class="fsep"></div>
 
     <div class="fg" id="fgPickup" style="display:none">
-      <span class="fg-label">Pickup date</span>
+      <span class="fg-label" data-i18n="filter.pickupDate">Pickup date</span>
       <div class="date-pair">
         <input type="date" class="fdate" id="fPickupFrom" onchange="onFdateChange(this);filterTableDebounced()">
         <span class="date-arrow">→</span>
@@ -571,7 +612,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
     <div class="fsep" id="fgPickupSep" style="display:none"></div>
 
     <div class="fg" id="fgDelivery">
-      <span class="fg-label">Delivery date</span>
+      <span class="fg-label" data-i18n="filter.deliveryDate">Delivery date</span>
       <div class="date-pair">
         <input type="date" class="fdate" id="fDeliveryFrom" onchange="onFdateChange(this);filterTableDebounced()">
         <span class="date-arrow">→</span>
@@ -581,24 +622,24 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 
     <div class="filter-actions">
       <span class="active-count" id="activeCount"></span>
-      <button class="btn-clear" onclick="clearAllFilters()">Clear filters</button>
+      <button class="btn-clear" onclick="clearAllFilters()" data-i18n="btn.clearFilters">Clear filters</button>
     </div>
   </div>
 
   <!-- Views bar -->
   <div class="views-bar">
-    <span class="views-label">Views</span>
+    <span class="views-label" data-i18n="views.label">Views</span>
     <div class="view-pills" id="viewPills"></div>
     <div class="save-view-wrap">
       <button class="btn-save-view" id="btnSaveView" onclick="openSaveView()">
         <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5.5 1v9M1 5.5h9"/></svg>
-        Save view
+        <span data-i18n="views.save">Save view</span>
       </button>
       <div class="save-popover hidden" id="savePopover">
-        <input id="viewNameInput" placeholder="Name this view…" maxlength="32"
+        <input id="viewNameInput" data-i18n-placeholder="views.namePlaceholder" placeholder="Name this view…" maxlength="32"
                onkeydown="if(event.key==='Enter')confirmSaveView();if(event.key==='Escape')closeSaveView()">
-        <button class="btn-pop-ok" onclick="confirmSaveView()">Save</button>
-        <button class="btn-pop-cancel" onclick="closeSaveView()">Cancel</button>
+        <button class="btn-pop-ok" onclick="confirmSaveView()" data-i18n="btn.save">Save</button>
+        <button class="btn-pop-cancel" onclick="closeSaveView()" data-i18n="btn.cancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -629,7 +670,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 <aside class="drawer" id="shipmentDrawer" role="dialog" aria-modal="true" aria-labelledby="dId">
   <div class="drawer-header">
     <div class="drawer-header-left">
-      <span class="drawer-eyebrow">Shipment Detail</span>
+      <span class="drawer-eyebrow" data-i18n="drawer.title">Shipment Detail</span>
       <div class="drawer-id" id="dId">—</div>
       <div id="dStatusBadge"></div>
     </div>
@@ -641,6 +682,123 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 </aside>
 
 <script>
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function _isDark(){
+  const t=document.documentElement.dataset.theme;
+  if(t)return t==='dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function updateThemeBtn(){
+  const btn=document.getElementById('themeToggle');
+  if(!btn)return;
+  if(_isDark()){
+    btn.innerHTML='<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="2.5"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.8 2.8l1 1M10.2 10.2l1 1M10.2 2.8l1-1M2.8 10.2l1-1"/></svg>';
+    btn.title='Switch to light mode';
+  }else{
+    btn.innerHTML='<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 8.5a6 6 0 0 1-7-7 5.5 5.5 0 1 0 7 7z"/></svg>';
+    btn.title='Switch to dark mode';
+  }
+}
+function toggleTheme(){
+  const next=_isDark()?'light':'dark';
+  document.documentElement.dataset.theme=next;
+  localStorage.setItem('nuvo_theme',next);
+  updateThemeBtn();
+}
+
+// ── Translations ──────────────────────────────────────────────────────────────
+const TRANS={
+  en:{
+    'header.title':'Operations Board','header.live':'Live','header.email':'Email Update','header.refresh':'Refresh',
+    'kpi.total.label':'Total Shipments','kpi.total.sub':'In system',
+    'kpi.live.label':'Live Shipments','kpi.live.sub':'In transit',
+    'kpi.today.label':'Scheduled Today','kpi.today.sub':'Delivery appointments',
+    'kpi.week.label':'This Week','kpi.week.sub':'Upcoming deliveries',
+    'srch.shipment':'Shipment ID','srch.trailer':'Trailer #','srch.ref':'Customer Ref',
+    'btn.columns':'Columns','btn.clearFilters':'Clear filters',
+    'btn.save':'Save','btn.cancel':'Cancel',
+    'views.label':'Views','views.save':'Save view','views.namePlaceholder':'Name this view…',
+    'filter.allCarriers':'All carriers','filter.allShippers':'All shippers',
+    'filter.allEvents':'All events','filter.allReps':'All reps',
+    'filter.carrier':'Carrier','filter.shipper':'Shipper',
+    'filter.lastEvent':'Last Event','filter.opsRep':'Ops Rep',
+    'filter.pickupDate':'Pickup date','filter.deliveryDate':'Delivery date',
+    'drawer.title':'Shipment Detail',
+    'tbl.actions':'Actions',
+    'tbl.shipments':'shipments','tbl.of':'of',
+    'tbl.empty.title':'No shipments match','tbl.empty.sub':'Try adjusting your search or filters.',
+    'tbl.noGps':'No GPS coordinates available',
+    'tbl.nextEta':'Next event / ETA',
+    'tbl.route':'Route','tbl.details':'Shipment Details','tbl.timing':'Timing','tbl.links':'Links',
+    'tbl.carrier':'Carrier','tbl.location':'Current location','tbl.checkCall':'Last check-call',
+    'tbl.shipper':'Shipper','tbl.ref':'Customer ref','tbl.trailer':'Trailer',
+    'tbl.pickup':'Pickup','tbl.delivery':'Delivery','tbl.origin':'Origin','tbl.dest':'Destination',
+    'tbl.gps':'GPS','tbl.nuvoos':'NuvoOS',
+    'tbl.logEvent':'Log event','tbl.logBtn':'+ Log',
+    'bulk.selected':'selected','bulk.shipment':'shipment','bulk.shipments':'shipments',
+    'bulk.log':'Log Event','bulk.email':'Email Update','bulk.clear':'Clear selection',
+    'event.logFor':'Log Event for','event.shipment':'Shipment','event.shipments':'Shipments',
+    'event.submit':'Submit Event','event.submitting':'Submitting…',
+    'event.suggestedNext':'Suggested next event',
+    'lastUpdated':'Last updated:',
+    'err.loadData':'Unable to load data','err.loadSub':'Could not reach Snowflake. Check credentials or contact your admin.',
+    'err.apiKey':'API key is required.','err.shipmentId':'Shipment ID is required.',
+    'err.eventType':'Please select an event type.','err.eventTime':'Event time is required.',
+  },
+  es:{
+    'header.title':'Tablero de Operaciones','header.live':'En vivo','header.email':'Enviar Actualización','header.refresh':'Actualizar',
+    'kpi.total.label':'Embarques Totales','kpi.total.sub':'En el sistema',
+    'kpi.live.label':'Embarques en Tránsito','kpi.live.sub':'En tránsito',
+    'kpi.today.label':'Programados Hoy','kpi.today.sub':'Citas de entrega',
+    'kpi.week.label':'Esta Semana','kpi.week.sub':'Entregas próximas',
+    'srch.shipment':'ID de Embarque','srch.trailer':'# de Caja','srch.ref':'Ref. del Cliente',
+    'btn.columns':'Columnas','btn.clearFilters':'Limpiar filtros',
+    'btn.save':'Guardar','btn.cancel':'Cancelar',
+    'views.label':'Vistas','views.save':'Guardar vista','views.namePlaceholder':'Nombra esta vista…',
+    'filter.allCarriers':'Todos los transportistas','filter.allShippers':'Todos los embarcadores',
+    'filter.allEvents':'Todos los eventos','filter.allReps':'Todos los reps',
+    'filter.carrier':'Transportista','filter.shipper':'Embarcador',
+    'filter.lastEvent':'Último Evento','filter.opsRep':'Rep. Ops',
+    'filter.pickupDate':'Fecha de recogida','filter.deliveryDate':'Fecha de entrega',
+    'drawer.title':'Detalle del Embarque',
+    'tbl.actions':'Acciones',
+    'tbl.shipments':'embarques','tbl.of':'de',
+    'tbl.empty.title':'Sin resultados','tbl.empty.sub':'Intenta ajustar tu búsqueda o filtros.',
+    'tbl.noGps':'Sin coordenadas GPS disponibles',
+    'tbl.nextEta':'Próximo evento / ETA',
+    'tbl.route':'Ruta','tbl.details':'Detalles del Embarque','tbl.timing':'Fechas','tbl.links':'Enlaces',
+    'tbl.carrier':'Transportista','tbl.location':'Ubicación actual','tbl.checkCall':'Último check-call',
+    'tbl.shipper':'Embarcador','tbl.ref':'Ref. cliente','tbl.trailer':'Caja',
+    'tbl.pickup':'Recogida','tbl.delivery':'Entrega','tbl.origin':'Origen','tbl.dest':'Destino',
+    'tbl.gps':'GPS','tbl.nuvoos':'NuvoOS',
+    'tbl.logEvent':'Registrar evento','tbl.logBtn':'+ Log',
+    'bulk.selected':'seleccionados','bulk.shipment':'embarque','bulk.shipments':'embarques',
+    'bulk.log':'Registrar Evento','bulk.email':'Enviar Actualización','bulk.clear':'Limpiar selección',
+    'event.logFor':'Registrar Evento para','event.shipment':'Embarque','event.shipments':'Embarques',
+    'event.submit':'Enviar Evento','event.submitting':'Enviando…',
+    'event.suggestedNext':'Próximo evento sugerido',
+    'lastUpdated':'Última actualización:',
+    'err.loadData':'No se pudo cargar la información','err.loadSub':'No se pudo conectar a Snowflake. Verifica las credenciales o contacta a tu administrador.',
+    'err.apiKey':'Se requiere clave API.','err.shipmentId':'Se requiere ID de Embarque.',
+    'err.eventType':'Por favor selecciona un tipo de evento.','err.eventTime':'Se requiere fecha y hora del evento.',
+  }
+};
+let _lang=localStorage.getItem('nuvo_lang')||'en';
+function t(key){return(TRANS[_lang]||TRANS.en)[key]||key;}
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=t(el.dataset.i18nPlaceholder));
+  const lb=document.getElementById('langToggle');if(lb)lb.textContent=_lang==='en'?'ES':'EN';
+  document.documentElement.lang=_lang==='es'?'es-MX':'en';
+}
+function toggleLang(){
+  _lang=_lang==='en'?'es':'en';
+  localStorage.setItem('nuvo_lang',_lang);
+  applyLang();
+  // Rebuild dynamic content in new language
+  if(_filtered.length||_allRows.length){renderTable();buildHeader();}
+}
+
 // ── Config ───────────────────────────────────────────────────────────────────
 const API_URL    = "/api/snowflake";
 const REFRESH_MS = 5 * 60 * 1000;
@@ -771,9 +929,9 @@ async function loadData(){
     filterTable(); // also updates KPIs
     geocodeDestinations(); // async — fills geo cache then re-renders
 
-    document.getElementById("lastUpdated").textContent="Last updated: "+fmtTime(new Date());
+    document.getElementById("lastUpdated").textContent=t('lastUpdated')+" "+fmtTime(new Date());
   }catch(e){
-    document.getElementById("tableBody").innerHTML='<tr><td colspan="99"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Unable to load data</div><div class="empty-sub">Could not reach Snowflake. Check credentials or contact your admin.</div></div></td></tr>';
+    document.getElementById("tableBody").innerHTML=`<tr><td colspan="99"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">${t('err.loadData')}</div><div class="empty-sub">${t('err.loadSub')}</div></div></td></tr>`;
     console.error(e);
   }
   setBtnSpinning(false);
@@ -786,7 +944,7 @@ function buildHeader(){
   const partSel = _selectedRows.size > 0 && _selectedRows.size < _filtered.length;
   document.getElementById("tableHead").innerHTML="<tr>"+
     `<th class="th-check"><input type="checkbox" id="selectAllChk" ${allSel?"checked":""} onclick="event.stopPropagation()" onchange="toggleSelectAll(this.checked)" title="Select all"></th>`+
-    `<th class="th-actions">Actions</th>`+
+    `<th class="th-actions">${t('tbl.actions')}</th>`+
     visCols.map(col=>{
     const idx=_colOrder.indexOf(col);
     return`<th draggable="true" data-col="${ea(col)}" data-idx="${idx}"
@@ -869,13 +1027,13 @@ function buildFilters(){
 
 // ── Multi-select ──────────────────────────────────────────────────────────────
 const _MSEL_TYPES = {
-  carrier:   { set: ()=>_selCarriers,   placeholder:"All carriers" },
-  shipper:   { set: ()=>_selShippers,   placeholder:"All shippers" },
-  lastEvent: { set: ()=>_selLastEvents, placeholder:"All events"   },
-  opsRep:    { set: ()=>_selOpsReps,    placeholder:"All reps"     }
+  carrier:   { set: ()=>_selCarriers,   placeholderKey:"filter.allCarriers" },
+  shipper:   { set: ()=>_selShippers,   placeholderKey:"filter.allShippers" },
+  lastEvent: { set: ()=>_selLastEvents, placeholderKey:"filter.allEvents"   },
+  opsRep:    { set: ()=>_selOpsReps,    placeholderKey:"filter.allReps"     }
 };
 function getMselSet(type){ return _MSEL_TYPES[type]?.set() || new Set(); }
-function getMselPlaceholder(type){ return _MSEL_TYPES[type]?.placeholder || "All"; }
+function getMselPlaceholder(type){ return t(_MSEL_TYPES[type]?.placeholderKey || "filter.allCarriers"); }
 
 function buildMsel(type, col, groupId, alwaysShow){
   showEl(groupId, col ? true : alwaysShow);
@@ -1146,13 +1304,13 @@ function updateBulkBar() {
   const bar = document.getElementById("bulkBar");
   if (!bar) return;
   bar.classList.toggle("visible", n > 0);
-  document.getElementById("bulkCount").textContent = `${n} shipment${n === 1 ? "" : "s"} selected`;
+  document.getElementById("bulkCount").textContent = `${n} ${n===1?t('bulk.shipment'):t('bulk.shipments')} ${t('bulk.selected')}`;
 }
 
 function openBulkEventModal() {
   _bulkMode = true;
   const n = _selectedRows.size;
-  document.getElementById("evModalTitle").textContent = `Log Event for ${n} Shipment${n === 1 ? "" : "s"}`;
+  document.getElementById("evModalTitle").textContent = `${t('event.logFor')} ${n} ${n===1?t('event.shipment'):t('event.shipments')}`;
   document.getElementById("evShipmentGroup").style.display = "none";
   const savedKey = localStorage.getItem(LS_API_KEY) || "";
   sv("evApiKey", savedKey);
@@ -1168,11 +1326,11 @@ function renderTable(){
   const tbody=document.getElementById("tableBody");
   const total=_allRows.length,shown=_filtered.length;
   document.getElementById("resultCount").textContent=
-    shown===total?`${total} shipments`:`${shown} of ${total} shipments`;
+    shown===total?`${total} ${t('tbl.shipments')}`:`${shown} ${t('tbl.of')} ${total} ${t('tbl.shipments')}`;
 
   const visCols=_colOrder.filter(c=>!_hiddenCols.has(c));
   if(!_filtered.length){
-    tbody.innerHTML=`<tr><td colspan="${visCols.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">No shipments match</div><div class="empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="${visCols.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">${t('tbl.empty.title')}</div><div class="empty-sub">${t('tbl.empty.sub')}</div></div></td></tr>`;
     updatePagination(0);
     return;
   }
@@ -1201,7 +1359,7 @@ function renderTable(){
     const lastEvt = row[_cm.lastEvent]||"";
     const sel = _selectedRows.has(absIdx);
     const chkTd=`<td class="td-check" onclick="event.stopPropagation()"><input type="checkbox" ${sel?"checked":""} onchange="toggleRowSelect(${absIdx},this.checked)" onclick="event.stopPropagation()"></td>`;
-    const actTd=`<td class="td-actions" onclick="event.stopPropagation()"><button class="btn-row-log" onclick="openEventModal('${sid}','${eh(lastEvt)}')">+ Log</button></td>`;
+    const actTd=`<td class="td-actions" onclick="event.stopPropagation()"><button class="btn-row-log" onclick="openEventModal('${sid}','${eh(lastEvt)}')">${t('tbl.logBtn')}</button></td>`;
     return`<tr class="clickable${sel?" row-selected":""}" onclick="openDrawer(${absIdx})">${chkTd}${actTd}${tds}</tr>`;
   }).join("");
 
@@ -1231,7 +1389,7 @@ function updateActiveCount(){
   let n=textIds.filter(id=>gv(id)).length;
   n+=(_selCarriers.size>0?1:0)+(_selShippers.size>0?1:0)+(_selLastEvents.size>0?1:0)+(_selOpsReps.size>0?1:0);
   const el=document.getElementById("activeCount");
-  el.textContent=n+" active";
+  el.textContent=n+(_lang==='es'?' activos':' active');
   el.classList.toggle("show",n>0);
 }
 
@@ -1373,14 +1531,26 @@ function buildColDrop(){
       <button class="btn-show-all" onclick="showAllCols()">Show all</button>
       <button class="btn-show-all" onclick="hideAllCols()" style="background:var(--bg2);color:var(--tx2)">Hide all</button>
     </div>
+  </div>
+  <div class="col-vis-search-wrap">
+    <input class="col-vis-search" type="text" placeholder="Search columns…"
+           oninput="filterColItems(this.value)" onclick="event.stopPropagation()">
   </div>`+
   _colOrder.map(col=>`
-    <div class="msel-item" onclick="onColVisClick(event,'${ea(col)}')">
+    <div class="msel-item col-vis-item" onclick="onColVisClick(event,'${ea(col)}')">
       <input type="checkbox" data-col="${ea(col)}" ${_hiddenCols.has(col)?'':'checked'}
              onclick="event.stopPropagation()"
              onchange="toggleColVis('${ea(col)}',this.checked)">
       <span>${eh(col.replace(/_/g,' '))}</span>
     </div>`).join('');
+}
+
+function filterColItems(q){
+  const lq=q.toLowerCase();
+  document.querySelectorAll('#colVisDrop .col-vis-item').forEach(item=>{
+    const label=(item.querySelector('span')?.textContent||'').toLowerCase();
+    item.classList.toggle('msel-hidden',!!(lq&&!label.includes(lq)));
+  });
 }
 
 function onColVisClick(e,col){
@@ -1648,7 +1818,7 @@ function openDrawer(rowIdx){
   mapDiv.id="dMap";
   if(!coords){
     mapDiv.className="map-placeholder";
-    mapDiv.innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span style="font-size:12px">No GPS coordinates available</span>`;
+    mapDiv.innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg><span style="font-size:12px">${t('tbl.noGps')}</span>`;
   }
   body.appendChild(mapDiv);
 
@@ -1657,7 +1827,7 @@ function openDrawer(rowIdx){
     const el=document.createElement("div");
     el.innerHTML=`<div class="eta-card">
       <div class="eta-left">
-        <div class="eta-label">Next event / ETA</div>
+        <div class="eta-label">${t('tbl.nextEta')}</div>
         <div class="eta-value">${eh(nextEvt)}</div>
       </div>
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
@@ -1669,12 +1839,12 @@ function openDrawer(rowIdx){
   const originLabel = origin||shipper||"—";
   const destLabel   = dest||"—";
   if(originLabel!=="—"||destLabel!=="—"||carrier){
-    const sec=mkSec("Route");
+    const sec=mkSec(t('tbl.route'));
     const locPill=locCity
       ?`<div class="loc-pill"><span class="loc-dot"></span>${eh(locCity)}</div>`:"";
     sec.innerHTML+=`<div class="route-banner">
       <div class="rp">
-        <div class="rp-label">Origin</div>
+        <div class="rp-label">${t('tbl.origin')}</div>
         <div class="rp-name" title="${eh(originLabel)}">${eh(originLabel)}</div>
         ${pickup?`<div class="rp-date">${fmtAppt(pickup)}</div>`:""}
       </div>
@@ -1684,7 +1854,7 @@ function openDrawer(rowIdx){
         ${carrier?`<div class="rp-carrier-tag" title="${eh(carrier)}">${eh(carrier)}</div>`:""}
       </div>
       <div class="rp" style="text-align:right">
-        <div class="rp-label" style="text-align:right">Destination</div>
+        <div class="rp-label" style="text-align:right">${t('tbl.dest')}</div>
         <div class="rp-name" style="text-align:right" title="${eh(destLabel)}">${eh(destLabel)}</div>
         ${delivery?`<div class="rp-date" style="text-align:right">${fmtAppt(delivery)}</div>`:""}
       </div>
@@ -1694,15 +1864,15 @@ function openDrawer(rowIdx){
 
   // ── Key details (2-column grid, client view) ──
   const details=[];
-  if(ref)       details.push(["Customer Ref",  eh(ref),           "nuvo"]);
-  if(pickup)    details.push(["Pickup",         fmtAppt(pickup),  ""]);
-  if(carrier)   details.push(["Carrier",        eh(carrier),       ""]);
-  if(delivery)  details.push(["Delivery Appt.", fmtAppt(delivery),""]);
-  if(trailer)   details.push(["Trailer #",      eh(trailer),       ""]);
-  if(checkCall) details.push(["Last Check Call",fmtAppt(checkCall)||eh(checkCall),""]);
+  if(ref)       details.push([t('tbl.ref'),       eh(ref),           "nuvo"]);
+  if(pickup)    details.push([t('tbl.pickup'),    fmtAppt(pickup),  ""]);
+  if(carrier)   details.push([t('tbl.carrier'),   eh(carrier),       ""]);
+  if(delivery)  details.push([t('tbl.delivery'),  fmtAppt(delivery),""]);
+  if(trailer)   details.push([t('tbl.trailer'),   eh(trailer),       ""]);
+  if(checkCall) details.push([t('tbl.checkCall'), fmtAppt(checkCall)||eh(checkCall),""]);
 
   if(details.length){
-    const sec=mkSec("Details");
+    const sec=mkSec(t('tbl.details'));
     // Ensure even count for 2-col grid
     if(details.length%2!==0)details.push(["","","muted"]);
     sec.innerHTML+=`<div class="detail-grid">${
@@ -1737,7 +1907,7 @@ function openDrawer(rowIdx){
   const _logBtn=document.createElement("button");
   _logBtn.type="button";
   _logBtn.style.cssText="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#357261;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s";
-  _logBtn.innerHTML=`<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg> Log Event`;
+  _logBtn.innerHTML=`<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 1v10M1 6h10"/></svg> ${t('tbl.logEvent')}`;
   _logBtn.onmouseover=()=>_logBtn.style.background="#2a5c4d";
   _logBtn.onmouseout=()=>_logBtn.style.background="#357261";
   _logBtn.onclick=()=>openEventModal(id==="—"?"":id, status);
@@ -1899,7 +2069,7 @@ function filterEvTypeItems(input) {
 
 function openEventModal(shipmentId, lastEventName) {
   _bulkMode = false;
-  document.getElementById("evModalTitle").textContent = "Log Load Event";
+  document.getElementById("evModalTitle").textContent = t('tbl.logEvent');
   document.getElementById("evShipmentGroup").style.display = "";
   const savedKey = localStorage.getItem(LS_API_KEY) || "";
   sv("evApiKey", savedKey);
@@ -1947,10 +2117,10 @@ async function submitLoadEvent() {
   const errEl = document.getElementById("evError");
   errEl.classList.add("hidden");
 
-  if (!key)         return showEvError("API key is required.");
-  if (!_bulkMode && !shipmentId)  return showEvError("Shipment ID is required.");
-  if (!eventTypeId) return showEvError("Please select an event type.");
-  if (!eventTimeRaw) return showEvError("Event time is required.");
+  if (!key)         return showEvError(t('err.apiKey'));
+  if (!_bulkMode && !shipmentId)  return showEvError(t('err.shipmentId'));
+  if (!eventTypeId) return showEvError(t('err.eventType'));
+  if (!eventTimeRaw) return showEvError(t('err.eventTime'));
 
   // Save key to localStorage for next time
   localStorage.setItem(LS_API_KEY, key);
@@ -1975,7 +2145,7 @@ async function submitLoadEvent() {
     const indices = [..._selectedRows];
     let success = 0, fail = 0;
     for (let idx = 0; idx < indices.length; idx++) {
-      btn.textContent = `Submitting ${idx + 1}/${indices.length}…`;
+      btn.textContent = `${t('event.submitting').replace('…','')} ${idx + 1}/${indices.length}…`;
       const row = _filtered[indices[idx]];
       const sid = row[_cm.shipmentId];
       try {
@@ -1988,7 +2158,7 @@ async function submitLoadEvent() {
       } catch { fail++; }
     }
     btn.disabled = false;
-    btn.textContent = "Submit Event";
+    btn.textContent = t('event.submit');
     closeEventModal();
     clearSelection();
     if (fail === 0) showToast(`Event logged for ${success} shipment${success === 1 ? "" : "s"} ✓`, "ok");
@@ -1996,7 +2166,7 @@ async function submitLoadEvent() {
     return;
   }
 
-  btn.textContent = "Submitting…";
+  btn.textContent = t('event.submitting');
   try {
     const r = await fetch(
       nuvoUrl(`/api/internal/shipments/${shipmentId}/load_event`),
@@ -2019,7 +2189,7 @@ async function submitLoadEvent() {
     showEvError(err.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = "Submit Event";
+    btn.textContent = t('event.submit');
   }
 }
 
@@ -2242,6 +2412,8 @@ const filterTableDebounced      = debounce(filterTable, 250);
 const updateEmailPreviewDebounced = debounce(updateEmailPreview, 400);
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+updateThemeBtn();
+applyLang();
 loadGeoCache();
 loadViews();
 loadData();
@@ -2252,14 +2424,14 @@ setInterval(loadData,REFRESH_MS);
 <!-- ── Bulk Action Bar ────────────────────────────────────────────────────────── -->
 <div class="bulk-bar" id="bulkBar">
   <span class="bulk-count" id="bulkCount">0 selected</span>
-  <button class="btn-bulk-log" onclick="openBulkEventModal()">Log Event</button>
+  <button class="btn-bulk-log" onclick="openBulkEventModal()" data-i18n="bulk.log">Log Event</button>
   <button class="btn-bulk-email" onclick="openEmailModal()">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
     </svg>
-    Email Update
+    <span data-i18n="bulk.email">Email Update</span>
   </button>
-  <button class="btn-bulk-clear" onclick="clearSelection()">Clear selection</button>
+  <button class="btn-bulk-clear" onclick="clearSelection()" data-i18n="bulk.clear">Clear selection</button>
 </div>
 
 <!-- ── Email Status Update Modal ─────────────────────────────────────────────── -->
@@ -2333,7 +2505,7 @@ setInterval(loadData,REFRESH_MS);
                onblur="if(this.value.trim())loadEventTypes(this.value.trim())">
       </div>
       <div class="form-group" id="evShipmentGroup">
-        <label class="form-label">Shipment ID</label>
+        <label class="form-label" data-i18n="srch.shipment">Shipment ID</label>
         <input class="form-input" id="evShipmentId" type="text" placeholder="e.g. 12345" autocomplete="off">
       </div>
       <div class="form-group">
@@ -2360,8 +2532,8 @@ setInterval(loadData,REFRESH_MS);
       <div id="evError" class="ev-error hidden"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-pop-cancel" onclick="closeEventModal()">Cancel</button>
-      <button class="btn-pop-ok" id="evSubmitBtn" onclick="submitLoadEvent()">Submit Event</button>
+      <button class="btn-pop-cancel" onclick="closeEventModal()" data-i18n="btn.cancel">Cancel</button>
+      <button class="btn-pop-ok" id="evSubmitBtn" onclick="submitLoadEvent()" data-i18n="event.submit">Submit Event</button>
     </div>
   </div>
 </div>
