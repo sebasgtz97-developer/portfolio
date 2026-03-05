@@ -393,6 +393,13 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
 .btn-em-send{height:32px;padding:0 16px;background:var(--teal);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .15s;}
 .btn-em-send:hover{background:#163d32;}
 
+/* ── Pagination ─────────────────────────────────────────────────────────────── */
+.pagination-bar{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border-top:1px solid var(--bd);background:var(--panel);font-size:12px;color:var(--tx3);}
+.btn-page{height:28px;padding:0 12px;border:1px solid var(--bd);border-radius:6px;font-size:11px;font-weight:500;color:var(--tx2);background:var(--panel);cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-page:hover:not(:disabled){background:var(--bg);border-color:var(--bd2);}
+.btn-page:disabled{opacity:.35;cursor:not-allowed;}
+.page-info{font-size:12px;color:var(--tx3);white-space:nowrap;}
+
 /* ── Dark mode ───────────────────────────────────────────────────────────────── */
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -512,21 +519,21 @@ html:not([data-theme="light"]) @media(prefers-color-scheme:dark) tbody tr.clicka
       <span class="srch-label" data-i18n="srch.shipment">Shipment ID</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
-        <input class="srch-input" id="srchShipment" placeholder="e.g. SH-12345" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+        <input class="srch-input" id="srchShipment" placeholder="e.g. SH-12345" autocomplete="off" oninput="onSrchInput(this);filterTableDebounced()">
       </div>
     </div>
     <div class="srch-field">
       <span class="srch-label" data-i18n="srch.trailer">Trailer #</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
-        <input class="srch-input" id="srchTrailer" placeholder="e.g. AL15179" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+        <input class="srch-input" id="srchTrailer" placeholder="e.g. AL15179" autocomplete="off" oninput="onSrchInput(this);filterTableDebounced()">
       </div>
     </div>
     <div class="srch-field">
       <span class="srch-label" data-i18n="srch.ref">Customer Ref</span>
       <div class="srch-iw">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="5" r="3.5"/><path d="M10.5 10.5L7.5 7.5"/></svg>
-        <input class="srch-input" id="srchRef" placeholder="Reference / PO #" autocomplete="off" oninput="onSrchInput(this);filterTable()">
+        <input class="srch-input" id="srchRef" placeholder="Reference / PO #" autocomplete="off" oninput="onSrchInput(this);filterTableDebounced()">
       </div>
     </div>
     <div class="search-spacer"></div>
@@ -597,9 +604,9 @@ html:not([data-theme="light"]) @media(prefers-color-scheme:dark) tbody tr.clicka
     <div class="fg" id="fgPickup" style="display:none">
       <span class="fg-label" data-i18n="filter.pickupDate">Pickup date</span>
       <div class="date-pair">
-        <input type="date" class="fdate" id="fPickupFrom" onchange="onFdateChange(this);filterTable()">
+        <input type="date" class="fdate" id="fPickupFrom" onchange="onFdateChange(this);filterTableDebounced()">
         <span class="date-arrow">→</span>
-        <input type="date" class="fdate" id="fPickupTo" onchange="onFdateChange(this);filterTable()">
+        <input type="date" class="fdate" id="fPickupTo" onchange="onFdateChange(this);filterTableDebounced()">
       </div>
     </div>
     <div class="fsep" id="fgPickupSep" style="display:none"></div>
@@ -607,9 +614,9 @@ html:not([data-theme="light"]) @media(prefers-color-scheme:dark) tbody tr.clicka
     <div class="fg" id="fgDelivery">
       <span class="fg-label" data-i18n="filter.deliveryDate">Delivery date</span>
       <div class="date-pair">
-        <input type="date" class="fdate" id="fDeliveryFrom" onchange="onFdateChange(this);filterTable()">
+        <input type="date" class="fdate" id="fDeliveryFrom" onchange="onFdateChange(this);filterTableDebounced()">
         <span class="date-arrow">→</span>
-        <input type="date" class="fdate" id="fDeliveryTo" onchange="onFdateChange(this);filterTable()">
+        <input type="date" class="fdate" id="fDeliveryTo" onchange="onFdateChange(this);filterTableDebounced()">
       </div>
     </div>
 
@@ -648,6 +655,11 @@ html:not([data-theme="light"]) @media(prefers-color-scheme:dark) tbody tr.clicka
           <tr><td><div class="skel" style="width:65px"></div></td><td><div class="skel" style="width:140px"></div></td><td><div class="skel" style="width:100px"></div></td><td><div class="skel" style="width:108px"></div></td><td><div class="skel" style="width:85px"></div></td></tr>
         </tbody>
       </table>
+    </div>
+    <div class="pagination-bar" id="paginationBar" style="display:none">
+      <button class="btn-page" id="btnPrevPage" onclick="goPage(_page-1)">← Prev</button>
+      <span class="page-info" id="pageInfo"></span>
+      <button class="btn-page" id="btnNextPage" onclick="goPage(_page+1)">Next →</button>
     </div>
   </div>
 
@@ -790,6 +802,7 @@ function toggleLang(){
 // ── Config ───────────────────────────────────────────────────────────────────
 const API_URL    = "/api/snowflake";
 const REFRESH_MS = 5 * 60 * 1000;
+const PAGE_SIZE  = 100;
 const LS_VIEWS   = "nuvo_ops_views";
 const LS_COLS    = "nuvo_ops_col_order";
 const LS_GEO        = "nuvo_geo_cache";
@@ -819,6 +832,7 @@ let _hiddenCols  = new Set();
 let _selectedRows = new Set(); // indices into _filtered
 let _bulkMode     = false;
 let _kpiFilter    = null; // 'live' | 'today' | 'week' | 'total' | null
+let _page         = 0;   // current pagination page
 
 // ── CSV parser (handles quoted multi-line fields and escaped quotes) ──────────
 function parseCSV(text){
@@ -1188,6 +1202,7 @@ function updateKPIs(rows){
 
 // ── Filter + render ───────────────────────────────────────────────────────────
 function filterTable(){
+  _page = 0;
   _selectedRows.clear();
   updateBulkBar();
   updateActiveCount();
@@ -1316,9 +1331,19 @@ function renderTable(){
   const visCols=_colOrder.filter(c=>!_hiddenCols.has(c));
   if(!_filtered.length){
     tbody.innerHTML=`<tr><td colspan="${visCols.length||5}"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">${t('tbl.empty.title')}</div><div class="empty-sub">${t('tbl.empty.sub')}</div></div></td></tr>`;
+    updatePagination(0);
     return;
   }
-  tbody.innerHTML=_filtered.map((row,i)=>{
+
+  // Clamp page to valid range
+  const totalPages=Math.max(1,Math.ceil(_filtered.length/PAGE_SIZE));
+  _page=Math.max(0,Math.min(_page,totalPages-1));
+
+  const pageStart=_page*PAGE_SIZE;
+  const pageRows=_filtered.slice(pageStart,pageStart+PAGE_SIZE);
+
+  tbody.innerHTML=pageRows.map((row,i)=>{
+    const absIdx=pageStart+i; // absolute index into _filtered for selection
     const tds=visCols.map(col=>{
       if(col===ETA_COL) return renderEtaCell(row);
       let val=row[col]||"";
@@ -1332,11 +1357,30 @@ function renderTable(){
     }).join("");
     const sid = eh(row[_cm.shipmentId]||"");
     const lastEvt = row[_cm.lastEvent]||"";
-    const sel = _selectedRows.has(i);
-    const chkTd=`<td class="td-check" onclick="event.stopPropagation()"><input type="checkbox" ${sel?"checked":""} onchange="toggleRowSelect(${i},this.checked)" onclick="event.stopPropagation()"></td>`;
+    const sel = _selectedRows.has(absIdx);
+    const chkTd=`<td class="td-check" onclick="event.stopPropagation()"><input type="checkbox" ${sel?"checked":""} onchange="toggleRowSelect(${absIdx},this.checked)" onclick="event.stopPropagation()"></td>`;
     const actTd=`<td class="td-actions" onclick="event.stopPropagation()"><button class="btn-row-log" onclick="openEventModal('${sid}','${eh(lastEvt)}')">${t('tbl.logBtn')}</button></td>`;
-    return`<tr class="clickable${sel?" row-selected":""}" onclick="openDrawer(${i})">${chkTd}${actTd}${tds}</tr>`;
+    return`<tr class="clickable${sel?" row-selected":""}" onclick="openDrawer(${absIdx})">${chkTd}${actTd}${tds}</tr>`;
   }).join("");
+
+  updatePagination(totalPages);
+}
+
+function updatePagination(totalPages){
+  const bar=document.getElementById("paginationBar");
+  if(!bar)return;
+  if(totalPages<=1){bar.style.display="none";return;}
+  bar.style.display="flex";
+  document.getElementById("pageInfo").textContent=
+    `Page ${_page+1} of ${totalPages} · ${_filtered.length} shipments`;
+  document.getElementById("btnPrevPage").disabled=_page===0;
+  document.getElementById("btnNextPage").disabled=_page>=totalPages-1;
+}
+
+function goPage(p){
+  _page=p;
+  renderTable();
+  document.querySelector(".table-wrap")?.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 
 // ── Active filter count ───────────────────────────────────────────────────────
@@ -2330,7 +2374,7 @@ function updateSubjectFromClient(){
   document.getElementById("emSubject").value=clientName
     ?"Shipment Status Update for "+clientName+" \u2014 "+dtStr
     :"Shipment Status Update \u2014 "+dtStr;
-  updateEmailPreview();
+  updateEmailPreviewDebounced();
 }
 
 function updateEmailPreview(){
@@ -2361,6 +2405,11 @@ async function sendEmail(){
     btn.textContent="Send Email";
   }
 }
+
+// ── Debounce utility ──────────────────────────────────────────────────────────
+function debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn,ms);};}
+const filterTableDebounced      = debounce(filterTable, 250);
+const updateEmailPreviewDebounced = debounce(updateEmailPreview, 400);
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 updateThemeBtn();
@@ -2401,7 +2450,7 @@ setInterval(loadData,REFRESH_MS);
       <div class="em-row2">
         <div class="em-field">
           <label class="em-label" for="emTo">To (recipient email)</label>
-          <input class="em-input" id="emTo" type="email" placeholder="client@example.com" oninput="updateEmailPreview()">
+          <input class="em-input" id="emTo" type="email" placeholder="client@example.com" oninput="updateEmailPreviewDebounced()">
         </div>
         <div class="em-field">
           <label class="em-label" for="emClientName">Client / Company name</label>
@@ -2411,16 +2460,16 @@ setInterval(loadData,REFRESH_MS);
       <div class="em-row2">
         <div class="em-field">
           <label class="em-label" for="emFrom">Your name (optional)</label>
-          <input class="em-input" id="emFrom" type="text" placeholder="Your name" oninput="updateEmailPreview()">
+          <input class="em-input" id="emFrom" type="text" placeholder="Your name" oninput="updateEmailPreviewDebounced()">
         </div>
         <div class="em-field">
           <label class="em-label" for="emSubject">Subject</label>
-          <input class="em-input" id="emSubject" type="text" oninput="updateEmailPreview()">
+          <input class="em-input" id="emSubject" type="text" oninput="updateEmailPreviewDebounced()">
         </div>
       </div>
       <div class="em-field">
         <label class="em-label" for="emMsg">Opening message (optional)</label>
-        <textarea class="em-textarea" id="emMsg" placeholder="Hi [client name], please find below the latest status for your shipments..." oninput="updateEmailPreview()"></textarea>
+        <textarea class="em-textarea" id="emMsg" placeholder="Hi [client name], please find below the latest status for your shipments..." oninput="updateEmailPreviewDebounced()"></textarea>
       </div>
       <div class="em-field">
         <span class="em-label">Email preview</span>
