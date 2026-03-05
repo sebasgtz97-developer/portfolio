@@ -168,9 +168,12 @@ header{background:var(--panel);border-bottom:1px solid var(--bd);padding:0 20px;
 .btn-col-vis:hover{border-color:var(--bd2);background:var(--bg)}
 .btn-col-vis.active{border-color:var(--teal);background:#F0FDF4;color:var(--teal);font-weight:600}
 .col-hidden-badge{min-width:16px;height:16px;padding:0 4px;background:var(--teal);color:#fff;border-radius:999px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
-.col-vis-drop{position:absolute;top:calc(100% + 4px);right:0;z-index:400;background:var(--panel);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:210px;max-height:300px;overflow-y:auto;padding:0}
+.col-vis-drop{position:absolute;top:calc(100% + 4px);right:0;z-index:400;background:var(--panel);border:1px solid var(--bd);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:220px;max-height:320px;overflow-y:auto;padding:0}
 .col-vis-drop.hidden{display:none}
 .col-vis-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 6px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--panel)}
+.col-vis-search-wrap{padding:6px 8px 4px;border-bottom:1px solid var(--bd);position:sticky;top:38px;background:var(--panel);z-index:1}
+.col-vis-search{width:100%;height:26px;padding:0 8px;border:1px solid var(--bd);border-radius:5px;font-size:11px;font-family:inherit;color:var(--tx1);background:var(--bg);outline:none;box-sizing:border-box}
+.col-vis-search:focus{border-color:var(--teal)}
 .col-vis-title{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em}
 .btn-show-all{font-size:11px;font-weight:500;color:var(--teal);background:none;border:none;cursor:pointer;padding:0;font-family:inherit}
 .btn-show-all:hover{text-decoration:underline}
@@ -225,6 +228,7 @@ tbody tr:hover td{background:#F9FAFB}
 tbody tr{transition:background .08s;animation:rowIn .18s ease both}
 @keyframes rowIn{from{opacity:0;transform:translateX(-3px)}to{opacity:1;transform:none}}
 td.col-id{font-weight:600;color:var(--teal)}
+[data-theme="dark"] td.col-id{color:var(--tx1)}
 
 /* Empty / skeleton */
 .empty-state{padding:52px 24px;text-align:center}
@@ -395,6 +399,7 @@ tbody tr.row-selected td{background:#f0fdf4 !important;}
     --bg:#0D1117;--panel:#161B22;--bd:#21262D;--bd2:#30363D;
     --tx1:#E6EDF3;--tx2:#C9D1D9;--tx3:#8B949E;--tx4:#484F58;
   }
+  :root:not([data-theme="light"]) td.col-id{color:var(--tx1)}
 }
 [data-theme="dark"]{
   --bg:#0D1117;--panel:#161B22;--bd:#21262D;--bd2:#30363D;
@@ -426,8 +431,8 @@ html:not([data-theme="light"]) @media(prefers-color-scheme:dark) tbody tr.clicka
 
 <header>
   <div class="hleft">
-    <svg width="160" height="28" viewBox="0 0 160 28" xmlns="http://www.w3.org/2000/svg" aria-label="Nuvocargo" role="img">
-      <text x="0" y="23" font-family="'Cormorant Garamond',Georgia,serif" font-size="26" font-weight="500" letter-spacing="0.3" fill="#1C4A3E">nuvocargo</text>
+    <svg width="124" height="34" viewBox="0 0 124 34" xmlns="http://www.w3.org/2000/svg" aria-label="Nuvocargo" role="img">
+      <text x="0" y="26" font-family="'Cormorant Garamond',Georgia,serif" font-size="26" font-weight="500" letter-spacing="0.3" fill="#1C4A3E">nuvocargo</text>
     </svg>
     <span class="htitle" data-i18n="header.title">Operations Board</span>
   </div>
@@ -1482,14 +1487,26 @@ function buildColDrop(){
       <button class="btn-show-all" onclick="showAllCols()">Show all</button>
       <button class="btn-show-all" onclick="hideAllCols()" style="background:var(--bg2);color:var(--tx2)">Hide all</button>
     </div>
+  </div>
+  <div class="col-vis-search-wrap">
+    <input class="col-vis-search" type="text" placeholder="Search columns…"
+           oninput="filterColItems(this.value)" onclick="event.stopPropagation()">
   </div>`+
   _colOrder.map(col=>`
-    <div class="msel-item" onclick="onColVisClick(event,'${ea(col)}')">
+    <div class="msel-item col-vis-item" onclick="onColVisClick(event,'${ea(col)}')">
       <input type="checkbox" data-col="${ea(col)}" ${_hiddenCols.has(col)?'':'checked'}
              onclick="event.stopPropagation()"
              onchange="toggleColVis('${ea(col)}',this.checked)">
       <span>${eh(col.replace(/_/g,' '))}</span>
     </div>`).join('');
+}
+
+function filterColItems(q){
+  const lq=q.toLowerCase();
+  document.querySelectorAll('#colVisDrop .col-vis-item').forEach(item=>{
+    const label=(item.querySelector('span')?.textContent||'').toLowerCase();
+    item.classList.toggle('msel-hidden',!!(lq&&!label.includes(lq)));
+  });
 }
 
 function onColVisClick(e,col){
