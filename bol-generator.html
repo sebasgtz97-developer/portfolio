@@ -586,8 +586,29 @@ textarea { resize: vertical; min-height: 50px; }
 }
 
 @media(max-width:900px){.app{grid-template-columns:1fr;height:auto}.pp{display:none}}
+
+/* ── Dark mode ──────────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1117;--panel:#161B22;--bd:#21262D;--bd2:#30363D;
+    --tx1:#E6EDF3;--tx2:#C9D1D9;--tx3:#8B949E;--tx4:#484F58;
+  }
+}
+[data-theme="dark"]{
+  --bg:#0D1117;--panel:#161B22;--bd:#21262D;--bd2:#30363D;
+  --tx1:#E6EDF3;--tx2:#C9D1D9;--tx3:#8B949E;--tx4:#484F58;
+}
+/* Keep the BOL document (printable) always light */
+[data-theme="dark"] .bol, [data-theme="dark"] .pp{background:#2a2a2a;}
+[data-theme="dark"] .bol{background:white;}
+
+/* ── Theme/Lang toggle buttons in header ──────────────────────────────────────── */
+.btn-ctrl{display:inline-flex;align-items:center;justify-content:center;background:var(--panel);color:var(--tx3);border:1px solid var(--bd);height:32px;padding:0 10px;border-radius:6px;font-weight:500;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s;gap:4px;white-space:nowrap;}
+.btn-ctrl:hover{background:var(--bg);border-color:var(--bd2);color:var(--tx1);}
+.btn-ctrl svg{width:13px;height:13px;}
 </style>
 </head>
+<script>(function(){var s=localStorage.getItem('nuvo_theme');if(s)document.documentElement.dataset.theme=s;})()</script>
 <body>
 
 <header>
@@ -596,10 +617,14 @@ textarea { resize: vertical; min-height: 50px; }
     <span class="htitle">BOL Generator</span>
   </div>
   <div class="hright">
-    <button class="btn-sec" onclick="clearForm()">Clear form</button>
+    <button class="btn-ctrl" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 8.5a6 6 0 0 1-7-7 5.5 5.5 0 1 0 7 7z"/></svg>
+    </button>
+    <button class="btn-ctrl" id="langToggle" onclick="toggleLang()" title="Switch language / Cambiar idioma">EN</button>
+    <button class="btn-sec" onclick="clearForm()" data-i18n="btn.clearForm">Clear form</button>
     <button class="btn-gen" onclick="generatePDF()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download PDF
+      <span data-i18n="btn.downloadPDF">Download PDF</span>
     </button>
   </div>
 </header>
@@ -609,7 +634,7 @@ textarea { resize: vertical; min-height: 50px; }
 
   <!-- UPLOAD -->
   <div class="upsec">
-    <h3>Import packing list</h3>
+    <h3 data-i18n="bol.import">Import packing list</h3>
     <div class="upzone" id="upzone">
       <input type="file" id="docfile" accept=".pdf,.xlsx,.xls,.csv" multiple onchange="handleUpload(event)">
       <div class="upicon">
@@ -625,7 +650,7 @@ textarea { resize: vertical; min-height: 50px; }
 
   <!-- SHIPMENT INFO -->
   <div class="fsec">
-    <h4>Shipment Info</h4>
+    <h4 data-i18n="bol.shipmentInfo">Shipment Info</h4>
     <div class="fr c2">
       <div class="fg"><label>Shipment ID</label><input type="text" id="shipmentId" placeholder="SH-00000" oninput="onShipmentIdInput(this.value)"></div>
       <div class="fg"><label>Date</label><input type="date" id="shipDate"></div>
@@ -686,21 +711,21 @@ textarea { resize: vertical; min-height: 50px; }
 
   <!-- SHIPPER -->
   <div class="fsec">
-    <h4>Ship From (Shipper)</h4>
+    <h4 data-i18n="bol.shipFrom">Ship From (Shipper)</h4>
     <div class="fr"><div class="fg"><label>Company Name</label><input type="text" id="shipperName" placeholder="Shipper company name"></div></div>
     <div class="fr"><div class="fg"><label>Address</label><textarea id="shipperAddr" rows="2" placeholder="Street, City, State, Zip"></textarea></div></div>
   </div>
 
   <!-- CONSIGNEE -->
   <div class="fsec">
-    <h4>Ship To (Consignee)</h4>
+    <h4 data-i18n="bol.shipTo">Ship To (Consignee)</h4>
     <div class="fr"><div class="fg"><label>Company Name</label><input type="text" id="consigneeName" placeholder="Consignee company name"></div></div>
     <div class="fr"><div class="fg"><label>Address</label><textarea id="consigneeAddr" rows="2" placeholder="Street, City, State, Zip"></textarea></div></div>
   </div>
 
   <!-- THIRD PARTY -->
   <div class="fsec">
-    <h4>Third Party Freight Bill To</h4>
+    <h4 data-i18n="bol.thirdParty">Third Party Freight Bill To</h4>
     <div class="fr"><div class="fg"><label>Name</label><input type="text" id="tpName" placeholder="Company / Person"></div></div>
     <div class="fr c2">
       <div class="fg"><label>Address</label><input type="text" id="tpAddr" placeholder="Street address"></div>
@@ -710,7 +735,7 @@ textarea { resize: vertical; min-height: 50px; }
 
   <!-- CARGO -->
   <div class="fsec">
-    <h4>Cargo Lines</h4>
+    <h4 data-i18n="bol.cargo">Cargo Lines</h4>
     <div style="overflow-x:auto">
       <table class="ctbl">
         <thead id="cargoHead">
@@ -2280,6 +2305,64 @@ function _applyRow(id, row){
   setSheetStatus("match", "🔗 Matched "+id+" — Carrier: "+carrier+" | Trailer: "+trailer+" | Ship To: "+dropoff+" | Appt: "+appt);
   render();
 }
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function _isDark(){
+  const t=document.documentElement.dataset.theme;
+  if(t)return t==='dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function updateThemeBtn(){
+  const btn=document.getElementById('themeToggle');
+  if(!btn)return;
+  if(_isDark()){
+    btn.innerHTML='<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="2.5"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.8 2.8l1 1M10.2 10.2l1 1M10.2 2.8l1-1M2.8 10.2l1-1"/></svg>';
+    btn.title='Switch to light mode';
+  }else{
+    btn.innerHTML='<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 8.5a6 6 0 0 1-7-7 5.5 5.5 0 1 0 7 7z"/></svg>';
+    btn.title='Switch to dark mode';
+  }
+}
+function toggleTheme(){
+  const next=_isDark()?'light':'dark';
+  document.documentElement.dataset.theme=next;
+  localStorage.setItem('nuvo_theme',next);
+  updateThemeBtn();
+}
+
+// ── Translations ──────────────────────────────────────────────────────────────
+const TRANS={
+  en:{
+    'btn.clearForm':'Clear form','btn.downloadPDF':'Download PDF',
+    'bol.import':'Import packing list','bol.shipmentInfo':'Shipment Info',
+    'bol.shipFrom':'Ship From (Shipper)','bol.shipTo':'Ship To (Consignee)',
+    'bol.thirdParty':'Third Party Freight Bill To','bol.cargo':'Cargo Lines',
+    'htitle':'BOL Generator',
+  },
+  es:{
+    'btn.clearForm':'Limpiar formulario','btn.downloadPDF':'Descargar PDF',
+    'bol.import':'Importar lista de empaque','bol.shipmentInfo':'Datos del Embarque',
+    'bol.shipFrom':'Origen (Embarcador)','bol.shipTo':'Destino (Consignatario)',
+    'bol.thirdParty':'Flete a Cargo de Tercero','bol.cargo':'Líneas de Carga',
+    'htitle':'Generador de BOL',
+  }
+};
+let _lang=localStorage.getItem('nuvo_lang')||'en';
+function t(key){return(TRANS[_lang]||TRANS.en)[key]||key;}
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+  const lb=document.getElementById('langToggle');if(lb)lb.textContent=_lang==='en'?'ES':'EN';
+  document.documentElement.lang=_lang==='es'?'es-MX':'en';
+}
+function toggleLang(){
+  _lang=_lang==='en'?'es':'en';
+  localStorage.setItem('nuvo_lang',_lang);
+  applyLang();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+updateThemeBtn();
+applyLang();
 </script>
 </body>
 </html>
