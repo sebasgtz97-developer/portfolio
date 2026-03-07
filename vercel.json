@@ -3,6 +3,12 @@
   "functions": {
     "api/shipment.js": {
       "maxDuration": 15
+    },
+    "api/snowflake.js": {
+      "maxDuration": 20
+    },
+    "api/ct-data.js": {
+      "maxDuration": 20
     }
   }
 }

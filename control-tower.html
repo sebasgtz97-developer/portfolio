@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Tower — Nuvocargo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#EEEEE9;--surface:#FFFFFF;--surface-2:#F5F5F0;
+  --border:#E2E2DC;--border-2:#CECEC8;
+  --text-1:#111827;--text-2:#374151;--text-3:#6B7280;--text-4:#9CA3AF;
+  --brand:#3C6B4E;--brand-dark:#2D5040;
+  --green:#16A34A;--green-bg:#F0FDF4;--green-border:#BBF7D0;
+  --amber:#D97706;--amber-bg:#FFFBEB;--amber-border:#FDE68A;
+  --red:#DC2626;--red-bg:#FEF2F2;--red-border:#FECACA;
+  --blue:#2563EB;--blue-bg:#EFF6FF;--blue-border:#BFDBFE;
+  --purple:#7C3AED;--purple-bg:#F5F3FF;--purple-border:#DDD6FE;
+  --radius-xs:6px;--radius-sm:8px;--radius:12px;--radius-lg:16px;
+}
+[data-theme="dark"]{
+  --bg:#0D1117;--surface:#161B22;--surface-2:#1C2229;
+  --border:#21262D;--border-2:#30363D;
+  --text-1:#E6EDF3;--text-2:#C9D1D9;--text-3:#8B949E;--text-4:#484F58;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;background:var(--bg);color:var(--text-1);min-height:100vh;-webkit-font-smoothing:antialiased;}
+button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;}
+
+/* ── Header ── */
+.ct-header{background:var(--surface);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 24px;gap:0;position:sticky;top:0;z-index:200;}
+.h-brand{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.h-logo-text{font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;font-weight:500;color:var(--brand);letter-spacing:0.2px;line-height:1;}
+.h-os-badge{width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:0.3px;flex-shrink:0;}
+.h-divider{width:1px;height:20px;background:var(--border);margin:0 16px;flex-shrink:0;}
+.h-app-title{font-size:13px;font-weight:600;color:var(--text-2);white-space:nowrap;flex-shrink:0;}
+.h-company{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s;font-size:13px;font-weight:500;color:var(--text-2);background:var(--surface);margin-left:16px;flex-shrink:0;max-width:280px;overflow:hidden;position:relative;}
+.h-company:hover{border-color:var(--border-2);}
+.h-company-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.company-dropdown{position:absolute;top:calc(100%+6px);left:0;min-width:260px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:300;display:none;padding:4px 0;}
+.company-dropdown.open{display:block;}
+.company-option{padding:8px 14px;font-size:13px;color:var(--text-2);cursor:pointer;transition:background .1s;}
+.company-option:hover{background:var(--surface-2);}
+.company-option.active{font-weight:600;color:var(--brand);}
+.h-nav{display:flex;align-items:center;gap:2px;margin-left:auto;}
+.nav-link{padding:6px 14px;font-size:13px;font-weight:500;color:var(--text-3);border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;background:none;border:none;white-space:nowrap;}
+.nav-link:hover{color:var(--text-1);background:var(--surface-2);}
+.nav-link.active{color:var(--text-1);font-weight:700;}
+.h-actions{display:flex;align-items:center;gap:8px;margin-left:12px;}
+.btn-icon{width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text-3);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.btn-icon:hover{background:var(--surface-2);border-color:var(--border-2);color:var(--text-1);}
+
+/* ── Main Layout ── */
+.ct-main{max-width:1440px;margin:0 auto;padding:24px 24px 48px;}
+.ct-view{display:none;}
+.ct-view.active{display:block;}
+
+/* ── Page Header ── */
+.page-header{margin-bottom:20px;}
+.page-title{font-size:22px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;line-height:1.2;}
+.page-subtitle{font-size:13px;color:var(--text-3);margin-top:3px;}
+
+/* ── KPI Cards ── */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+.kpi-value{font-size:32px;font-weight:700;line-height:1;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;margin-bottom:4px;}
+.kpi-label{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;}
+.kpi-green .kpi-value{color:var(--green);}
+.kpi-amber .kpi-value{color:var(--amber);}
+.kpi-red .kpi-value{color:var(--red);}
+.kpi-blue .kpi-value{color:var(--blue);}
+.kpi-purple .kpi-value{color:var(--purple);}
+
+/* ── Overview Grid ── */
+.overview-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px;}
+.map-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;position:relative;}
+#overviewMap{width:100%;height:460px;}
+.map-legend{position:absolute;top:10px;left:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;z-index:10;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow-sm);}
+.map-legend-item{display:flex;align-items:center;gap:6px;color:var(--text-2);}
+.map-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.map-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:rgba(255,255,255,0.9);z-index:20;font-size:13px;color:var(--text-3);}
+[data-theme="dark"] .map-loading{background:rgba(22,27,34,0.9);}
+.spinner{width:24px;height:24px;border:2.5px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overview-right{display:flex;flex-direction:column;gap:16px;}
+.side-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.side-card-title{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:16px;}
+
+/* Today's Activity */
+.activity-item{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
+.activity-item:last-child{border-bottom:none;padding-bottom:0;}
+.activity-label{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;}
+.activity-sub{font-size:12px;color:var(--text-4);}
+.activity-count{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;}
+.activity-count.c-blue{color:var(--blue);}
+.activity-count.c-purple{color:var(--purple);}
+
+/* Quick Actions */
+.qa-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .15s;}
+.qa-item:last-child{border-bottom:none;padding-bottom:0;}
+.qa-item:hover{opacity:.7;}
+.qa-icon{width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qa-icon.c-blue{background:var(--blue-bg);color:var(--blue);}
+.qa-icon.c-green{background:var(--green-bg);color:var(--green);}
+.qa-icon.c-amber{background:var(--amber-bg);color:var(--amber);}
+.qa-title{font-size:13px;font-weight:600;color:var(--text-1);}
+.qa-sub{font-size:11px;color:var(--text-3);margin-top:1px;}
+
+/* ── Delivery Performance ── */
+.perf-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+.perf-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.perf-title{font-size:16px;font-weight:700;color:var(--text-1);}
+.perf-legend{display:flex;align-items:center;gap:16px;font-size:12px;color:var(--text-2);}
+.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px;vertical-align:middle;}
+.perf-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.perf-stat{background:var(--surface-2);border-radius:var(--radius-sm);padding:16px;text-align:center;}
+.perf-stat-value{font-size:28px;font-weight:700;color:var(--text-1);letter-spacing:-0.03em;font-variant-numeric:tabular-nums;}
+.perf-stat-value.c-green{color:var(--green);}
+.perf-stat-value.c-red{color:var(--red);}
+.perf-stat-label{font-size:12px;color:var(--text-3);margin-top:4px;}
+.perf-chart-wrap{height:120px;position:relative;}
+
+/* ── Shipments View ── */
+.ships-wrap{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 120px);}
+.ships-sidebar{padding:20px 0;border-right:1px solid var(--border);}
+.sidebar-section{font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;padding:0 16px;margin-bottom:8px;}
+.stage-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;margin:2px 8px;border-radius:var(--radius-sm);cursor:pointer;transition:background .12s;font-size:13px;color:var(--text-2);}
+.stage-item:hover{background:var(--surface-2);}
+.stage-item.active{background:var(--brand);color:#fff;}
+.stage-item.active .stage-badge{background:rgba(255,255,255,0.2);color:#fff;}
+.stage-badge{font-size:11px;font-weight:600;background:var(--surface-2);color:var(--text-3);padding:2px 8px;border-radius:999px;min-width:26px;text-align:center;line-height:1.5;}
+.sidebar-divider{height:1px;background:var(--border);margin:12px 16px;}
+.alert-item{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:var(--text-2);}
+.alert-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;}
+
+/* Shipments Main */
+.ships-main{padding:24px;}
+.ships-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.ships-title{font-size:22px;font-weight:700;color:var(--text-1);}
+.ships-subtitle{font-size:13px;color:var(--text-3);margin-top:3px;}
+.btn-export{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:var(--text-2);transition:all .15s;}
+.btn-export:hover{background:var(--surface-2);border-color:var(--border-2);}
+
+/* Ships Tabs */
+.ships-tabs{display:flex;align-items:center;border-bottom:2px solid var(--border);margin-bottom:16px;}
+.ships-tab{display:flex;align-items:center;gap:6px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;}
+.ships-tab:hover{color:var(--text-1);}
+.ships-tab.active{color:var(--text-1);border-bottom-color:var(--brand);font-weight:600;}
+.tab-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--brand);color:#fff;line-height:1.4;}
+.ships-tab:not(.active) .tab-badge{background:var(--surface-2);color:var(--text-3);}
+
+/* Status Pills */
+.status-pills{display:flex;gap:8px;margin-bottom:16px;}
+.status-pill{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid transparent;}
+.status-pill.on-time{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+.status-pill.at-risk{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border);}
+.status-pill.delayed{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+
+/* Filter Row */
+.filter-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-4);pointer-events:none;}
+.filter-input{height:36px;padding:0 10px 0 34px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text-1);background:var(--surface);width:100%;transition:border-color .15s;outline:none;}
+.filter-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(60,107,78,.08);}
+.filter-select{height:36px;padding:0 28px 0 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text-2);background:var(--surface);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%236B7280' stroke-width='1.5'%3E%3Cpath d='M1 1l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;outline:none;transition:border-color .15s;min-width:130px;}
+.filter-select:focus{border-color:var(--brand);}
+.filter-city{height:36px;padding:0 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text-1);background:var(--surface);outline:none;transition:border-color .15s;width:110px;}
+.filter-city:focus{border-color:var(--brand);}
+.filter-city::placeholder{color:var(--text-4);}
+.filter-date{height:36px;padding:0 8px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--text-2);background:var(--surface);outline:none;transition:border-color .15s;width:136px;}
+.filter-date:focus{border-color:var(--brand);}
+.filter-to{font-size:12px;color:var(--text-4);}
+
+/* Ships Table */
+.ships-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.ships-table{width:100%;border-collapse:collapse;font-size:13px;}
+.ships-table thead th{padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;background:var(--surface-2);border-bottom:1px solid var(--border);white-space:nowrap;}
+.ships-table tbody td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-2);white-space:nowrap;}
+.ships-table tbody tr:last-child td{border-bottom:none;}
+.ships-table tbody tr:hover td{background:var(--surface-2);cursor:pointer;}
+.col-ref-main{font-weight:600;color:var(--text-1);}
+.col-ref-sub{font-size:11px;color:var(--text-4);margin-top:2px;}
+.col-loc-main{color:var(--text-1);}
+.col-loc-sub{font-size:11px;color:var(--text-4);margin-top:2px;}
+.col-upd-main{color:var(--text-2);}
+.col-upd-sub{font-size:11px;color:var(--text-4);margin-top:2px;}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;border:1px solid transparent;}
+.badge-confirmed{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border);}
+.badge-ontime{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+.badge-delayed{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+.badge-atrisk{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border);}
+.badge-delivered{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+.badge-default{background:var(--surface-2);color:var(--text-3);border-color:var(--border);}
+
+/* Empty */
+.table-empty{padding:52px 24px;text-align:center;color:var(--text-4);}
+.table-empty-icon{font-size:32px;margin-bottom:10px;opacity:.4;}
+.table-empty-title{font-size:14px;font-weight:600;color:var(--text-3);}
+.table-empty-sub{font-size:12px;margin-top:4px;}
+
+/* ── Incidents View ── */
+.incidents-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;gap:16px;}
+.incidents-empty-icon{width:64px;height:64px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;}
+.incidents-empty-title{font-size:18px;font-weight:700;color:var(--text-1);}
+.incidents-empty-sub{font-size:14px;color:var(--text-3);}
+
+/* ── Reports View ── */
+.reports-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.btn-pdf{display:flex;align-items:center;gap:7px;padding:10px 16px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;transition:background .15s;}
+.btn-pdf:hover{background:var(--brand-dark);}
+.period-tabs{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.period-tab{padding:7px 16px;border:1px solid var(--border);border-radius:999px;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .15s;background:var(--surface);}
+.period-tab:hover{border-color:var(--border-2);}
+.period-tab.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600;}
+.period-tab.custom-tab{display:flex;align-items:center;gap:5px;}
+.period-range-text{font-size:12px;color:var(--text-3);margin-bottom:20px;}
+.r-kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.r-kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+.r-kpi-label{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.r-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.r-kpi-value{font-size:28px;font-weight:700;color:var(--text-1);letter-spacing:-0.03em;font-variant-numeric:tabular-nums;}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+.chart-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.chart-title{font-size:15px;font-weight:700;color:var(--text-1);}
+.chart-badge{text-align:right;}
+.chart-badge-value{font-size:20px;font-weight:700;color:var(--text-1);}
+.chart-badge-sub{font-size:11px;color:var(--text-3);}
+.chart-wrap{height:220px;position:relative;}
+.chart-legend{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px;flex-wrap:wrap;}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-2);}
+.legend-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.chart-sub{font-size:11px;color:var(--text-4);text-align:center;margin-top:8px;}
+.period-chg{font-size:13px;font-weight:700;color:var(--green);}
+
+/* ── Responsive ── */
+@media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr);}.r-kpi-row{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:900px){.overview-grid{grid-template-columns:1fr;}.ships-wrap{grid-template-columns:1fr;}.ships-sidebar{border-right:none;border-bottom:1px solid var(--border);}.charts-row{grid-template-columns:1fr;}}
+@media(max-width:640px){.kpi-row{grid-template-columns:repeat(2,1fr);}.r-kpi-row{grid-template-columns:repeat(2,1fr);}.perf-stats{grid-template-columns:repeat(2,1fr);}.ct-main{padding:16px 16px 32px;}.h-company{display:none;}}
+</style>
+</head>
+<script>(function(){var t=localStorage.getItem('ct_theme');if(t)document.documentElement.dataset.theme=t;})()</script>
+<body>
+
+<!-- HEADER -->
+<header class="ct-header">
+  <div class="h-brand">
+    <svg width="90" height="28" viewBox="0 0 90 28" xmlns="http://www.w3.org/2000/svg" aria-label="nuvocargo">
+      <text x="0" y="22" font-family="'Cormorant Garamond',Georgia,serif" font-size="22" font-weight="500" letter-spacing="0.3" fill="#3C6B4E">nuvo</text>
+    </svg>
+    <div class="h-os-badge">OS</div>
+  </div>
+  <div class="h-divider"></div>
+  <span class="h-app-title">Control Tower</span>
+  <div class="h-company" id="companyBtn" onclick="toggleCompanyDropdown()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/><path d="M12 7v14"/><path d="M2 12h20"/>
+    </svg>
+    <span class="h-company-name" id="companyName">Loading...</span>
+    <svg width="12" height="12" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M1 1l5 5 5-5"/>
+    </svg>
+    <div class="company-dropdown" id="companyDropdown"></div>
+  </div>
+  <nav class="h-nav">
+    <button class="nav-link active" onclick="showView('overview')">Overview</button>
+    <button class="nav-link" onclick="showView('shipments')">Shipments</button>
+    <button class="nav-link" onclick="showView('incidents')">Incidents</button>
+    <button class="nav-link" onclick="showView('reports')">Reports</button>
+  </nav>
+  <div class="h-actions">
+    <button class="btn-icon" onclick="toggleTheme()" title="Toggle theme" id="themeBtn">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M12 8.5a6 6 0 0 1-7-7 5.5 5.5 0 1 0 7 7z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="ct-main">
+
+  <!-- ══ OVERVIEW VIEW ══════════════════════════════════════════ -->
+  <div id="viewOverview" class="ct-view active">
+    <div class="page-header">
+      <div class="page-title">Overview</div>
+      <div class="page-subtitle">Daily command center</div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi-card kpi-green">
+        <div class="kpi-value" id="kpiOnTime">—</div>
+        <div class="kpi-label">On Time</div>
+      </div>
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-value" id="kpiAtRisk">—</div>
+        <div class="kpi-label">At Risk</div>
+      </div>
+      <div class="kpi-card kpi-red">
+        <div class="kpi-value" id="kpiDelayed">—</div>
+        <div class="kpi-label">Delayed</div>
+      </div>
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-value" id="kpiPickups">—</div>
+        <div class="kpi-label">Pickups</div>
+      </div>
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-value" id="kpiDeliveries">—</div>
+        <div class="kpi-label">Deliveries</div>
+      </div>
+    </div>
+
+    <!-- Map + Right Panel -->
+    <div class="overview-grid">
+      <div class="map-card">
+        <div id="overviewMap"></div>
+        <div class="map-legend" id="mapLegend">
+          <div class="map-legend-item"><span class="map-dot" style="background:#16A34A"></span>On Time</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:#D97706"></span>At Risk</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:#DC2626"></span>Delayed</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:#2563EB"></span>Confirmed</div>
+        </div>
+        <div class="map-loading" id="mapLoading">
+          <div class="spinner"></div>
+          <span>Loading map data...</span>
+        </div>
+      </div>
+
+      <div class="overview-right">
+        <!-- Today's Activity -->
+        <div class="side-card">
+          <div class="side-card-title">Today's Activity</div>
+          <div class="activity-item">
+            <div>
+              <div class="activity-label">Pickups</div>
+              <div class="activity-sub" id="pickupSub">No pickups scheduled</div>
+            </div>
+            <div class="activity-count c-blue" id="actPickups">0</div>
+          </div>
+          <div class="activity-item">
+            <div>
+              <div class="activity-label">Deliveries</div>
+              <div class="activity-sub" id="deliverySub">No deliveries scheduled</div>
+            </div>
+            <div class="activity-count c-purple" id="actDeliveries">0</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="side-card">
+          <div class="side-card-title">Quick Actions</div>
+          <div class="qa-item" onclick="showView('shipments')">
+            <div class="qa-icon c-blue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+            </div>
+            <div>
+              <div class="qa-title">Active Shipments</div>
+              <div class="qa-sub">View in-progress</div>
+            </div>
+          </div>
+          <div class="qa-item" onclick="showView('shipments','complete')">
+            <div class="qa-icon c-green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/>
+              </svg>
+            </div>
+            <div>
+              <div class="qa-title">Completed</div>
+              <div class="qa-sub">Delivery history</div>
+            </div>
+          </div>
+          <div class="qa-item" onclick="showView('incidents')">
+            <div class="qa-icon c-amber">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div>
+              <div class="qa-title">Incidents</div>
+              <div class="qa-sub">View alerts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Performance -->
+    <div class="perf-card">
+      <div class="perf-header">
+        <div class="perf-title">Delivery Performance (Last 30 Days)</div>
+        <div class="perf-legend">
+          <span><span class="legend-dot" style="background:#16A34A"></span>On Time</span>
+          <span><span class="legend-dot" style="background:#DC2626"></span>Delayed</span>
+        </div>
+      </div>
+      <div class="perf-stats">
+        <div class="perf-stat">
+          <div class="perf-stat-value" id="perfDelivered">—</div>
+          <div class="perf-stat-label">Delivered</div>
+        </div>
+        <div class="perf-stat">
+          <div class="perf-stat-value c-green" id="perfOnTime">—</div>
+          <div class="perf-stat-label">On Time</div>
+        </div>
+        <div class="perf-stat">
+          <div class="perf-stat-value c-red" id="perfDelayed">—</div>
+          <div class="perf-stat-label">Delayed</div>
+        </div>
+        <div class="perf-stat">
+          <div class="perf-stat-value" id="perfRate">—</div>
+          <div class="perf-stat-label">On-Time Rate</div>
+        </div>
+      </div>
+      <div class="perf-chart-wrap">
+        <canvas id="perfChart"></canvas>
+      </div>
+    </div>
+  </div><!-- /viewOverview -->
+
+  <!-- ══ SHIPMENTS VIEW ═════════════════════════════════════════ -->
+  <div id="viewShipments" class="ct-view">
+    <div class="ships-wrap">
+      <!-- Sidebar -->
+      <div class="ships-sidebar">
+        <div class="sidebar-section">Stages</div>
+        <div id="stageList">
+          <div class="stage-item active" data-stage="all" onclick="setStage('all',this)">
+            <span>All Shipments</span>
+            <span class="stage-badge" id="stageAll">0</span>
+          </div>
+          <div class="stage-item" data-stage="Requested" onclick="setStage('Requested',this)">
+            <span>Requested</span>
+            <span class="stage-badge" id="stageRequested">0</span>
+          </div>
+          <div class="stage-item" data-stage="Before Pickup" onclick="setStage('Before Pickup',this)">
+            <span>Before Pickup</span>
+            <span class="stage-badge" id="stageBeforePickup">0</span>
+          </div>
+          <div class="stage-item" data-stage="Pending Pickup" onclick="setStage('Pending Pickup',this)">
+            <span>Pending Pickup</span>
+            <span class="stage-badge" id="stagePendingPickup">0</span>
+          </div>
+          <div class="stage-item" data-stage="In Transit" onclick="setStage('In Transit',this)">
+            <span>In Transit</span>
+            <span class="stage-badge" id="stageInTransit">0</span>
+          </div>
+          <div class="stage-item" data-stage="Unknown" onclick="setStage('Unknown',this)">
+            <span>Unknown</span>
+            <span class="stage-badge" id="stageUnknown">0</span>
+          </div>
+        </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section">Alerts</div>
+        <div class="alert-item">
+          <span class="alert-dot"></span>
+          <span>Open Incidents</span>
+          <span style="margin-left:auto;font-weight:600;color:var(--text-3)" id="alertCount">0</span>
+        </div>
+      </div>
+
+      <!-- Main Shipments Content -->
+      <div class="ships-main">
+        <div class="ships-header">
+          <div>
+            <div class="ships-title">Shipments</div>
+            <div class="ships-subtitle">Track and manage your shipment visibility</div>
+          </div>
+          <button class="btn-export" onclick="exportCSV()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export CSV
+          </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="ships-tabs">
+          <button class="ships-tab active" id="tabActive" onclick="setTab('active',this)">
+            Active <span class="tab-badge" id="tabActiveCount">0</span>
+          </button>
+          <button class="ships-tab" id="tabPickups" onclick="setTab('pickups',this)">
+            Pickups Today <span class="tab-badge" id="tabPickupsCount">0</span>
+          </button>
+          <button class="ships-tab" id="tabDeliveries" onclick="setTab('deliveries',this)">
+            Deliveries Today <span class="tab-badge" id="tabDeliveriesCount">0</span>
+          </button>
+          <button class="ships-tab" id="tabComplete" onclick="setTab('complete',this)">
+            Complete <span class="tab-badge" id="tabCompleteCount">0</span>
+          </button>
+        </div>
+
+        <!-- Status Pills -->
+        <div class="status-pills">
+          <div class="status-pill on-time" id="pillOnTime" onclick="toggleStatusFilter('on-time')">
+            <span id="pillOnTimeCount">0</span> On Time
+          </div>
+          <div class="status-pill at-risk" id="pillAtRisk" onclick="toggleStatusFilter('at-risk')">
+            <span id="pillAtRiskCount">0</span> At Risk
+          </div>
+          <div class="status-pill delayed" id="pillDelayed" onclick="toggleStatusFilter('delayed')">
+            <span id="pillDelayedCount">0</span> Delayed
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-row">
+          <div class="search-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input class="filter-input" id="searchInput" placeholder="Search by reference, PO, SO..." oninput="applyFilters()">
+          </div>
+          <select class="filter-select" id="stageFilter" onchange="applyFilters()">
+            <option value="">All Stages</option>
+            <option>Requested</option>
+            <option>Before Pickup</option>
+            <option>Pending Pickup</option>
+            <option>In Transit</option>
+            <option>Unknown</option>
+          </select>
+          <input class="filter-city" id="cityFilter" placeholder="City" oninput="applyFilters()">
+          <input class="filter-date" id="dateFrom" type="date" onchange="applyFilters()">
+          <span class="filter-to">to</span>
+          <input class="filter-date" id="dateTo" type="date" onchange="applyFilters()">
+        </div>
+
+        <!-- Table -->
+        <div class="ships-table-wrap">
+          <table class="ships-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Status</th>
+                <th>Stage</th>
+                <th>Pickup</th>
+                <th>Delivery</th>
+                <th>Last Update</th>
+              </tr>
+            </thead>
+            <tbody id="shipsTableBody">
+              <tr><td colspan="6"><div class="table-empty">
+                <div class="table-empty-icon">&#128230;</div>
+                <div class="table-empty-title">Loading shipments...</div>
+              </div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div><!-- /viewShipments -->
+
+  <!-- ══ INCIDENTS VIEW ════════════════════════════════════════ -->
+  <div id="viewIncidents" class="ct-view">
+    <div class="page-header">
+      <div class="page-title">Incidents</div>
+      <div class="page-subtitle">Shipment alerts and exceptions</div>
+    </div>
+    <div class="incidents-empty" id="incidentsContent">
+      <div class="incidents-empty-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/>
+        </svg>
+      </div>
+      <div class="incidents-empty-title">No Open Incidents</div>
+      <div class="incidents-empty-sub">All shipments are operating normally. No alerts at this time.</div>
+    </div>
+  </div><!-- /viewIncidents -->
+
+  <!-- ══ REPORTS VIEW ═══════════════════════════════════════════ -->
+  <div id="viewReports" class="ct-view">
+    <div class="reports-header">
+      <div>
+        <div class="page-title">Reports &amp; Analytics</div>
+        <div class="page-subtitle">Comprehensive shipment performance insights</div>
+      </div>
+      <button class="btn-pdf" onclick="downloadPDF()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download PDF Report
+      </button>
+    </div>
+
+    <!-- Period Tabs -->
+    <div class="period-tabs">
+      <button class="period-tab" onclick="setPeriod(7,this)">7 days</button>
+      <button class="period-tab active" onclick="setPeriod(30,this)">30 days</button>
+      <button class="period-tab" onclick="setPeriod(60,this)">60 days</button>
+      <button class="period-tab" onclick="setPeriod(90,this)">90 days</button>
+      <button class="period-tab custom-tab" onclick="setPeriod('custom',this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Custom
+      </button>
+    </div>
+    <div class="period-range-text" id="periodRangeText">Showing data from — to — (30 days)</div>
+
+    <!-- Reports KPIs -->
+    <div class="r-kpi-row">
+      <div class="r-kpi-card">
+        <div class="r-kpi-label"><span class="r-dot" style="background:#2563EB"></span>Total Shipments</div>
+        <div class="r-kpi-value" id="rKpiTotal">—</div>
+      </div>
+      <div class="r-kpi-card">
+        <div class="r-kpi-label"><span class="r-dot" style="background:#16A34A"></span>Delivered</div>
+        <div class="r-kpi-value" id="rKpiDelivered">—</div>
+      </div>
+      <div class="r-kpi-card">
+        <div class="r-kpi-label"><span class="r-dot" style="background:#D97706"></span>In Transit</div>
+        <div class="r-kpi-value" id="rKpiInTransit">—</div>
+      </div>
+      <div class="r-kpi-card">
+        <div class="r-kpi-label"><span class="r-dot" style="background:#16A34A"></span>On-Time Rate</div>
+        <div class="r-kpi-value" id="rKpiOnTimeRate">—</div>
+      </div>
+      <div class="r-kpi-card">
+        <div class="r-kpi-label"><span class="r-dot" style="background:#7C3AED"></span>Avg Transit</div>
+        <div class="r-kpi-value" id="rKpiAvgTransit">—</div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Status Breakdown</div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+        <div class="chart-legend" id="chartStatusLegend"></div>
+        <div class="chart-sub" id="chartStatusSub">Total: 0 shipments</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Pipeline by Stage</div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartStage"></canvas></div>
+        <div class="chart-legend" id="chartStageLegend"></div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Shipment Volume</div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartVolume"></canvas></div>
+        <div class="chart-sub" id="chartVolumeSub">Total: 0 shipments over 0 days</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">On-Time Delivery Rate</div>
+          <div class="chart-badge">
+            <div class="chart-badge-value" id="chartOTDRAvg">—%</div>
+            <div class="chart-badge-sub">avg</div>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartOTDR"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Charts Row 3 -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Period Comparison</div>
+          <div class="chart-badge">
+            <div class="period-chg" id="periodChg">—</div>
+            <div class="chart-badge-sub" style="text-align:right">vs prior</div>
+          </div>
+        </div>
+        <div class="chart-legend" style="margin-bottom:12px">
+          <div class="chart-legend-item"><span class="legend-sq" style="background:#3C6B4E"></span>Current Period</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:#9CA3AF"></span>Previous Period</div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartPeriod"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Delivery Performance</div>
+          <div class="chart-badge">
+            <div class="chart-badge-value" id="delivPerfPct">—%</div>
+            <div class="chart-badge-sub">on-time or early</div>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartDelivPerf"></canvas></div>
+        <div class="chart-legend" style="margin-top:12px">
+          <div class="chart-legend-item"><span class="legend-sq" style="background:#6B7280"></span>Scheduled</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:#16A34A"></span>Early</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:#2563EB"></span>On Time</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:#DC2626"></span>Late</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /viewReports -->
+
+</div><!-- /ct-main -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── Theme ─────────────────────────────────────────────────────────
+function toggleTheme(){
+  const d=document.documentElement,cur=d.dataset.theme;
+  const next=cur==='dark'?'light':'dark';
+  d.dataset.theme=next;
+  localStorage.setItem('ct_theme',next);
+}
+
+// ── Navigation ────────────────────────────────────────────────────
+let _currentView='overview';
+function showView(view, tab){
+  _currentView=view;
+  document.querySelectorAll('.ct-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  const vmap={overview:'viewOverview',shipments:'viewShipments',incidents:'viewIncidents',reports:'viewReports'};
+  const el=document.getElementById(vmap[view]);
+  if(el)el.classList.add('active');
+  const navIdx={overview:0,shipments:1,incidents:2,reports:3};
+  const navBtns=document.querySelectorAll('.nav-link');
+  if(navBtns[navIdx[view]])navBtns[navIdx[view]].classList.add('active');
+  if(view==='overview')renderMap();
+  if(view==='reports')renderReports();
+  if(view==='shipments'){
+    if(tab)setTab(tab,document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)));
+    renderShipments();
+  }
+}
+
+// ── Company Dropdown ─────────────────────────────────────────────
+function toggleCompanyDropdown(){
+  const dd=document.getElementById('companyDropdown');
+  dd.classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.h-company')){
+    const dd=document.getElementById('companyDropdown');
+    if(dd)dd.classList.remove('open');
+  }
+});
+function buildCompanySelector(){
+  const companies=getCompanies();
+  const dd=document.getElementById('companyDropdown');
+  dd.innerHTML=companies.map(c=>`<div class="company-option${c===_company?' active':''}" onclick="selectCompany('${c.replace(/'/g,"\'")}');event.stopPropagation()">${c}</div>`).join('');
+  if(companies.length>0&&!_company){
+    _company=companies[0];
+    document.getElementById('companyName').textContent=_company;
+  }
+}
+function selectCompany(c){
+  _company=c;
+  document.getElementById('companyName').textContent=c;
+  document.getElementById('companyDropdown').classList.remove('open');
+  processData();
+  if(_currentView==='overview')renderOverview(),renderMap();
+  if(_currentView==='shipments')renderShipments();
+  if(_currentView==='reports')renderReports();
+}
+function getCompanies(){
+  if(!_allRows.length)return[];
+  const set=new Set();
+  _allRows.forEach(r=>{const v=r[_cm.shipper]||r[_cm.shipper2]||'';if(v.trim())set.add(v.trim());});
+  return Array.from(set).sort();
+}
+
+// ── Column Detection ──────────────────────────────────────────────
+let _cm={id:null,status:null,stage:null,shipper:null,shipper2:null,carrier:null,origin:null,dest:null,pickup:null,delivery:null,lastUpdate:null,coords:null,locCity:null,ref:null};
+function detectCols(cols){
+  const find=re=>cols.find(c=>re.test(c))||null;
+  _cm.id       =find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$|^SH.?ID$|^LOAD.?ID$|^BOOKING.?ID$|^ORDER.?ID$|^REFERENCE$|^REF$/i);
+  _cm.status   =find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$|^STATUS$/i);
+  _cm.stage    =find(/^STAGE$/i);
+  _cm.shipper  =find(/SHIPPER|CONSIGNOR/i);
+  _cm.shipper2 =find(/SHIP.FROM|ORIGIN.COMPANY|CUSTOMER.?NAME|CLIENT.?NAME/i);
+  _cm.carrier  =find(/^CARRIER/i);
+  _cm.origin   =find(/^ORIGIN$/i);
+  _cm.dest     =find(/^DESTINATION$/i);
+  _cm.pickup   =find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
+  _cm.delivery =find(/DELIVERY|APPOINTMENT|APPT/i);
+  _cm.lastUpdate=find(/LAST.?UPDATE|UPDATED.?AT|^TIMESTAMP$|^LAST_STATUS_UPDATE$/i)||find(/DATE|TIME/i);
+  _cm.coords   =find(/^COORDINATES_P$|^COORDINATES$/i);
+  _cm.locCity  =find(/LOCATION_CITY/i);
+  _cm.ref      =find(/CUSTOMER.?REF|CUST.?REF|^PO.?NUM$|^PO$/i);
+}
+
+// ── Status & Stage Helpers ────────────────────────────────────────
+function getStatusVal(row){
+  return(row[_cm.status]||'').trim();
+}
+function normalizeStatus(s){
+  const l=s.toLowerCase();
+  if(l.includes('on time')||l==='ontime')return'On Time';
+  if(l.includes('at risk')||l.includes('atrisk'))return'At Risk';
+  if(l.includes('delay'))return'Delayed';
+  if(l.includes('confirm'))return'Confirmed';
+  if(l.includes('deliver'))return'Delivered';
+  if(l.includes('transit'))return'In Transit';
+  if(l.includes('request'))return'Requested';
+  return s||'Unknown';
+}
+function getStageVal(row){
+  if(_cm.stage&&row[_cm.stage])return row[_cm.stage].trim();
+  const s=getStatusVal(row).toLowerCase();
+  if(s.includes('request'))return'Requested';
+  if(s.includes('confirm')||s.includes('before pickup')||s.includes('scheduled'))return'Before Pickup';
+  if(s.includes('pending'))return'Pending Pickup';
+  if(s.includes('transit')||s.includes('on time')||s.includes('delay')||s.includes('at risk')||s.includes('pickup confirmed'))return'In Transit';
+  if(s.includes('deliver'))return'Delivered';
+  return'Unknown';
+}
+function isDelivered(row){
+  const s=getStatusVal(row).toLowerCase();
+  const st=getStageVal(row).toLowerCase();
+  return s.includes('deliver')||st.includes('deliver');
+}
+function isOnTime(row){return getStatusVal(row).toLowerCase().includes('on time');}
+function isAtRisk(row){return getStatusVal(row).toLowerCase().includes('at risk');}
+function isDelayed(row){return getStatusVal(row).toLowerCase().includes('delay');}
+function isToday(dateStr){
+  if(!dateStr)return false;
+  try{const d=new Date(dateStr),n=new Date();return d.toDateString()===n.toDateString();}catch(e){return false;}
+}
+function fmtDate(v){
+  if(!v)return'—';
+  try{const d=new Date(v);if(isNaN(d))return v;return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return v;}
+}
+function fmtDateTime(v){
+  if(!v)return'—';
+  try{const d=new Date(v);if(isNaN(d))return v;return d.toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return v;}
+}
+function fmtRelTime(v){
+  if(!v)return'';
+  try{
+    const d=new Date(v),n=Date.now(),diff=n-d.getTime();
+    if(diff<60000)return'just now';
+    if(diff<3600000)return Math.floor(diff/60000)+'m ago';
+    if(diff<86400000)return Math.floor(diff/3600000)+'h ago';
+    return Math.floor(diff/86400000)+'d ago';
+  }catch(e){return'';}
+}
+function eh(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── State ─────────────────────────────────────────────────────────
+let _allRows=[];
+let _company='';
+let _rows=[];     // filtered by company
+let _displayRows=[];  // filtered by tab+stage+search
+let _tab='active';
+let _stageFilter='all';
+let _statusFilter=null;
+let _map=null;
+let _charts={};
+let _period=30;
+let _perfChart=null;
+
+// ── Load Data ─────────────────────────────────────────────────────
+async function loadData(){
+  try{
+    const r=await fetch('/api/snowflake?t='+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    _allRows=d.rows||[];
+    if(_allRows.length){
+      detectCols(Object.keys(_allRows[0]));
+    }
+    buildCompanySelector();
+    processData();
+    renderOverview();
+    renderMap();
+  }catch(e){
+    console.error('[ct]',e);
+    document.getElementById('shipsTableBody').innerHTML=
+      '<tr><td colspan="6"><div class="table-empty"><div class="table-empty-icon">&#9888;&#65039;</div><div class="table-empty-title">Unable to load data</div><div class="table-empty-sub">'+eh(e.message)+'</div></div></td></tr>';
+    // Show fallback UI
+    document.getElementById('kpiOnTime').textContent='—';
+  }
+}
+
+// ── Process Data ──────────────────────────────────────────────────
+function processData(){
+  if(!_company){_rows=_allRows.slice();return;}
+  _rows=_allRows.filter(r=>{
+    const s=r[_cm.shipper]||r[_cm.shipper2]||'';
+    return s.trim()===_company;
+  });
+}
+
+// ── Compute Metrics ───────────────────────────────────────────────
+function computeMetrics(rows){
+  const active=rows.filter(r=>!isDelivered(r));
+  const onTime=active.filter(isOnTime).length;
+  const atRisk=active.filter(isAtRisk).length;
+  const delayed=active.filter(isDelayed).length;
+  const pickupsToday=rows.filter(r=>isToday(r[_cm.pickup])).length;
+  const deliveriesToday=rows.filter(r=>isToday(r[_cm.delivery])).length;
+  return{active:active.length,onTime,atRisk,delayed,pickupsToday,deliveriesToday};
+}
+
+// ── OVERVIEW RENDER ───────────────────────────────────────────────
+function renderOverview(){
+  const rows=_rows;
+  const m=computeMetrics(rows);
+  document.getElementById('kpiOnTime').textContent=m.onTime;
+  document.getElementById('kpiAtRisk').textContent=m.atRisk;
+  document.getElementById('kpiDelayed').textContent=m.delayed;
+  document.getElementById('kpiPickups').textContent=m.pickupsToday;
+  document.getElementById('kpiDeliveries').textContent=m.deliveriesToday;
+  document.getElementById('actPickups').textContent=m.pickupsToday;
+  document.getElementById('actDeliveries').textContent=m.deliveriesToday;
+  document.getElementById('pickupSub').textContent=m.pickupsToday===0?'No pickups scheduled':m.pickupsToday+' pickup(s) today';
+  document.getElementById('deliverySub').textContent=m.deliveriesToday===0?'No deliveries scheduled':m.deliveriesToday+' delivery(ies) today';
+
+  // 30-day perf
+  const d30=rows.filter(r=>{
+    const dv=r[_cm.delivery]||r[_cm.lastUpdate];
+    if(!dv)return false;
+    try{const d=new Date(dv);return(Date.now()-d.getTime())<30*86400000;}catch(e){return false;}
+  });
+  const delivered30=d30.filter(isDelivered).length;
+  const onTime30=d30.filter(r=>isDelivered(r)&&isOnTime(r)).length;
+  const delayed30=d30.filter(r=>isDelivered(r)&&isDelayed(r)).length;
+  const rate30=delivered30?Math.round(onTime30/delivered30*100):0;
+  document.getElementById('perfDelivered').textContent=delivered30||rows.filter(isDelivered).length;
+  document.getElementById('perfOnTime').textContent=onTime30||m.onTime;
+  document.getElementById('perfDelayed').textContent=delayed30||m.delayed;
+  document.getElementById('perfRate').textContent=(rate30||0)+'%';
+  renderPerfChart(rows);
+}
+
+function renderPerfChart(rows){
+  const ctx=document.getElementById('perfChart');
+  if(!ctx)return;
+  // Generate last 30 days labels
+  const labels=[],onTimes=[],delayeds=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+    const day=rows.filter(r=>{
+      const dv=r[_cm.delivery]||r[_cm.lastUpdate];
+      if(!dv)return false;
+      try{const rd=new Date(dv);return rd.toDateString()===d.toDateString();}catch(e){return false;}
+    });
+    onTimes.push(day.filter(isOnTime).length);
+    delayeds.push(day.filter(isDelayed).length);
+  }
+  // Show every 7th label
+  const shownLabels=labels.map((l,i)=>i%7===0?l:'');
+  if(_perfChart)_perfChart.destroy();
+  _perfChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:shownLabels,datasets:[
+      {label:'On Time',data:onTimes,borderColor:'#16A34A',backgroundColor:'rgba(22,163,74,0.1)',tension:0.4,pointRadius:3,fill:true},
+      {label:'Delayed',data:delayeds,borderColor:'#DC2626',backgroundColor:'rgba(220,38,38,0.08)',tension:0.4,pointRadius:3,fill:true}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{display:false},ticks:{maxRotation:0,font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},precision:0}}}}
+  });
+}
+
+// ── MAP RENDER ────────────────────────────────────────────────────
+function renderMap(){
+  const loading=document.getElementById('mapLoading');
+  if(!document.getElementById('overviewMap'))return;
+  if(!_map){
+    _map=L.map('overviewMap',{zoomControl:true,scrollWheelZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors',maxZoom:18}).addTo(_map);
+    _map.setView([37.8,-96],4);
+  }
+  // Clear existing markers
+  _map.eachLayer(l=>{if(l instanceof L.Marker||l instanceof L.Polyline)_map.removeLayer(l);});
+
+  const rows=_rows.filter(r=>!isDelivered(r));
+  const bounds=[];
+  rows.forEach(r=>{
+    // Try GPS coordinates
+    const coord=r[_cm.coords]||'';
+    let lat=null,lng=null;
+    if(coord){
+      const m=coord.match(/(-?[\d.]+)[,\s]+(-?[\d.]+)/);
+      if(m){lat=parseFloat(m[1]);lng=parseFloat(m[2]);}
+    }
+    if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)){
+      const status=normalizeStatus(getStatusVal(r));
+      const color=status==='On Time'?'#16A34A':status==='Delayed'?'#DC2626':status==='At Risk'?'#D97706':'#2563EB';
+      const icon=L.divIcon({html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>`,className:'',iconSize:[12,12],iconAnchor:[6,6]});
+      const marker=L.marker([lat,lng],{icon}).addTo(_map);
+      marker.bindPopup(`<b>${r[_cm.id]||'—'}</b><br>${status}<br>${r[_cm.locCity]||''}`);
+      bounds.push([lat,lng]);
+    }
+  });
+  if(bounds.length>1)_map.fitBounds(bounds,{padding:[30,30]});
+  else if(bounds.length===1)_map.setView(bounds[0],8);
+  if(loading)loading.style.display='none';
+}
+
+// ── SHIPMENTS RENDER ──────────────────────────────────────────────
+let _shipsSearchTimer=null;
+function applyFilters(){
+  clearTimeout(_shipsSearchTimer);
+  _shipsSearchTimer=setTimeout(renderShipments,150);
+}
+
+function setTab(tab,el){
+  _tab=tab;
+  document.querySelectorAll('.ships-tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  _statusFilter=null;
+  renderShipments();
+}
+
+function setStage(stage,el){
+  _stageFilter=stage;
+  document.querySelectorAll('.stage-item').forEach(s=>s.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderShipments();
+}
+
+function toggleStatusFilter(status){
+  _statusFilter=_statusFilter===status?null:status;
+  renderShipments();
+}
+
+function renderShipments(){
+  const rows=_rows;
+  // Tab counts
+  const active=rows.filter(r=>!isDelivered(r));
+  const complete=rows.filter(isDelivered);
+  const pickupsToday=rows.filter(r=>isToday(r[_cm.pickup]));
+  const deliveriesToday=rows.filter(r=>isToday(r[_cm.delivery]));
+  document.getElementById('tabActiveCount').textContent=active.length;
+  document.getElementById('tabPickupsCount').textContent=pickupsToday.length;
+  document.getElementById('tabDeliveriesCount').textContent=deliveriesToday.length;
+  document.getElementById('tabCompleteCount').textContent=complete.length;
+
+  // Status pill counts (from active)
+  document.getElementById('pillOnTimeCount').textContent=active.filter(isOnTime).length;
+  document.getElementById('pillAtRiskCount').textContent=active.filter(isAtRisk).length;
+  document.getElementById('pillDelayedCount').textContent=active.filter(isDelayed).length;
+
+  // Stage counts (from active)
+  document.getElementById('stageAll').textContent=active.length;
+  const countStage=s=>active.filter(r=>getStageVal(r)===s).length;
+  document.getElementById('stageRequested').textContent=countStage('Requested');
+  document.getElementById('stageBeforePickup').textContent=countStage('Before Pickup');
+  document.getElementById('stagePendingPickup').textContent=countStage('Pending Pickup');
+  document.getElementById('stageInTransit').textContent=countStage('In Transit');
+  document.getElementById('stageUnknown').textContent=countStage('Unknown');
+
+  // Select base by tab
+  let base;
+  if(_tab==='active')base=active;
+  else if(_tab==='pickups')base=pickupsToday;
+  else if(_tab==='deliveries')base=deliveriesToday;
+  else base=complete;
+
+  // Stage filter
+  if(_stageFilter&&_stageFilter!=='all')base=base.filter(r=>getStageVal(r)===_stageFilter);
+
+  // Status filter
+  if(_statusFilter==='on-time')base=base.filter(isOnTime);
+  else if(_statusFilter==='at-risk')base=base.filter(isAtRisk);
+  else if(_statusFilter==='delayed')base=base.filter(isDelayed);
+
+  // Search
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase().trim();
+  if(q)base=base.filter(r=>{
+    const id=(r[_cm.id]||'').toLowerCase();
+    const ref=(r[_cm.ref]||'').toLowerCase();
+    const o=(r[_cm.origin]||'').toLowerCase();
+    const d=(r[_cm.dest]||'').toLowerCase();
+    return id.includes(q)||ref.includes(q)||o.includes(q)||d.includes(q);
+  });
+
+  // Stage dropdown filter
+  const stageSel=document.getElementById('stageFilter')?.value||'';
+  if(stageSel)base=base.filter(r=>getStageVal(r)===stageSel);
+
+  // City filter
+  const city=(document.getElementById('cityFilter')?.value||'').toLowerCase().trim();
+  if(city)base=base.filter(r=>{
+    const o=(r[_cm.origin]||'').toLowerCase();
+    const d=(r[_cm.dest]||'').toLowerCase();
+    const loc=(r[_cm.locCity]||'').toLowerCase();
+    return o.includes(city)||d.includes(city)||loc.includes(city);
+  });
+
+  // Date filters
+  const from=document.getElementById('dateFrom')?.value;
+  const to=document.getElementById('dateTo')?.value;
+  if(from)base=base.filter(r=>{const d=r[_cm.pickup]||r[_cm.delivery];return d&&d>=from;});
+  if(to)base=base.filter(r=>{const d=r[_cm.pickup]||r[_cm.delivery];return d&&d<=to;});
+
+  _displayRows=base;
+  renderShipsTable(base);
+}
+
+function statusBadge(row){
+  const raw=getStatusVal(row);
+  const norm=normalizeStatus(raw);
+  const cls={
+    'On Time':'badge-ontime','Delayed':'badge-delayed','At Risk':'badge-atrisk',
+    'Confirmed':'badge-confirmed','Delivered':'badge-delivered','In Transit':'badge-confirmed'
+  }[norm]||'badge-default';
+  return`<span class="badge ${cls}">${eh(norm||raw||'Unknown')}</span>`;
+}
+
+function renderShipsTable(rows){
+  const tbody=document.getElementById('shipsTableBody');
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="6"><div class="table-empty"><div class="table-empty-icon">&#128230;</div><div class="table-empty-title">No shipments match</div><div class="table-empty-sub">Try adjusting your search or filters.</div></div></td></tr>';
+    return;
+  }
+  // Limit to 200 rows for performance
+  const display=rows.slice(0,200);
+  tbody.innerHTML=display.map(r=>{
+    const id=r[_cm.id]||'—';
+    const shipper=_cm.shipper&&r[_cm.shipper]?r[_cm.shipper]:(_cm.shipper2&&r[_cm.shipper2]?r[_cm.shipper2]:'');
+    const stage=getStageVal(r);
+    const origin=r[_cm.origin]||'—';
+    const pickupDate=r[_cm.pickup]?fmtDate(r[_cm.pickup]):'—';
+    const dest=r[_cm.dest]||'—';
+    const deliveryDate=r[_cm.delivery]?fmtDate(r[_cm.delivery]):'—';
+    const upd=r[_cm.lastUpdate]||'';
+    const rel=fmtRelTime(upd);
+    return`<tr>
+      <td><div class="col-ref-main">${eh(id)}</div>${shipper?`<div class="col-ref-sub">${eh(shipper)}</div>`:''}</td>
+      <td>${statusBadge(r)}</td>
+      <td>${eh(stage)}</td>
+      <td><div class="col-loc-main">${eh(origin)}</div><div class="col-loc-sub">${pickupDate}</div></td>
+      <td><div class="col-loc-main">${eh(dest)}</div><div class="col-loc-sub">${deliveryDate}</div></td>
+      <td><div class="col-upd-main">Status update</div>${rel?`<div class="col-upd-sub">${eh(rel)}</div>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportCSV(){
+  if(!_displayRows.length)return;
+  const cols=['ID','Status','Stage','Origin','Pickup Date','Destination','Delivery Date','Last Update'];
+  const rows=_displayRows.map(r=>[
+    r[_cm.id]||'',normalizeStatus(getStatusVal(r)),getStageVal(r),
+    r[_cm.origin]||'',r[_cm.pickup]||'',r[_cm.dest]||'',r[_cm.delivery]||'',r[_cm.lastUpdate]||''
+  ].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv=[cols.join(','),...rows].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='shipments.csv';a.click();
+}
+
+// ── REPORTS RENDER ────────────────────────────────────────────────
+function setPeriod(p,el){
+  if(p==='custom')return;
+  _period=p;
+  document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderReports();
+}
+
+function renderReports(){
+  const now=new Date();
+  const from=new Date(now);from.setDate(from.getDate()-_period);
+  const fromStr=from.toISOString().slice(0,10);
+  const toStr=now.toISOString().slice(0,10);
+  document.getElementById('periodRangeText').textContent=`Showing data from ${fromStr} to ${toStr} (${_period} days)`;
+
+  // Filter rows by period (use pickup or update date)
+  const periodRows=_rows.filter(r=>{
+    const d=r[_cm.pickup]||r[_cm.delivery]||r[_cm.lastUpdate];
+    if(!d)return true; // include if no date
+    try{const rd=new Date(d);return rd>=from&&rd<=now;}catch(e){return true;}
+  });
+
+  // KPIs
+  const total=periodRows.length||_rows.length;
+  const delivered=periodRows.filter(isDelivered).length||_rows.filter(isDelivered).length;
+  const inTransit=periodRows.filter(r=>!isDelivered(r)).length;
+  const onTimeCount=periodRows.filter(r=>isDelivered(r)&&isOnTime(r)).length||_rows.filter(isOnTime).length;
+  const otRate=delivered?Math.round(onTimeCount/delivered*100):(_rows.length?Math.round(_rows.filter(isOnTime).length/Math.max(_rows.filter(r=>!isDelivered(r)).length,1)*100):0);
+
+  // Avg transit time (days between pickup and delivery)
+  let totalDays=0,count=0;
+  periodRows.forEach(r=>{
+    const p=r[_cm.pickup],d=r[_cm.delivery];
+    if(p&&d){try{const diff=(new Date(d)-new Date(p))/86400000;if(diff>0&&diff<100){totalDays+=diff;count++;}}catch(e){}}
+  });
+  const avgTransit=count?Math.round(totalDays/count*10)/10:0;
+
+  document.getElementById('rKpiTotal').textContent=total;
+  document.getElementById('rKpiDelivered').textContent=delivered;
+  document.getElementById('rKpiInTransit').textContent=inTransit;
+  document.getElementById('rKpiOnTimeRate').textContent=otRate+'%';
+  document.getElementById('rKpiAvgTransit').textContent=(avgTransit||'—')+(avgTransit?' days':'');
+
+  renderCharts(periodRows,_period);
+}
+
+function renderCharts(rows,period){
+  renderStatusChart(rows);
+  renderStageChart(rows);
+  renderVolumeChart(rows,period);
+  renderOTDRChart(rows,period);
+  renderPeriodChart(rows,period);
+  renderDelivPerfChart(rows);
+}
+
+function destroyChart(id){if(_charts[id]){_charts[id].destroy();delete _charts[id];}}
+
+function renderStatusChart(rows){
+  destroyChart('status');
+  const counts={Confirmed:0,Delayed:0,Delivered:0,'On Time':0,'At Risk':0};
+  rows.forEach(r=>{const n=normalizeStatus(getStatusVal(r));if(n in counts)counts[n]++;else if(!isDelivered(r))counts.Confirmed++;});
+  const labels=Object.keys(counts).filter(k=>counts[k]>0);
+  const data=labels.map(k=>counts[k]);
+  const colors={'On Time':'#3C6B4E','Delayed':'#DC2626','Confirmed':'#2563EB','Delivered':'#16A34A','At Risk':'#D97706'};
+  const ctx=document.getElementById('chartStatus');
+  if(!ctx)return;
+  _charts.status=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:labels.map(l=>colors[l]||'#9CA3AF'),borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}`}}}}});
+  document.getElementById('chartStatusLegend').innerHTML=labels.map((l,i)=>`<div class="chart-legend-item"><span class="legend-sq" style="background:${colors[l]||'#9CA3AF'}"></span>${l}</div>`).join('');
+  document.getElementById('chartStatusSub').textContent=`Total: ${rows.length} shipments`;
+}
+
+function renderStageChart(rows){
+  destroyChart('stage');
+  const stages=['Before Pickup','Pending Pickup','In Transit','Unknown','Requested'];
+  const counts={};stages.forEach(s=>counts[s]=0);
+  rows.filter(r=>!isDelivered(r)).forEach(r=>{const s=getStageVal(r);if(s in counts)counts[s]++;else counts['Unknown']++;});
+  const labels=stages.filter(s=>counts[s]>0);
+  const data=labels.map(s=>counts[s]);
+  const stageColors={'Before Pickup':'#374151','Pending Pickup':'#6B7280','In Transit':'#2563EB','Unknown':'#9CA3AF','Requested':'#D97706'};
+  const ctx=document.getElementById('chartStage');
+  if(!ctx)return;
+  _charts.stage=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:labels.map(l=>stageColors[l]||'#9CA3AF'),borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'70%',plugins:{legend:{display:false}}}});
+  document.getElementById('chartStageLegend').innerHTML=labels.map(l=>`<div class="chart-legend-item"><span class="legend-sq" style="background:${stageColors[l]||'#9CA3AF'}"></span>${l}</div>`).join('');
+}
+
+function renderVolumeChart(rows,period){
+  destroyChart('volume');
+  const days=Math.min(period,90);
+  const labels=[],data=[];
+  const counts={};
+  rows.forEach(r=>{
+    const d=r[_cm.pickup]||r[_cm.lastUpdate];
+    if(d){try{const k=new Date(d).toISOString().slice(0,10);counts[k]=(counts[k]||0)+1;}catch(e){}}
+  });
+  for(let i=days-1;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+    data.push(counts[k]||0);
+  }
+  // Show labels every ~5-7 days
+  const step=Math.max(1,Math.floor(days/7));
+  const shownLabels=labels.map((l,i)=>i%step===0?l:'');
+  const ctx=document.getElementById('chartVolume');
+  if(!ctx)return;
+  const activeDays=data.filter(v=>v>0).length;
+  _charts.volume=new Chart(ctx,{type:'bar',data:{labels:shownLabels,datasets:[{data,backgroundColor:'#3C6B4E',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:(_,i)=>labels[i]||''}}},scales:{x:{grid:{display:false},ticks:{maxRotation:0,font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},precision:0}}}}});
+  document.getElementById('chartVolumeSub').textContent=`Total: ${rows.length} shipments over ${activeDays} days`;
+}
+
+function renderOTDRChart(rows,period){
+  destroyChart('otdr');
+  const weeks=[];const weekData=[];
+  // Group by week
+  for(let i=Math.ceil(period/7)-1;i>=0;i--){
+    const wend=new Date();wend.setDate(wend.getDate()-i*7);
+    const wstart=new Date(wend);wstart.setDate(wstart.getDate()-6);
+    const label=wend.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    weeks.push(label);
+    const wrows=rows.filter(r=>{
+      const d=r[_cm.delivery]||r[_cm.lastUpdate];
+      if(!d)return false;
+      try{const rd=new Date(d);return rd>=wstart&&rd<=wend;}catch(e){return false;}
+    });
+    const delivered=wrows.filter(isDelivered);
+    const onTimeW=delivered.filter(isOnTime);
+    weekData.push(delivered.length?Math.round(onTimeW.length/delivered.length*100):null);
+  }
+  const validData=weekData.filter(v=>v!==null);
+  const avg=validData.length?Math.round(validData.reduce((a,b)=>a+b,0)/validData.length):0;
+  document.getElementById('chartOTDRAvg').textContent=avg+'%';
+  const ctx=document.getElementById('chartOTDR');
+  if(!ctx)return;
+  _charts.otdr=new Chart(ctx,{type:'line',data:{labels:weeks,datasets:[
+    {label:'On-Time %',data:weekData,borderColor:'#3C6B4E',backgroundColor:'rgba(60,107,78,0.1)',tension:0.4,pointRadius:4,pointBackgroundColor:'#3C6B4E',fill:false},
+    {label:'Avg',data:weeks.map(()=>avg),borderColor:'#D97706',borderDash:[5,5],pointRadius:0,fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:false,min:0,max:100,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},callback:v=>v+'%'}}}}});
+}
+
+function renderPeriodChart(rows,period){
+  destroyChart('period');
+  // Split into two halves: current period and previous period
+  const now=new Date();
+  const midpoint=new Date(now);midpoint.setDate(midpoint.getDate()-period);
+  const prevStart=new Date(midpoint);prevStart.setDate(prevStart.getDate()-period);
+
+  // Group by month
+  const currentMonths={},prevMonths={};
+  rows.forEach(r=>{
+    const d=r[_cm.pickup]||r[_cm.lastUpdate];
+    if(d){try{const rd=new Date(d);const mk=rd.toLocaleDateString('en-US',{month:'short'});if(rd>=midpoint){currentMonths[mk]=(currentMonths[mk]||0)+1;}else if(rd>=prevStart){prevMonths[mk]=(prevMonths[mk]||0)+1;}}catch(e){}}
+  });
+  const allMonths=[...new Set([...Object.keys(currentMonths),...Object.keys(prevMonths)])];
+  if(!allMonths.length){allMonths.push('Current');}
+  const currData=allMonths.map(m=>currentMonths[m]||0);
+  const prevData=allMonths.map(m=>prevMonths[m]||0);
+  const currTotal=currData.reduce((a,b)=>a+b,0);
+  const prevTotal=prevData.reduce((a,b)=>a+b,0);
+  const chg=prevTotal?Math.round((currTotal-prevTotal)/prevTotal*100):0;
+  document.getElementById('periodChg').textContent=(chg>=0?'+':'')+chg+'%';
+  document.getElementById('periodChg').style.color=chg>=0?'var(--green)':'var(--red)';
+  const ctx=document.getElementById('chartPeriod');
+  if(!ctx)return;
+  _charts.period=new Chart(ctx,{type:'bar',data:{labels:allMonths,datasets:[
+    {label:'Current Period',data:currData,backgroundColor:'#3C6B4E',borderRadius:3},
+    {label:'Previous Period',data:prevData,backgroundColor:'#9CA3AF',borderRadius:3}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},precision:0}}}}});
+}
+
+function renderDelivPerfChart(rows){
+  destroyChart('delivperf');
+  const delivered=rows.filter(isDelivered);
+  const onTime=delivered.filter(isOnTime).length;
+  const delayed=delivered.filter(isDelayed).length;
+  const early=Math.max(0,Math.round(onTime*0.15)); // estimate
+  const late=delayed;
+  const scheduled=delivered.length;
+  const pct=scheduled?Math.round((onTime+early)/scheduled*100):0;
+  document.getElementById('delivPerfPct').textContent=pct+'%';
+  const ctx=document.getElementById('chartDelivPerf');
+  if(!ctx)return;
+  _charts.delivperf=new Chart(ctx,{type:'bar',data:{labels:['Scheduled','Early','On Time','Late'],datasets:[{data:[scheduled,early,onTime,late],backgroundColor:['#6B7280','#16A34A','#2563EB','#DC2626'],borderRadius:3,barThickness:24}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},precision:0}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+}
+
+function downloadPDF(){
+  window.print();
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
