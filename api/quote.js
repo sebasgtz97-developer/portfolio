@@ -1,24 +1,28 @@
-// Vercel serverless function — receives a quote request and appends it to
-// a Google Sheet via a Google Apps Script web app (webhook).
+// Vercel serverless function — receives a multi-lane quote request and appends
+// each lane as a separate row to a Google Sheet via a Google Apps Script webhook.
 //
-// SETUP:
-// 1. In your Google Sheet, open Extensions > Apps Script and paste:
+// SETUP — Google Apps Script (Extensions > Apps Script in your Sheet):
 //
 //    function doPost(e) {
 //      try {
 //        var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 //        var d = JSON.parse(e.postData.contents);
-//        sheet.appendRow([
-//          d.qrId, d.date, d.requester, d.shipperName, d.commodity,
-//          d.originCity, d.originState, d.originCountry,
-//          d.bcCity, d.destCity, d.destState, d.destCountry,
-//          d.equipType, d.serviceType,
-//          d.fuelIncluded, d.nuvoBC, d.numStraps, d.loadUnloadHrs,
-//          d.daysAtBorder, d.foodGrade, d.fumigation, d.teamDriver,
-//          d.targetRate, d.potentialLPM, d.notes, d.submittedAt
-//        ]);
+//        // Each lane is a separate row
+//        var lanes = d.lanes || [d];  // backwards-compat with single-lane
+//        lanes.forEach(function(lane) {
+//          sheet.appendRow([
+//            d.qrId, d.date, d.requester, d.salesRep || '', d.shipperName, d.commodity,
+//            lane.rateId || '',
+//            lane.originCity, lane.originState, lane.originCountry,
+//            lane.bcCity, lane.destCity, lane.destState, lane.destCountry,
+//            lane.equipType, lane.serviceType,
+//            lane.fuelIncluded, lane.nuvoBC, lane.numStraps, lane.loadUnloadHrs,
+//            lane.daysAtBorder, lane.foodGrade, lane.fumigation, lane.teamDriver,
+//            lane.targetRate, lane.potentialLPM, d.notes, d.submittedAt
+//          ]);
+//        });
 //        return ContentService
-//          .createTextOutput(JSON.stringify({ status: 'ok' }))
+//          .createTextOutput(JSON.stringify({ status: 'ok', lanes: lanes.length }))
 //          .setMimeType(ContentService.MimeType.JSON);
 //      } catch(err) {
 //        return ContentService
@@ -27,8 +31,8 @@
 //      }
 //    }
 //
-// 2. Deploy as a web app: Execute as "Me", Who has access "Anyone"
-// 3. Copy the deployment URL and set it as QUOTE_WEBHOOK_URL in Vercel env vars
+// Deploy as web app: Execute as "Me", access "Anyone".
+// Set QUOTE_WEBHOOK_URL in Vercel environment variables.
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -41,27 +45,34 @@ module.exports = async function handler(req, res) {
   const webhookUrl = process.env.QUOTE_WEBHOOK_URL;
   if (!webhookUrl) {
     return res.status(503).json({
-      error: 'Quote submission is not configured. Set the QUOTE_WEBHOOK_URL environment variable.',
+      error: 'Quote submission is not configured. Set QUOTE_WEBHOOK_URL in environment variables.',
     });
   }
 
   const body = req.body;
 
-  // Basic server-side validation
-  const required = [
-    'qrId', 'date', 'requester', 'shipperName', 'commodity',
-    'originCity', 'originState', 'originCountry',
-    'bcCity', 'destCity', 'destState', 'destCountry',
-    'equipType', 'serviceType',
-  ];
-
-  const missing = required.filter(f => !body[f] || String(body[f]).trim() === '');
+  // Global required fields
+  const globalRequired = ['qrId', 'date', 'requester', 'shipperName', 'commodity'];
+  const missing = globalRequired.filter(f => !body[f] || String(body[f]).trim() === '');
   if (missing.length) {
     return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
   }
 
-  if (!/^\d+$/.test(String(body.qrId).trim())) {
-    return res.status(400).json({ error: 'qrId must be numeric' });
+  const lanes = body.lanes;
+  if (!Array.isArray(lanes) || lanes.length === 0) {
+    return res.status(400).json({ error: 'At least one lane is required' });
+  }
+
+  // Per-lane required
+  const laneRequired = ['originCity', 'originState', 'bcCity', 'destCity', 'destState'];
+  for (let i = 0; i < lanes.length; i++) {
+    const lane = lanes[i];
+    const missingLane = laneRequired.filter(f => !lane[f] || String(lane[f]).trim() === '');
+    if (missingLane.length) {
+      return res.status(400).json({
+        error: `Lane ${i + 1} (${lane.rateId || 'unknown'}) missing: ${missingLane.join(', ')}`,
+      });
+    }
   }
 
   try {
@@ -79,7 +90,12 @@ module.exports = async function handler(req, res) {
       throw new Error(json.message || json.error || `Upstream error ${upstream.status}`);
     }
 
-    return res.status(200).json({ status: 'ok', message: 'Quote submitted successfully' });
+    return res.status(200).json({
+      status: 'ok',
+      message: `Quote submitted: ${lanes.length} lane(s)`,
+      qrId: body.qrId,
+      lanes: lanes.length,
+    });
   } catch (err) {
     console.error('Quote webhook error:', err.message);
     return res.status(502).json({ error: 'Failed to submit to Google Sheets', detail: err.message });
