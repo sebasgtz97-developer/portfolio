@@ -290,7 +290,7 @@ button,input,select,textarea{font-family:inherit;}
 </style>
 </head>
 
-<script>(function(){var t=localStorage.getItem('ct_theme');if(t)document.documentElement.dataset.theme=t;})()</script>
+<script>(function(){var t=localStorage.getItem('ct_theme');if(t==='dark')document.documentElement.dataset.theme='dark';})()</script>
 <body>
 
 <!-- HEADER -->
@@ -834,7 +834,7 @@ function toggleLaneEquipOverride(id){
   const sec=document.getElementById(id+'_equipSection');
   if(!chk||!sec)return;
   const inherited='<div class="inherited-badge"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M3.5 5l3.5-3 3.5 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Using defaults</div>';
-  const toggleRow='<div class="lane-ops-toggle" style="margin-top:6px"><span class="lane-ops-toggle-label" style="font-size:10px;color:var(--text-4)">Override equipment for this lane?</span><label class="sw"><input type="checkbox" id="'+id+'_overrideEquip" onchange="toggleLaneEquipOverride(''+id+'')" '+(chk.checked?'checked':'')+'>  <span class="sw-track"></span><span class="sw-thumb"></span></label></div>';
+  const toggleRow='<div class="lane-ops-toggle" style="margin-top:6px"><span class="lane-ops-toggle-label" style="font-size:10px;color:var(--text-4)">Override equipment for this lane?</span><label class="sw"><input type="checkbox" id="'+id+'_overrideEquip" onchange="toggleLaneEquipOverride(\''+id+'\')" '+(chk.checked?'checked':'')+'>  <span class="sw-track"></span><span class="sw-thumb"></span></label></div>';
   if(chk.checked){
     sec.innerHTML=renderEquipFields(id)+toggleRow;
   }else{
@@ -848,7 +848,7 @@ function toggleLaneOpsOverride(id){
   const sec=document.getElementById(id+'_opsSection');
   if(!chk||!sec)return;
   const inherited='<div class="inherited-badge"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M3.5 5l3.5-3 3.5 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Using defaults</div>';
-  const toggleRow='<div class="lane-ops-toggle" style="margin-top:6px"><span class="lane-ops-toggle-label" style="font-size:10px;color:var(--text-4)">Override ops for this lane?</span><label class="sw"><input type="checkbox" id="'+id+'_overrideOps" onchange="toggleLaneOpsOverride(''+id+'')" '+(chk.checked?'checked':'')+'>  <span class="sw-track"></span><span class="sw-thumb"></span></label></div>';
+  const toggleRow='<div class="lane-ops-toggle" style="margin-top:6px"><span class="lane-ops-toggle-label" style="font-size:10px;color:var(--text-4)">Override ops for this lane?</span><label class="sw"><input type="checkbox" id="'+id+'_overrideOps" onchange="toggleLaneOpsOverride(\''+id+'\')" '+(chk.checked?'checked':'')+'>  <span class="sw-track"></span><span class="sw-thumb"></span></label></div>';
   if(chk.checked){
     sec.innerHTML=renderOpsFields(id)+toggleRow;
   }else{
@@ -1085,9 +1085,9 @@ document.getElementById('btnGoBack').addEventListener('click',()=>{hideSuccess()
 // ─── Dark Mode Toggle ──────────────────────────────────────────────────────
 function toggleDark(){
   const html=document.documentElement;
-  const dark=html.dataset.theme==='dark';
-  html.dataset.theme=dark?'':'dark';
-  localStorage.setItem('ct_theme',dark?'':'dark');
+  const isDark=html.dataset.theme==='dark';
+  html.dataset.theme=isDark?'':'dark';
+  localStorage.setItem('ct_theme',isDark?'':'dark');
 }
 </script>
 </body>
