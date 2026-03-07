@@ -223,6 +223,70 @@ button,input,select,textarea{font-family:inherit;}
 
 @media(max-width:700px){.fg-2,.fg-3,.fg-4{grid-template-columns:1fr;}.ops-grid{grid-template-columns:1fr;}.span-2,.span-3,.span-4{grid-column:span 1;}.main{padding:16px 14px 48px;}}
 
+/* ── Dark Mode ── */
+[data-theme="dark"]{
+  --bg:#15191F;--surface:#1E2330;--surface-2:#242938;--surface-3:#15191F;
+  --border:#2A3044;--border-2:#354060;
+  --text-1:#F0F4FC;--text-2:#C4CEDD;--text-3:#8899B4;--text-4:#5A6880;
+  --brand:#4D8B67;--brand-dark:#3C6B4E;--brand-light:rgba(77,139,103,.12);
+  --green:#22C55E;--green-bg:rgba(34,197,94,.1);--green-border:rgba(34,197,94,.2);
+  --amber:#F59E0B;--amber-bg:rgba(245,158,11,.1);--amber-border:rgba(245,158,11,.2);
+  --red:#F87171;--red-bg:rgba(248,113,113,.1);--red-border:rgba(248,113,113,.2);
+  --blue:#60A5FA;--blue-bg:rgba(96,165,250,.1);--blue-border:rgba(96,165,250,.2);
+}
+[data-theme="dark"] body{background:var(--bg);}
+[data-theme="dark"] .field input,[data-theme="dark"] .field select,[data-theme="dark"] .field textarea,[data-theme="dark"] .lf input,[data-theme="dark"] .lf select{background:var(--surface-2);color:var(--text-1);}
+[data-theme="dark"] .combo-drop,[data-theme="dark"] .lf-drop{background:var(--surface);border-color:var(--border);}
+[data-theme="dark"] .inherited-badge{background:var(--surface-3);}
+
+/* ── Dark Mode Toggle Button ── */
+.btn-dark-mode{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.btn-dark-mode:hover{background:var(--surface-2);color:var(--text-1);border-color:var(--border-2);}
+.dm-sun{display:none;}
+.dm-moon{display:block;}
+[data-theme="dark"] .dm-sun{display:block;}
+[data-theme="dark"] .dm-moon{display:none;}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes laneSlideIn{from{opacity:0;transform:translateX(28px) scale(.96)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes spinnerSpin{to{transform:rotate(360deg)}}
+.qr-banner{animation:fadeUp .38s .04s cubic-bezier(.22,.84,.38,1) both;}
+.section-card:nth-child(1){animation:fadeUp .4s .08s cubic-bezier(.22,.84,.38,1) both;}
+.section-card:nth-child(2){animation:fadeUp .4s .14s cubic-bezier(.22,.84,.38,1) both;}
+.section-card:nth-child(3){animation:fadeUp .4s .20s cubic-bezier(.22,.84,.38,1) both;}
+.lanes-area{animation:fadeUp .4s .26s cubic-bezier(.22,.84,.38,1) both;}
+.submit-area{animation:fadeUp .4s .32s cubic-bezier(.22,.84,.38,1) both;}
+.val-summary{animation:fadeUp .22s cubic-bezier(.22,.84,.38,1) both;}
+.lane-card{animation:laneSlideIn .28s cubic-bezier(.22,.84,.38,1) both;}
+.section-card{transition:box-shadow .2s;}
+.section-card:hover{box-shadow:0 2px 14px rgba(0,0,0,.07);}
+.btn-submit{transition:background .14s,transform .12s,box-shadow .14s;}
+.btn-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 14px rgba(60,107,78,.28);}
+.btn-add-lane{transition:background .14s,transform .12s;}
+.btn-add-lane:hover{transform:translateY(-1px);}
+.lane-card{transition:border-color .15s,box-shadow .2s;}
+.lane-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08);}
+
+/* ── Success Full-Screen ── */
+.success-screen{position:fixed;inset:0;background:#27463E;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;opacity:0;pointer-events:none;transition:opacity .3s ease;}
+.success-screen.show{opacity:1;pointer-events:all;}
+.success-inner{text-align:center;max-width:520px;width:100%;}
+.success-inner.animate{animation:fadeUp .5s .1s cubic-bezier(.22,.84,.38,1) both;}
+.ss-checkmark{width:72px;height:72px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 28px;color:#fff;background:rgba(255,255,255,.1);backdrop-filter:blur(4px);}
+.ss-title{font-size:26px;font-weight:700;color:#fff;margin-bottom:14px;line-height:1.25;}
+.ss-sub{font-size:15px;color:rgba(255,255,255,.72);line-height:1.65;margin-bottom:32px;}
+.ss-details{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:14px 20px;margin-bottom:32px;text-align:left;}
+.ss-detail-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+.ss-detail-row:last-child{border-bottom:none;}
+.ss-detail-label{color:rgba(255,255,255,.45);}
+.ss-detail-value{font-weight:600;color:#fff;}
+.ss-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-ss-more{height:42px;padding:0 24px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:background .15s,transform .12s;}
+.btn-ss-more:hover{background:rgba(255,255,255,.22);transform:translateY(-1px);}
+.btn-ss-back{height:42px;padding:0 24px;background:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:#27463E;cursor:pointer;transition:background .15s,transform .12s;}
+.btn-ss-back:hover{background:rgba(255,255,255,.9);transform:translateY(-1px);}
+
 </style>
 </head>
 
@@ -232,16 +296,16 @@ button,input,select,textarea{font-family:inherit;}
 <!-- HEADER -->
 <header class="ct-header">
   <div class="h-brand">
-    <svg width="88" height="26" viewBox="0 0 88 26" xmlns="http://www.w3.org/2000/svg">
-      <text x="0" y="21" font-family="'Cormorant Garamond',Georgia,serif" font-size="21" font-weight="500" letter-spacing="0.3" fill="#3C6B4E">nuvo</text>
-    </svg>
+    <span class="h-logo-text">nuvo</span>
     <div class="h-os-badge">OS</div>
   </div>
   <div class="h-divider"></div>
   <span class="h-app-title">Quote Request Tool</span>
   <div class="h-right">
-    <a href="/index.html" class="h-nav-link">Portfolio</a>
-    <a href="/control-tower.html" class="h-nav-link">Control Tower</a>
+    <button class="btn-dark-mode" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">
+      <svg class="dm-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="dm-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
   </div>
 </header>
 
@@ -281,18 +345,18 @@ button,input,select,textarea{font-family:inherit;}
       <span class="section-sub">Opportunity details</span>
     </div>
     <div class="section-body">
-      <div class="fg fg-3">
+      <div class="fg fg-2">
         <div class="field">
           <label class="field-label" for="reqDate">Date <span class="field-req">*</span></label>
           <input type="date" id="reqDate" name="reqDate">
         </div>
         <div class="field">
-          <label class="field-label" for="requester">Requester <span class="field-req">*</span></label>
-          <input type="text" id="requester" name="requester" placeholder="Your name">
-        </div>
-        <div class="field">
-          <label class="field-label" for="salesRep">Sales Rep</label>
-          <input type="text" id="salesRep" name="salesRep" placeholder="Opportunity owner">
+          <label class="field-label" for="requester">Sales Rep / Requester <span class="field-req">*</span></label>
+          <div class="combo-wrap">
+            <input type="text" id="requester" name="requester" placeholder="Select or type a name…" autocomplete="off">
+            <div class="combo-drop" id="requesterDrop"></div>
+          </div>
+          <span class="field-hint">Choose from the list or type a custom name</span>
         </div>
       </div>
     </div>
@@ -481,25 +545,34 @@ button,input,select,textarea{font-family:inherit;}
   </form>
 </div>
 
-<!-- SUCCESS OVERLAY -->
-<div class="success-overlay" id="successOverlay">
-  <div class="success-card">
-    <div class="success-icon">&#10003;</div>
-    <h2 class="success-title">Quote Request Submitted!</h2>
-    <p class="success-sub" id="successMsg">Your pricing opportunity has been added to the sheet.</p>
-    <div class="success-details" id="successDetails"></div>
-    <button class="btn-new-quote" id="btnNewQuote">Submit another quote</button>
+<!-- SUCCESS SCREEN -->
+<div class="success-screen" id="successScreen">
+  <div class="success-inner" id="successInner">
+    <div class="ss-checkmark">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 class="ss-title">Thank you for your Quote</h2>
+    <p class="ss-sub">The pricing team will reach out to you once it's ready.</p>
+    <div class="ss-details" id="ssDetails"></div>
+    <div class="ss-actions">
+      <button class="btn-ss-more" id="btnSubmitMore">Submit more quotes</button>
+      <button class="btn-ss-back" id="btnGoBack">Go back to form</button>
+    </div>
   </div>
 </div>
 
 <script>
 // ─── Data ───────────────────────────────────────────────────────────────────
+const REQUESTER_NAMES=['Diego Lozano','Justin Diaz','Rich Solarte','Luis Garcia','Meghan Holmquist'];
+
 const MX_CITIES=['Aguascalientes','Celaya','Chihuahua','Ciudad de Mexico','Ciudad Ju\u00e1rez','Ciudad Obreg\u00f3n','Coatzacoalcos','Culiac\u00e1n','Durango','Ensenada','Guadalajara','Hermosillo','Irapuato','La Paz','Le\u00f3n','Los Mochis','Manzanillo','Matamoros','Mazatl\u00e1n','M\u00e9rida','Mexicali','Monterrey','Morelia','Nuevo Laredo','Oaxaca','Piedras Negras','Puebla','Quer\u00e9taro','Reynosa','Saltillo','San Luis Potos\u00ed','Silao','Tampico','Tijuana','Tlalnepantla','Toluca','Torre\u00f3n','Veracruz','Villahermosa','Xalapa'];
-const US_CITIES=['Albuquerque','Atlanta','Austin','Baltimore','Birmingham','Boston','Buffalo','Charlotte','Chicago','Cincinnati','Cleveland','Columbus','Dallas','Denver','Detroit','El Paso','Fort Worth','Fresno','Grand Rapids','Houston','Indianapolis','Jacksonville','Kansas City','Laredo','Las Vegas','Los Angeles','Louisville','McAllen','Memphis','Miami','Milwaukee','Minneapolis','Nashville','New York','Newark','Oklahoma City','Omaha','Orlando','Philadelphia','Phoenix','Pittsburgh','Portland','Raleigh','Sacramento','Salt Lake City','San Antonio','San Diego','San Francisco','Seattle','St. Louis','Tampa','Tucson','Washington DC'];
+const US_CITIES=['Albuquerque','Atlanta','Ashland','Austin','Baltimore','Birmingham','Boston','Buffalo','Charlotte','Chicago','Cincinnati','Cleveland','Columbus','Dallas','Denver','Detroit','El Paso','Fort Worth','Fresno','Grand Rapids','Houston','Indianapolis','Jacksonville','Kansas City','Laredo','Las Vegas','Los Angeles','Louisville','McAllen','Memphis','Miami','Milwaukee','Minneapolis','Nashville','New York','Newark','Oklahoma City','Omaha','Orlando','Philadelphia','Phoenix','Pittsburgh','Portland','Raleigh','Sacramento','Salt Lake City','San Antonio','San Diego','San Francisco','Seattle','St. Louis','Tampa','Torrance','Tucson','Washington DC'];
+const CA_CITIES=['Abbotsford','Brampton','Burnaby','Calgary','Coquitlam','Edmonton','Gatineau','Greater Sudbury','Halifax','Hamilton','Kelowna','Laval','London','Longueuil','Markham','Mississauga','Montreal','Ottawa','Quebec City','Regina','Richmond','Saskatoon','Sherbrooke','Surrey','Toronto','Vancouver','Vaughan','Windsor','Winnipeg'];
 const MX_STATES=['Aguascalientes','Baja California','Baja California Sur','Campeche','Chiapas','Chihuahua','Ciudad de M\u00e9xico','Coahuila','Colima','Durango','Guanajuato','Guerrero','Hidalgo','Jalisco','Estado de M\u00e9xico','Michoac\u00e1n','Morelos','Nayarit','Nuevo Le\u00f3n','Oaxaca','Puebla','Quer\u00e9taro','Quintana Roo','San Luis Potos\u00ed','Sinaloa','Sonora','Tabasco','Tamaulipas','Tlaxcala','Veracruz','Yucat\u00e1n','Zacatecas'];
 const US_STATES=['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
-const ALL_CITIES=[...new Set([...MX_CITIES,...US_CITIES])].sort();
-const ALL_STATES=[...new Set([...MX_STATES,...US_STATES])].sort();
+const CA_PROVINCES=['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon'];
+const ALL_CITIES=[...new Set([...MX_CITIES,...US_CITIES,...CA_CITIES])].sort();
+const ALL_STATES=[...new Set([...MX_STATES,...US_STATES,...CA_PROVINCES])].sort();
 const BC_CITIES=['Laredo / Nuevo Laredo','El Paso / Ciudad Ju\u00e1rez','McAllen / Reynosa','Eagle Pass / Piedras Negras','Del Rio / Ciudad Acuna','Brownsville / Matamoros','San Diego / Tijuana','Douglas / Agua Prieta','Nogales / Nogales','Calexico / Mexicali','Presidio / Ojinaga','Hidalgo / Reynosa'];
 const COMMODITIES=['Aerospace Components','Agricultural Products','Auto Parts / Automotive','Beverages (Ambient)','Beverages (Refrigerated)','Building Materials','Chemicals / Hazmat','Chocolate / Confectionery','Consumer Electronics','Dairy Products','Electrical / Cable','Food (Ambient)','Food (Frozen)','Food (Refrigerated)','Fresh Produce','Furniture / Home Goods','Glass / Fragile','Hardware / Tools','Health & Beauty','Industrial Equipment','Machinery / Heavy Equipment','Meat / Poultry','Medical Supplies','Metal / Steel','Paper / Packaging','Personal Care Products','Pet Food','Pharmaceuticals','Plastics / Resins','Retail / E-commerce','Snacks / Dry Goods','Textiles / Apparel','Tires / Rubber','Tobacco','Toys / Seasonal Goods'];
 
@@ -826,6 +899,7 @@ function initCombo(inputId,dropId,data){
   document.addEventListener('click',e=>{if(!input.contains(e.target)&&!drop.contains(e.target))close();});
 }
 initCombo('commodity','commodityDrop',COMMODITIES);
+initCombo('requester','requesterDrop',REQUESTER_NAMES);
 
 // ─── Combobox (Lane) ──────────────────────────────────────────────────────────
 function initLaneCombo(inputId,dropId,data){
@@ -956,7 +1030,7 @@ document.getElementById('quoteForm').addEventListener('submit',async function(e)
     qrId:_qrId,
     date:g('reqDate'),
     requester:g('requester'),
-    salesRep:g('salesRep'),
+    salesRep:g('requester'),
     shipperName:g('shipperName'),
     commodity:g('commodity'),
     notes:g('notes'),
@@ -972,14 +1046,17 @@ document.getElementById('quoteForm').addEventListener('submit',async function(e)
     const json=await resp.json().catch(()=>({}));
     if(!resp.ok)throw new Error(json.error||'Server returned '+resp.status);
     clearStatus();
-    const lanesText=lanes.map((l,i)=>`Lane ${i+1} (${l.rateId}): ${l.originCity||'?'} → ${l.destCity||'?'}`).join(', ');
-    document.getElementById('successMsg').textContent='QR '+_qrId+' with '+lanes.length+' lane(s) has been submitted to the pricing sheet.';
-    document.getElementById('successDetails').innerHTML=
-      '<div class="success-detail-row"><span class="success-detail-label">QR ID</span><span class="success-detail-value">'+eh(_qrId)+'</span></div>'+
-      '<div class="success-detail-row"><span class="success-detail-label">Shipper</span><span class="success-detail-value">'+eh(global.shipperName)+'</span></div>'+
-      '<div class="success-detail-row"><span class="success-detail-label">Lanes</span><span class="success-detail-value">'+lanes.length+'</span></div>'+
-      lanes.map((l,i)=>'<div class="success-detail-row"><span class="success-detail-label">'+eh(l.rateId)+'</span><span class="success-detail-value">'+eh((l.originCity||'?')+' → '+(l.destCity||'?'))+'</span></div>').join('');
-    document.getElementById('successOverlay').classList.add('show');
+    document.getElementById('ssDetails').innerHTML=
+      '<div class="ss-detail-row"><span class="ss-detail-label">Quote ID</span><span class="ss-detail-value">'+eh(_qrId)+'</span></div>'+
+      '<div class="ss-detail-row"><span class="ss-detail-label">Requester</span><span class="ss-detail-value">'+eh(global.requester)+'</span></div>'+
+      '<div class="ss-detail-row"><span class="ss-detail-label">Shipper</span><span class="ss-detail-value">'+eh(global.shipperName)+'</span></div>'+
+      '<div class="ss-detail-row"><span class="ss-detail-label">Lanes</span><span class="ss-detail-value">'+lanes.length+'</span></div>'+
+      lanes.map((l,i)=>'<div class="ss-detail-row"><span class="ss-detail-label">'+eh(l.rateId)+'</span><span class="ss-detail-value">'+eh((l.originCity||'?')+' \u2192 '+(l.destCity||'?'))+'</span></div>').join('');
+    const si=document.getElementById('successInner');
+    si.classList.remove('animate');
+    void si.offsetWidth; // reflow to restart animation
+    si.classList.add('animate');
+    document.getElementById('successScreen').classList.add('show');
   }catch(err){
     setStatus('err','Submission failed: '+err.message+'. Please try again.');
   }finally{
@@ -1000,8 +1077,18 @@ function resetForm(){
   addLane();
 }
 document.getElementById('btnReset').addEventListener('click',()=>{if(confirm('Reset the form? All entered data will be cleared.'))resetForm();});
-document.getElementById('btnNewQuote').addEventListener('click',()=>{document.getElementById('successOverlay').classList.remove('show');resetForm();window.scrollTo({top:0,behavior:'smooth'});});
-document.getElementById('successOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+
+function hideSuccess(){document.getElementById('successScreen').classList.remove('show');}
+document.getElementById('btnSubmitMore').addEventListener('click',()=>{hideSuccess();resetForm();window.scrollTo({top:0,behavior:'smooth'});});
+document.getElementById('btnGoBack').addEventListener('click',()=>{hideSuccess();window.scrollTo({top:0,behavior:'smooth'});});
+
+// ─── Dark Mode Toggle ──────────────────────────────────────────────────────
+function toggleDark(){
+  const html=document.documentElement;
+  const dark=html.dataset.theme==='dark';
+  html.dataset.theme=dark?'':'dark';
+  localStorage.setItem('ct_theme',dark?'':'dark');
+}
 </script>
 </body>
 </html>
