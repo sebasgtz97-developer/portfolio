@@ -338,7 +338,7 @@ button,input,select,textarea{font-family:inherit;}
 .pi-search-btn{width:100%;height:38px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .14s,transform .12s;margin-top:4px;}
 .pi-search-btn:hover{background:var(--brand-dark);transform:translateY(-1px);}
 .pi-search-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-.pi-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pi-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px;}
 .pi-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;}
 .pi-stat-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:5px;}
 .pi-stat-value{font-size:20px;font-weight:700;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:1.1;}
@@ -363,7 +363,9 @@ button,input,select,textarea{font-family:inherit;}
 .pi-dot-line{width:16px;height:3px;border-radius:2px;flex-shrink:0;}
 .pi-dot-cost{background:#3C6B4E;}
 .pi-dot-rec{background:#D97706;}
-.pi-chart-wrap{position:relative;height:300px;}
+.pi-chart-wrap{position:relative;height:280px;}
+.pi-dl-btn{height:30px;padding:0 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;font-weight:600;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:background .12s,border-color .12s;}
+.pi-dl-btn:hover{background:var(--brand-light);border-color:var(--brand);color:var(--brand);}
 .pi-no-data{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--text-3);text-align:center;}
 /* skeleton preview */
 .pi-skeleton{flex:1;display:flex;flex-direction:column;gap:16px;}
@@ -720,31 +722,7 @@ button,input,select,textarea{font-family:inherit;}
           </div>
         </div>
 
-        <!-- Stats cards, shown after search -->
-        <div id="piStats" style="display:none;">
-          <div class="pi-stats-grid">
-            <div class="pi-stat-card">
-              <div class="pi-stat-label">Avg Freight Cost</div>
-              <div class="pi-stat-value green" id="piStatAvg">—</div>
-              <div class="pi-stat-sub">per shipment</div>
-            </div>
-            <div class="pi-stat-card">
-              <div class="pi-stat-label">Recommended Rate</div>
-              <div class="pi-stat-value amber" id="piStatRec">—</div>
-              <div class="pi-stat-sub">+12% margin</div>
-            </div>
-            <div class="pi-stat-card">
-              <div class="pi-stat-label">Lowest Month</div>
-              <div class="pi-stat-value" id="piStatMin">—</div>
-              <div class="pi-stat-sub">avg freight</div>
-            </div>
-            <div class="pi-stat-card">
-              <div class="pi-stat-label">Shipments</div>
-              <div class="pi-stat-value" id="piStatCount">—</div>
-              <div class="pi-stat-sub" id="piStatMonths">months of data</div>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       <!-- Right: Chart area -->
@@ -806,14 +784,46 @@ button,input,select,textarea{font-family:inherit;}
         <div class="pi-error" id="piErrorMsg" style="display:none;"></div>
         <!-- Chart -->
         <div class="pi-chart-inner" id="piChartInner" style="display:none;">
+          <!-- Stats cards -->
+          <div id="piStats">
+            <div class="pi-stats-grid">
+              <div class="pi-stat-card">
+                <div class="pi-stat-label">Avg Freight Cost</div>
+                <div class="pi-stat-value green" id="piStatAvg">—</div>
+                <div class="pi-stat-sub">per shipment</div>
+              </div>
+              <div class="pi-stat-card">
+                <div class="pi-stat-label">Recommended Rate</div>
+                <div class="pi-stat-value amber" id="piStatRec">—</div>
+                <div class="pi-stat-sub">+12% margin</div>
+              </div>
+              <div class="pi-stat-card">
+                <div class="pi-stat-label">Lowest Month</div>
+                <div class="pi-stat-value" id="piStatMin">—</div>
+                <div class="pi-stat-sub">avg freight</div>
+              </div>
+              <div class="pi-stat-card">
+                <div class="pi-stat-label">Shipments</div>
+                <div class="pi-stat-value" id="piStatCount">—</div>
+                <div class="pi-stat-sub" id="piStatMonths">months of data</div>
+              </div>
+            </div>
+          </div>
+          <!-- Chart header -->
           <div class="pi-chart-top">
             <div>
               <div class="pi-chart-title" id="piChartTitle"></div>
               <div class="pi-chart-sub" id="piChartSub"></div>
             </div>
-            <div class="pi-legend">
-              <div class="pi-legend-item"><span class="pi-dot pi-dot-cost"></span>Avg Freight Cost</div>
-              <div class="pi-legend-item"><span class="pi-dot pi-dot-rec"></span>Recommended Rate (+12%)</div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              <div class="pi-legend">
+                <div class="pi-legend-item"><span class="pi-dot pi-dot-cost"></span>Avg Freight Cost</div>
+                <div class="pi-legend-item"><span class="pi-dot pi-dot-rec"></span>Recommended Rate (+12%)</div>
+              </div>
+              <button class="pi-dl-btn" id="piDownloadBtn" onclick="downloadPricingReport()">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Download
+              </button>
             </div>
           </div>
           <div class="pi-chart-wrap">
@@ -1499,6 +1509,7 @@ updateHistBadge();
 // ─── Pricing Insights ─────────────────────────────────────────────────────────
 let piChart = null;
 let piCombosInited = false;
+let piLastData = null; // {sorted, route} — kept for CSV download
 // Seed comboboxes with static lists while API loads
 let piOriginCities = [...ALL_CITIES];
 let piOriginStates = [...ALL_STATES];
@@ -1539,11 +1550,11 @@ function initPricingCombos(){
 
 function showPiState(state){
   // 'empty' = skeleton preview, 'loading', 'error', 'chart'
-  document.getElementById('piEmpty').style.display        = state==='empty'   ? 'flex' : 'none';
-  document.getElementById('piLoading').style.display      = state==='loading' ? ''     : 'none';
-  document.getElementById('piErrorMsg').style.display     = state==='error'   ? ''     : 'none';
-  document.getElementById('piChartInner').style.display   = state==='chart'   ? ''     : 'none';
-  document.getElementById('piStats').style.display        = state==='chart'   ? ''     : 'none';
+  document.getElementById('piEmpty').style.display      = state==='empty'   ? 'flex' : 'none';
+  document.getElementById('piLoading').style.display    = state==='loading' ? ''     : 'none';
+  document.getElementById('piErrorMsg').style.display   = state==='error'   ? ''     : 'none';
+  document.getElementById('piChartInner').style.display = state==='chart'   ? ''     : 'none';
+  // piStats lives inside piChartInner so no separate toggle needed
 }
 
 async function searchPricing(){
@@ -1591,6 +1602,7 @@ async function searchPricing(){
 function renderPricingChart(rows,route){
   // Parse & sort rows
   const sorted=rows.slice().sort((a,b)=>new Date(a.MONTH)-new Date(b.MONTH));
+  piLastData={sorted,route};
   const labels=sorted.map(r=>{
     const d=new Date(r.MONTH);
     return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
@@ -1690,6 +1702,43 @@ function renderPricingChart(rows,route){
   });
 
   showPiState('chart');
+}
+
+function downloadPricingReport(){
+  if(!piLastData)return;
+  const {sorted,route}=piLastData;
+  const headers=['Month','Avg Freight Cost','Recommended Rate (+12%)','Min Freight Cost','Max Freight Cost','Shipment Count'];
+  const csvRows=[headers.join(',')];
+  sorted.forEach(r=>{
+    const d=new Date(r.MONTH);
+    const month=d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+    const avg=parseFloat(r.AVG_FREIGHT_COST)||0;
+    const rec=Math.round(avg*1.12);
+    csvRows.push([
+      '"'+month+'"',
+      avg.toFixed(2),
+      rec.toFixed(2),
+      (parseFloat(r.MIN_FREIGHT_COST)||0).toFixed(2),
+      (parseFloat(r.MAX_FREIGHT_COST)||0).toFixed(2),
+      r.SHIPMENT_COUNT||0
+    ].join(','));
+  });
+  // Summary rows
+  const avgCosts=sorted.map(r=>parseFloat(r.AVG_FREIGHT_COST)||0);
+  const overallAvg=avgCosts.length?Math.round(avgCosts.reduce((s,v)=>s+v,0)/avgCosts.length):0;
+  csvRows.push('');
+  csvRows.push('"Route","'+route+'"');
+  csvRows.push('"Overall Avg Freight Cost","$'+overallAvg+'"');
+  csvRows.push('"Recommended Rate","$'+Math.round(overallAvg*1.12)+'"');
+  csvRows.push('"Total Shipments","'+sorted.reduce((s,r)=>s+(parseInt(r.SHIPMENT_COUNT)||0),0)+'"');
+  const blob=new Blob([csvRows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const safe=route.replace(/[^a-z0-9]/gi,'_').replace(/_+/g,'_');
+  a.download='pricing_'+safe+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
