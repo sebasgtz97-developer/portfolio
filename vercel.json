@@ -9,6 +9,9 @@
     },
     "api/ct-data.js": {
       "maxDuration": 20
+    },
+    "api/pricing-insights.js": {
+      "maxDuration": 25
     }
   }
 }

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quote Request Tool — Nuvocargo</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 :root{
   --bg:#EEEEE9;--surface:#FFFFFF;--surface-2:#F5F5F0;--surface-3:#EEEEE9;
@@ -331,6 +332,41 @@ button,input,select,textarea{font-family:inherit;}
 .btn-ss-back{height:42px;padding:0 24px;background:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:#27463E;cursor:pointer;transition:background .15s,transform .12s;}
 .btn-ss-back:hover{background:rgba(255,255,255,.9);transform:translateY(-1px);}
 
+/* ── Pricing Insights ── */
+.pi-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+.pi-sidebar{display:flex;flex-direction:column;gap:14px;}
+.pi-search-btn{width:100%;height:38px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .14s,transform .12s;margin-top:4px;}
+.pi-search-btn:hover{background:var(--brand-dark);transform:translateY(-1px);}
+.pi-search-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.pi-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pi-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;}
+.pi-stat-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-4);margin-bottom:5px;}
+.pi-stat-value{font-size:20px;font-weight:700;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:1.1;}
+.pi-stat-value.amber{color:var(--amber);}
+.pi-stat-value.green{color:var(--brand);}
+.pi-stat-sub{font-size:10px;color:var(--text-4);margin-top:2px;}
+.pi-chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;min-height:420px;display:flex;flex-direction:column;}
+.pi-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-4);text-align:center;padding:40px;}
+.pi-empty-icon{width:56px;height:56px;border-radius:50%;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+.pi-empty-text{font-size:13px;line-height:1.6;}
+.pi-empty-hint{font-size:11px;color:var(--text-4);}
+.pi-loading{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text-3);font-size:13px;}
+.pi-loading-spinner{width:18px;height:18px;border:2.5px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+.pi-error{flex:1;display:flex;align-items:center;justify-content:center;padding:32px;color:var(--red);font-size:12px;text-align:center;}
+.pi-chart-inner{flex:1;display:flex;flex-direction:column;gap:16px;}
+.pi-chart-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.pi-chart-title{font-size:15px;font-weight:700;color:var(--text-1);}
+.pi-chart-sub{font-size:11px;color:var(--text-3);margin-top:3px;}
+.pi-legend{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.pi-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--text-2);}
+.pi-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.pi-dot-line{width:16px;height:3px;border-radius:2px;flex-shrink:0;}
+.pi-dot-cost{background:#3C6B4E;}
+.pi-dot-rec{background:#D97706;}
+.pi-chart-wrap{position:relative;height:300px;}
+.pi-no-data{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--text-3);text-align:center;}
+@media(max-width:900px){.pi-layout{grid-template-columns:1fr;}.pi-stats-grid{grid-template-columns:repeat(4,1fr);}}
+
 </style>
 </head>
 
@@ -364,7 +400,11 @@ button,input,select,textarea{font-family:inherit;}
     <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">
       <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 4v3l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       Quote History
-      <span id="histBadge" style="display:none;background:var(--brand);color:#fff;border-radius:999px;padding:0 6px;font-size:10px;" id="histCountBadge"></span>
+      <span id="histBadge" style="display:none;background:var(--brand);color:#fff;border-radius:999px;padding:0 6px;font-size:10px;"></span>
+    </button>
+    <button class="tab-btn" id="tabPricing" onclick="switchTab('pricing')">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="1,10 4.5,6 7,8 10,4 13,2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      Pricing Insights
     </button>
   </div>
 
@@ -608,6 +648,123 @@ button,input,select,textarea{font-family:inherit;}
   <!-- ── History Panel ── -->
   <div class="tab-panel" id="panelHistory">
     <div id="histContent"></div>
+  </div>
+
+  <!-- ── Pricing Insights Panel ── -->
+  <div class="tab-panel" id="panelPricing">
+    <div class="pi-layout">
+
+      <!-- Left: search form + stats -->
+      <div class="pi-sidebar">
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon si-brand">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="1,10 4,6.5 7,8 10,4 13,2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            </div>
+            <span class="section-title">Route Lookup</span>
+            <span class="section-sub">Search historical pricing</span>
+          </div>
+          <div class="section-body">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="field">
+                <label class="field-label" for="piOriginCity">Origin City <span class="field-req">*</span></label>
+                <div class="combo-wrap">
+                  <input type="text" id="piOriginCity" placeholder="e.g. Querétaro" autocomplete="off">
+                  <div class="combo-drop" id="piOriginCityDrop"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="piOriginState">Origin State <span class="field-req">*</span></label>
+                <div class="combo-wrap">
+                  <input type="text" id="piOriginState" placeholder="e.g. Querétaro" autocomplete="off">
+                  <div class="combo-drop" id="piOriginStateDrop"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="piDestCity">Destination City <span class="field-req">*</span></label>
+                <div class="combo-wrap">
+                  <input type="text" id="piDestCity" placeholder="e.g. Ashland" autocomplete="off">
+                  <div class="combo-drop" id="piDestCityDrop"></div>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="piDestState">Destination State <span class="field-req">*</span></label>
+                <div class="combo-wrap">
+                  <input type="text" id="piDestState" placeholder="e.g. Ohio" autocomplete="off">
+                  <div class="combo-drop" id="piDestStateDrop"></div>
+                </div>
+              </div>
+              <button class="pi-search-btn" id="piSearchBtn" onclick="searchPricing()">
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/><line x1="9.5" y1="9.5" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Search Lane
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats cards, shown after search -->
+        <div id="piStats" style="display:none;">
+          <div class="pi-stats-grid">
+            <div class="pi-stat-card">
+              <div class="pi-stat-label">Avg Freight Cost</div>
+              <div class="pi-stat-value green" id="piStatAvg">—</div>
+              <div class="pi-stat-sub">per shipment</div>
+            </div>
+            <div class="pi-stat-card">
+              <div class="pi-stat-label">Recommended Rate</div>
+              <div class="pi-stat-value amber" id="piStatRec">—</div>
+              <div class="pi-stat-sub">+12% margin</div>
+            </div>
+            <div class="pi-stat-card">
+              <div class="pi-stat-label">Lowest Month</div>
+              <div class="pi-stat-value" id="piStatMin">—</div>
+              <div class="pi-stat-sub">avg freight</div>
+            </div>
+            <div class="pi-stat-card">
+              <div class="pi-stat-label">Shipments</div>
+              <div class="pi-stat-value" id="piStatCount">—</div>
+              <div class="pi-stat-sub" id="piStatMonths">months of data</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Chart area -->
+      <div class="pi-chart-card" id="piChartCard">
+        <!-- Empty state -->
+        <div class="pi-empty" id="piEmpty">
+          <div class="pi-empty-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="pi-empty-text">Enter an origin and destination<br>to see historical freight rates</div>
+          <div class="pi-empty-hint">Data sourced from PERFORMANCE_DASH</div>
+        </div>
+        <!-- Loading -->
+        <div class="pi-loading" id="piLoading" style="display:none;">
+          <div class="pi-loading-spinner"></div>
+          Querying Snowflake…
+        </div>
+        <!-- Error -->
+        <div class="pi-error" id="piErrorMsg" style="display:none;"></div>
+        <!-- Chart -->
+        <div class="pi-chart-inner" id="piChartInner" style="display:none;">
+          <div class="pi-chart-top">
+            <div>
+              <div class="pi-chart-title" id="piChartTitle"></div>
+              <div class="pi-chart-sub" id="piChartSub"></div>
+            </div>
+            <div class="pi-legend">
+              <div class="pi-legend-item"><span class="pi-dot pi-dot-cost"></span>Avg Freight Cost</div>
+              <div class="pi-legend-item"><span class="pi-dot pi-dot-rec"></span>Recommended Rate (+12%)</div>
+            </div>
+          </div>
+          <div class="pi-chart-wrap">
+            <canvas id="piChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
 </div>
@@ -1167,9 +1324,12 @@ function toggleDark(){
 function switchTab(tab){
   document.getElementById('tabForm').classList.toggle('active',tab==='form');
   document.getElementById('tabHistory').classList.toggle('active',tab==='history');
+  document.getElementById('tabPricing').classList.toggle('active',tab==='pricing');
   document.getElementById('panelForm').classList.toggle('active',tab==='form');
   document.getElementById('panelHistory').classList.toggle('active',tab==='history');
+  document.getElementById('panelPricing').classList.toggle('active',tab==='pricing');
   if(tab==='history')renderHistory();
+  if(tab==='pricing')initPricingCombos();
 }
 
 // ─── History (localStorage) ───────────────────────────────────────────────────
@@ -1277,6 +1437,173 @@ document.getElementById('histDetailOverlay').addEventListener('click',function(e
 
 // Init badge on load
 updateHistBadge();
+
+// ─── Pricing Insights ─────────────────────────────────────────────────────────
+let piChart = null;
+let piCombosInited = false;
+
+function initPricingCombos(){
+  if(piCombosInited)return;
+  piCombosInited=true;
+  initCombo('piOriginCity','piOriginCityDrop',ALL_CITIES,function(){});
+  initCombo('piOriginState','piOriginStateDrop',ALL_STATES,function(){});
+  initCombo('piDestCity','piDestCityDrop',ALL_CITIES,function(){});
+  initCombo('piDestState','piDestStateDrop',ALL_STATES,function(){});
+}
+
+function showPiState(state){
+  document.getElementById('piEmpty').style.display   = state==='empty'   ? '' : 'none';
+  document.getElementById('piLoading').style.display = state==='loading' ? '' : 'none';
+  document.getElementById('piErrorMsg').style.display= state==='error'   ? '' : 'none';
+  document.getElementById('piChartInner').style.display= state==='chart' ? '' : 'none';
+  document.getElementById('piStats').style.display   = state==='chart'   ? '' : 'none';
+}
+
+async function searchPricing(){
+  const originCity  = document.getElementById('piOriginCity').value.trim();
+  const originState = document.getElementById('piOriginState').value.trim();
+  const destCity    = document.getElementById('piDestCity').value.trim();
+  const destState   = document.getElementById('piDestState').value.trim();
+
+  // Validate
+  let missing=[];
+  if(!originCity)missing.push('Origin City');
+  if(!originState)missing.push('Origin State');
+  if(!destCity)missing.push('Destination City');
+  if(!destState)missing.push('Destination State');
+  if(missing.length){
+    document.getElementById('piErrorMsg').textContent='Please fill in: '+missing.join(', ');
+    showPiState('error');
+    return;
+  }
+
+  showPiState('loading');
+  document.getElementById('piSearchBtn').disabled=true;
+
+  try{
+    const params=new URLSearchParams({originCity,originState,destCity,destState});
+    const resp=await fetch('/api/pricing-insights?'+params.toString());
+    const data=await resp.json();
+    if(!resp.ok)throw new Error(data.error||'API error '+resp.status);
+    const rows=data.rows||[];
+    if(!rows.length){
+      document.getElementById('piErrorMsg').textContent='No historical data found for this lane. Try a different route.';
+      showPiState('error');
+      return;
+    }
+    const route=originCity+', '+originState+' → '+destCity+', '+destState;
+    renderPricingChart(rows,route);
+  }catch(err){
+    document.getElementById('piErrorMsg').textContent='Error: '+err.message;
+    showPiState('error');
+  }finally{
+    document.getElementById('piSearchBtn').disabled=false;
+  }
+}
+
+function renderPricingChart(rows,route){
+  // Parse & sort rows
+  const sorted=rows.slice().sort((a,b)=>new Date(a.MONTH)-new Date(b.MONTH));
+  const labels=sorted.map(r=>{
+    const d=new Date(r.MONTH);
+    return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+  });
+  const avgCosts=sorted.map(r=>parseFloat(r.AVG_FREIGHT_COST)||0);
+  const recRates=sorted.map(r=>Math.round((parseFloat(r.AVG_FREIGHT_COST)||0)*1.12));
+  const minCosts=sorted.map(r=>parseFloat(r.MIN_FREIGHT_COST)||0);
+  const totalShipments=sorted.reduce((s,r)=>s+(parseInt(r.SHIPMENT_COUNT)||0),0);
+
+  // Stats
+  const overallAvg=avgCosts.length?Math.round(avgCosts.reduce((s,v)=>s+v,0)/avgCosts.length):0;
+  const overallRec=Math.round(overallAvg*1.12);
+  const lowestAvg=avgCosts.length?Math.min(...avgCosts):0;
+  document.getElementById('piStatAvg').textContent='$'+overallAvg.toLocaleString();
+  document.getElementById('piStatRec').textContent='$'+overallRec.toLocaleString();
+  document.getElementById('piStatMin').textContent='$'+Math.round(lowestAvg).toLocaleString();
+  document.getElementById('piStatCount').textContent=totalShipments.toLocaleString();
+  document.getElementById('piStatMonths').textContent=sorted.length+' month'+(sorted.length!==1?'s':'')+' of data';
+
+  // Chart title
+  document.getElementById('piChartTitle').textContent=route;
+  document.getElementById('piChartSub').textContent=
+    sorted.length+' months · '+totalShipments.toLocaleString()+' shipments';
+
+  // Destroy previous chart
+  if(piChart){piChart.destroy();piChart=null;}
+
+  const ctx=document.getElementById('piChart').getContext('2d');
+  piChart=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'Avg Freight Cost',
+          data:avgCosts,
+          borderColor:'#3C6B4E',
+          backgroundColor:'rgba(60,107,78,0.08)',
+          borderWidth:2,
+          pointRadius:4,
+          pointHoverRadius:6,
+          pointBackgroundColor:'#3C6B4E',
+          fill:true,
+          tension:0.3
+        },
+        {
+          label:'Recommended Rate (+12%)',
+          data:recRates,
+          borderColor:'#D97706',
+          backgroundColor:'transparent',
+          borderWidth:2,
+          borderDash:[6,3],
+          pointRadius:4,
+          pointHoverRadius:6,
+          pointBackgroundColor:'#D97706',
+          fill:false,
+          tension:0.3
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#fff',
+          titleColor:'#111827',
+          bodyColor:'#374151',
+          borderColor:'#E2E2DC',
+          borderWidth:1,
+          padding:10,
+          callbacks:{
+            label:function(ctx){
+              return ' '+ctx.dataset.label+': $'+ctx.parsed.y.toLocaleString();
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{color:'rgba(0,0,0,0.05)'},
+          ticks:{color:'#6B7280',font:{size:11}}
+        },
+        y:{
+          grid:{color:'rgba(0,0,0,0.05)'},
+          ticks:{
+            color:'#6B7280',
+            font:{size:11},
+            callback:v=>'$'+v.toLocaleString()
+          },
+          beginAtZero:false
+        }
+      }
+    }
+  });
+
+  showPiState('chart');
+}
 </script>
 </body>
 </html>
