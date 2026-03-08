@@ -365,6 +365,24 @@ button,input,select,textarea{font-family:inherit;}
 .pi-dot-rec{background:#D97706;}
 .pi-chart-wrap{position:relative;height:300px;}
 .pi-no-data{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--text-3);text-align:center;}
+/* skeleton preview */
+.pi-skeleton{flex:1;display:flex;flex-direction:column;gap:16px;}
+.pi-skeleton-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.pi-skeleton-legend{display:flex;gap:14px;}
+.pi-skel-bar{height:10px;border-radius:6px;background:var(--border);animation:skelPulse 1.6s ease-in-out infinite;}
+.pi-skel-bar.w40{width:40%;}
+.pi-skel-bar.w25{width:25%;}
+.pi-skel-bar.w18{width:18%;}
+.pi-skel-bar.w12{width:12%;}
+@keyframes skelPulse{0%,100%{opacity:.4}50%{opacity:.9}}
+.pi-chart-preview{flex:1;position:relative;min-height:240px;overflow:hidden;}
+.pi-chart-preview svg{width:100%;height:100%;}
+.pi-preview-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(var(--surface-rgb,255,255,255),.7);backdrop-filter:blur(2px);}
+[data-theme=dark] .pi-preview-overlay{background:rgba(30,30,30,.7);}
+.pi-preview-hint{font-size:12px;font-weight:600;color:var(--text-2);}
+.pi-preview-sub{font-size:11px;color:var(--text-4);}
+.pi-stats-skeleton{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pi-stat-skel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;flex-direction:column;gap:6px;}
 @media(max-width:900px){.pi-layout{grid-template-columns:1fr;}.pi-stats-grid{grid-template-columns:repeat(4,1fr);}}
 
 </style>
@@ -731,13 +749,53 @@ button,input,select,textarea{font-family:inherit;}
 
       <!-- Right: Chart area -->
       <div class="pi-chart-card" id="piChartCard">
-        <!-- Empty state -->
-        <div class="pi-empty" id="piEmpty">
-          <div class="pi-empty-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <!-- Skeleton / preview state -->
+        <div id="piEmpty" style="display:flex;flex-direction:column;gap:16px;flex:1;">
+          <!-- Stats skeleton -->
+          <div class="pi-stats-skeleton">
+            <div class="pi-stat-skel"><div class="pi-skel-bar w40" style="height:8px;margin-bottom:2px;"></div><div class="pi-skel-bar w25" style="height:20px;"></div><div class="pi-skel-bar w40" style="height:8px;margin-top:2px;"></div></div>
+            <div class="pi-stat-skel"><div class="pi-skel-bar w40" style="height:8px;margin-bottom:2px;"></div><div class="pi-skel-bar w25" style="height:20px;"></div><div class="pi-skel-bar w40" style="height:8px;margin-top:2px;"></div></div>
+            <div class="pi-stat-skel"><div class="pi-skel-bar w40" style="height:8px;margin-bottom:2px;"></div><div class="pi-skel-bar w25" style="height:20px;"></div><div class="pi-skel-bar w40" style="height:8px;margin-top:2px;"></div></div>
+            <div class="pi-stat-skel"><div class="pi-skel-bar w40" style="height:8px;margin-bottom:2px;"></div><div class="pi-skel-bar w25" style="height:20px;"></div><div class="pi-skel-bar w40" style="height:8px;margin-top:2px;"></div></div>
           </div>
-          <div class="pi-empty-text">Enter an origin and destination<br>to see historical freight rates</div>
-          <div class="pi-empty-hint">Data sourced from PERFORMANCE_DASH</div>
+          <!-- Chart skeleton + overlay -->
+          <div style="flex:1;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="display:flex;flex-direction:column;gap:6px;"><div class="pi-skel-bar w40" style="height:14px;width:180px;"></div><div class="pi-skel-bar w25" style="height:9px;width:120px;margin-top:2px;"></div></div>
+              <div style="display:flex;gap:12px;"><div class="pi-skel-bar" style="width:90px;height:9px;"></div><div class="pi-skel-bar" style="width:110px;height:9px;"></div></div>
+            </div>
+            <div class="pi-chart-preview">
+              <svg viewBox="0 0 600 240" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Y gridlines -->
+                <line x1="0" y1="200" x2="600" y2="200" stroke="currentColor" stroke-opacity=".08" stroke-width="1"/>
+                <line x1="0" y1="150" x2="600" y2="150" stroke="currentColor" stroke-opacity=".08" stroke-width="1"/>
+                <line x1="0" y1="100" x2="600" y2="100" stroke="currentColor" stroke-opacity=".08" stroke-width="1"/>
+                <line x1="0" y1="50"  x2="600" y2="50"  stroke="currentColor" stroke-opacity=".08" stroke-width="1"/>
+                <!-- Freight cost area (green) -->
+                <path d="M0,170 C50,165 100,140 150,130 C200,120 250,115 300,125 C350,135 400,110 450,95 C500,80 550,85 600,75 L600,240 L0,240 Z" fill="#3C6B4E" fill-opacity=".12"/>
+                <path d="M0,170 C50,165 100,140 150,130 C200,120 250,115 300,125 C350,135 400,110 450,95 C500,80 550,85 600,75" fill="none" stroke="#3C6B4E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- Recommended rate (amber dashed) -->
+                <path d="M0,148 C50,143 100,118 150,107 C200,97 250,91 300,102 C350,112 400,86 450,70 C500,55 550,61 600,50" fill="none" stroke="#D97706" stroke-width="2.5" stroke-dasharray="7,4" stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- Dots on green line -->
+                <circle cx="0"   cy="170" r="4" fill="#3C6B4E"/>
+                <circle cx="150" cy="130" r="4" fill="#3C6B4E"/>
+                <circle cx="300" cy="125" r="4" fill="#3C6B4E"/>
+                <circle cx="450" cy="95"  r="4" fill="#3C6B4E"/>
+                <circle cx="600" cy="75"  r="4" fill="#3C6B4E"/>
+                <!-- Dots on amber line -->
+                <circle cx="0"   cy="148" r="4" fill="#D97706"/>
+                <circle cx="150" cy="107" r="4" fill="#D97706"/>
+                <circle cx="300" cy="102" r="4" fill="#D97706"/>
+                <circle cx="450" cy="70"  r="4" fill="#D97706"/>
+                <circle cx="600" cy="50"  r="4" fill="#D97706"/>
+              </svg>
+              <div class="pi-preview-overlay">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <div class="pi-preview-hint">Search a lane to see live data</div>
+                <div class="pi-preview-sub">Origin → Destination · historical monthly rates</div>
+              </div>
+            </div>
+          </div>
         </div>
         <!-- Loading -->
         <div class="pi-loading" id="piLoading" style="display:none;">
@@ -1441,22 +1499,51 @@ updateHistBadge();
 // ─── Pricing Insights ─────────────────────────────────────────────────────────
 let piChart = null;
 let piCombosInited = false;
+// Seed comboboxes with static lists while API loads
+let piOriginCities = [...ALL_CITIES];
+let piOriginStates = [...ALL_STATES];
+let piDestCities   = [...ALL_CITIES];
+let piDestStates   = [...ALL_STATES];
 
 function initPricingCombos(){
   if(piCombosInited)return;
   piCombosInited=true;
-  initCombo('piOriginCity','piOriginCityDrop',ALL_CITIES,function(){});
-  initCombo('piOriginState','piOriginStateDrop',ALL_STATES,function(){});
-  initCombo('piDestCity','piDestCityDrop',ALL_CITIES,function(){});
-  initCombo('piDestState','piDestStateDrop',ALL_STATES,function(){});
+  // Init immediately with static lists (free typing always works)
+  initCombo('piOriginCity','piOriginCityDrop',piOriginCities,function(){});
+  initCombo('piOriginState','piOriginStateDrop',piOriginStates,function(){});
+  initCombo('piDestCity','piDestCityDrop',piDestCities,function(){});
+  initCombo('piDestState','piDestStateDrop',piDestStates,function(){});
+  // Then enrich with Snowflake data
+  fetch('/api/pricing-meta')
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.originCities&&data.originCities.length){
+        const merged=[...new Set([...data.originCities,...ALL_CITIES])].sort();
+        initCombo('piOriginCity','piOriginCityDrop',merged,function(){});
+      }
+      if(data.originStates&&data.originStates.length){
+        const merged=[...new Set([...data.originStates,...ALL_STATES])].sort();
+        initCombo('piOriginState','piOriginStateDrop',merged,function(){});
+      }
+      if(data.destCities&&data.destCities.length){
+        const merged=[...new Set([...data.destCities,...ALL_CITIES])].sort();
+        initCombo('piDestCity','piDestCityDrop',merged,function(){});
+      }
+      if(data.destStates&&data.destStates.length){
+        const merged=[...new Set([...data.destStates,...ALL_STATES])].sort();
+        initCombo('piDestState','piDestStateDrop',merged,function(){});
+      }
+    })
+    .catch(()=>{/* silently keep static lists */});
 }
 
 function showPiState(state){
-  document.getElementById('piEmpty').style.display   = state==='empty'   ? '' : 'none';
-  document.getElementById('piLoading').style.display = state==='loading' ? '' : 'none';
-  document.getElementById('piErrorMsg').style.display= state==='error'   ? '' : 'none';
-  document.getElementById('piChartInner').style.display= state==='chart' ? '' : 'none';
-  document.getElementById('piStats').style.display   = state==='chart'   ? '' : 'none';
+  // 'empty' = skeleton preview, 'loading', 'error', 'chart'
+  document.getElementById('piEmpty').style.display        = state==='empty'   ? 'flex' : 'none';
+  document.getElementById('piLoading').style.display      = state==='loading' ? ''     : 'none';
+  document.getElementById('piErrorMsg').style.display     = state==='error'   ? ''     : 'none';
+  document.getElementById('piChartInner').style.display   = state==='chart'   ? ''     : 'none';
+  document.getElementById('piStats').style.display        = state==='chart'   ? ''     : 'none';
 }
 
 async function searchPricing(){

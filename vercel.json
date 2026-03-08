@@ -12,6 +12,9 @@
     },
     "api/pricing-insights.js": {
       "maxDuration": 25
+    },
+    "api/pricing-meta.js": {
+      "maxDuration": 25
     }
   }
 }
