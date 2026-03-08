@@ -44,8 +44,8 @@ module.exports = async (req, res) => {
       conn.connect((err, c) => err ? reject(err) : resolve(c))
     );
 
-    // Step 1: discover the pickup date column name from INFORMATION_SCHEMA
-    const colRows = await query(conn, `
+    // Step 1: discover column names from INFORMATION_SCHEMA in one query
+    const metaCols = await query(conn, `
       SELECT COLUMN_NAME
       FROM ANALYTICS.INFORMATION_SCHEMA.COLUMNS
       WHERE TABLE_SCHEMA = 'DATA_OPS'
@@ -54,23 +54,30 @@ module.exports = async (req, res) => {
           LOWER(COLUMN_NAME) LIKE '%picked_up%'
           OR LOWER(COLUMN_NAME) LIKE '%pickup_date%'
           OR LOWER(COLUMN_NAME) LIKE '%pick_up%'
+          OR LOWER(COLUMN_NAME) LIKE '%dropoff_stop%'
+          OR LOWER(COLUMN_NAME) LIKE '%stop_one%'
         )
-      LIMIT 1
     `);
 
+    // Partition discovered columns by purpose
+    const dateCol  = metaCols.find(r => /picked.up|pickup.date|pick.up/i.test(r.COLUMN_NAME));
+    const stopCol  = metaCols.find(r => /dropoff.stop|stop.one/i.test(r.COLUMN_NAME));
+
     let dateExpr;
-    if (colRows.length > 0) {
-      // Use the discovered column name — double-quote for exact case match
-      const col = colRows[0].COLUMN_NAME;
-      dateExpr = `TRY_TO_DATE(TRIM("${col}"))`;
+    if (dateCol) {
+      dateExpr = `TRY_TO_DATE(TRIM("${dateCol.COLUMN_NAME}"))`;
     } else {
-      // Fall back: try common date column names without quoting
       dateExpr = `COALESCE(
         TRY_TO_DATE(TRIM(ACTUAL_DELIVERY_DATE)),
         TRY_TO_DATE(TRIM(SHIP_DATE)),
         TRY_TO_DATE(TRIM(CREATED_DATE))
       )`;
     }
+
+    // Optional stop-city filter — exclude shipments with a dropoff stop
+    const stopFilter = stopCol
+      ? `AND ("${stopCol.COLUMN_NAME}" IS NULL OR TRIM("${stopCol.COLUMN_NAME}") = '')`
+      : '';
 
     // Step 2: monthly freight cost query
     const sql = `
@@ -82,13 +89,14 @@ module.exports = async (req, res) => {
         COUNT(*)                          AS SHIPMENT_COUNT
       FROM ANALYTICS.DATA_OPS.PERFORMANCE_DASH
       WHERE
-        UPPER(TRIM(ORIGIN_CITY))       = UPPER(TRIM(:1))
-        AND UPPER(TRIM(ORIGIN_STATE))  = UPPER(TRIM(:2))
+        UPPER(TRIM(ORIGIN_CITY))           = UPPER(TRIM(:1))
+        AND UPPER(TRIM(ORIGIN_STATE))      = UPPER(TRIM(:2))
         AND UPPER(TRIM(DESTINATION_CITY))  = UPPER(TRIM(:3))
         AND UPPER(TRIM(DESTINATION_STATE)) = UPPER(TRIM(:4))
         AND ${dateExpr} IS NOT NULL
         AND FREIGHT_COST IS NOT NULL
         AND FREIGHT_COST > 0
+        ${stopFilter}
       GROUP BY 1
       ORDER BY 1 ASC
     `;
@@ -96,7 +104,11 @@ module.exports = async (req, res) => {
     const rows = await query(conn, sql, [originCity, originState, destCity, destState]);
 
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
-    res.status(200).json({ rows, dateColumn: colRows.length ? colRows[0].COLUMN_NAME : null });
+    res.status(200).json({
+      rows,
+      dateColumn: dateCol ? dateCol.COLUMN_NAME : null,
+      stopColumn: stopCol ? stopCol.COLUMN_NAME : null,
+    });
   } catch (err) {
     console.error('[pricing-insights]', err.message);
     res.status(500).json({ error: err.message });
