@@ -49,8 +49,8 @@ button,input,select,textarea{font-family:inherit;}
 .main{max-width:1320px;margin:0 auto;padding:24px 24px 64px;}
 
 /* ── Section Cards ── */
-.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
-.section-header{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface-2);}
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:visible;margin-bottom:16px;}
+.section-header{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface-2);border-radius:var(--radius) var(--radius) 0 0;}
 .section-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .si-brand{background:var(--brand-light);color:var(--brand);}
 .si-blue{background:var(--blue-bg);color:var(--blue);}
@@ -86,7 +86,7 @@ button,input,select,textarea{font-family:inherit;}
 
 /* ── Combobox ── */
 .combo-wrap{position:relative;}
-.combo-drop{position:absolute;top:calc(100%+3px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.1);display:none;}
+.combo-drop{position:absolute;top:calc(100%+3px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);z-index:400;max-height:220px;overflow-y:auto;box-shadow:0 6px 20px rgba(0,0,0,.15);display:none;}
 .combo-drop.open{display:block;}
 .combo-item{padding:8px 10px;font-size:12px;cursor:pointer;color:var(--text-2);transition:background .08s;}
 .combo-item:hover,.combo-item.active{background:var(--surface-2);}
@@ -239,6 +239,50 @@ button,input,select,textarea{font-family:inherit;}
 [data-theme="dark"] .combo-drop,[data-theme="dark"] .lf-drop{background:var(--surface);border-color:var(--border);}
 [data-theme="dark"] .inherited-badge{background:var(--surface-3);}
 
+/* ── Tab Bar ── */
+.tab-bar{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:5px;width:fit-content;}
+.tab-btn{height:30px;padding:0 18px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--text-3);transition:all .15s;display:flex;align-items:center;gap:6px;}
+.tab-btn.active{background:var(--brand);color:#fff;}
+.tab-btn:hover:not(.active){background:var(--surface-2);color:var(--text-1);}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+
+/* ── History View ── */
+.hist-empty{text-align:center;padding:60px 20px;color:var(--text-4);}
+.hist-empty-icon{font-size:36px;margin-bottom:12px;}
+.hist-empty-text{font-size:13px;}
+.hist-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.hist-table{width:100%;border-collapse:collapse;font-size:12px;}
+.hist-table th{text-align:left;padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);background:var(--surface-2);border-bottom:1px solid var(--border);}
+.hist-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:middle;}
+.hist-table tr:last-child td{border-bottom:none;}
+.hist-table tbody tr{cursor:pointer;transition:background .1s;}
+.hist-table tbody tr:hover{background:var(--surface-2);}
+.hist-qr{font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums;}
+.hist-badge{display:inline-block;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);border-radius:999px;padding:1px 7px;font-size:10px;font-weight:700;}
+.hist-detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:450;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.hist-detail-overlay.show{opacity:1;pointer-events:all;}
+.hist-detail-card{background:var(--surface);border-radius:var(--radius);width:min(640px,94vw);max-height:85vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.25);}
+.hist-detail-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface-2);border-radius:var(--radius) var(--radius) 0 0;position:sticky;top:0;}
+.hist-detail-title{font-size:14px;font-weight:700;color:var(--text-1);}
+.hist-detail-sub{font-size:11px;color:var(--text-3);margin-top:2px;}
+.btn-hist-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;}
+.btn-hist-close:hover{background:var(--red-bg);color:var(--red);}
+.hist-detail-body{padding:20px;}
+.hist-global{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.hist-field{display:flex;flex-direction:column;gap:3px;}
+.hist-field-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-4);}
+.hist-field-value{font-size:12px;font-weight:600;color:var(--text-1);}
+.hist-lanes-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:12px;}
+.hist-lane-card{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px;}
+.hist-lane-card:last-child{margin-bottom:0;}
+.hist-lane-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface-2);border-bottom:1px solid var(--border);}
+.hist-lane-title{font-size:11px;font-weight:700;color:var(--text-2);}
+.hist-route-arrow{font-size:11px;color:var(--text-4);}
+.hist-lane-body{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 12px;padding:12px;}
+.hist-notes{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+.hist-notes-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-4);margin-bottom:4px;}
+.hist-notes-text{font-size:12px;color:var(--text-2);line-height:1.5;}
+
 /* ── Dark Mode Toggle Button ── */
 .btn-dark-mode{width:32px;height:32px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
 .btn-dark-mode:hover{background:var(--surface-2);color:var(--text-1);border-color:var(--border-2);}
@@ -310,6 +354,22 @@ button,input,select,textarea{font-family:inherit;}
 </header>
 
 <div class="main">
+
+  <!-- ── Tab Bar ── -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tabForm" onclick="switchTab('form')">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="1.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M4 5h6M4 7.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      New Quote
+    </button>
+    <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M7 4v3l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Quote History
+      <span id="histBadge" style="display:none;background:var(--brand);color:#fff;border-radius:999px;padding:0 6px;font-size:10px;" id="histCountBadge"></span>
+    </button>
+  </div>
+
+  <!-- ── Form Panel ── -->
+  <div class="tab-panel active" id="panelForm">
 
   <!-- ── Validation Summary ── -->
   <div class="val-summary" id="valSummary">
@@ -543,6 +603,18 @@ button,input,select,textarea{font-family:inherit;}
   </div>
 
   </form>
+  </div><!-- /panelForm -->
+
+  <!-- ── History Panel ── -->
+  <div class="tab-panel" id="panelHistory">
+    <div id="histContent"></div>
+  </div>
+
+</div>
+
+<!-- History Detail Overlay -->
+<div class="hist-detail-overlay" id="histDetailOverlay">
+  <div class="hist-detail-card" id="histDetailCard"></div>
 </div>
 
 <!-- SUCCESS SCREEN -->
@@ -1052,6 +1124,7 @@ document.getElementById('quoteForm').addEventListener('submit',async function(e)
       '<div class="ss-detail-row"><span class="ss-detail-label">Shipper</span><span class="ss-detail-value">'+eh(global.shipperName)+'</span></div>'+
       '<div class="ss-detail-row"><span class="ss-detail-label">Lanes</span><span class="ss-detail-value">'+lanes.length+'</span></div>'+
       lanes.map((l,i)=>'<div class="ss-detail-row"><span class="ss-detail-label">'+eh(l.rateId)+'</span><span class="ss-detail-value">'+eh((l.originCity||'?')+' \u2192 '+(l.destCity||'?'))+'</span></div>').join('');
+    saveToHistory(global,lanes);
     const si=document.getElementById('successInner');
     si.classList.remove('animate');
     void si.offsetWidth; // reflow to restart animation
@@ -1089,6 +1162,121 @@ function toggleDark(){
   html.dataset.theme=isDark?'':'dark';
   localStorage.setItem('ct_theme',isDark?'':'dark');
 }
+
+// ─── Tab Switching ────────────────────────────────────────────────────────────
+function switchTab(tab){
+  document.getElementById('tabForm').classList.toggle('active',tab==='form');
+  document.getElementById('tabHistory').classList.toggle('active',tab==='history');
+  document.getElementById('panelForm').classList.toggle('active',tab==='form');
+  document.getElementById('panelHistory').classList.toggle('active',tab==='history');
+  if(tab==='history')renderHistory();
+}
+
+// ─── History (localStorage) ───────────────────────────────────────────────────
+const HIST_KEY='qt_history';
+
+function saveToHistory(payload,lanes){
+  const entries=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  entries.unshift({
+    qrId:payload.qrId,
+    date:payload.date,
+    submittedAt:payload.submittedAt,
+    requester:payload.requester,
+    shipperName:payload.shipperName,
+    commodity:payload.commodity,
+    notes:payload.notes,
+    lanes:lanes
+  });
+  // Keep last 200
+  if(entries.length>200)entries.splice(200);
+  localStorage.setItem(HIST_KEY,JSON.stringify(entries));
+  updateHistBadge();
+}
+
+function updateHistBadge(){
+  const entries=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  const badge=document.getElementById('histBadge');
+  if(badge&&entries.length>0){badge.style.display='';badge.textContent=entries.length;}
+}
+
+function renderHistory(){
+  const entries=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  const wrap=document.getElementById('histContent');
+  if(!entries.length){
+    wrap.innerHTML='<div class="hist-empty"><div class="hist-empty-icon">📋</div><div class="hist-empty-text">No quote requests submitted yet.<br>Submit a quote and it will appear here.</div></div>';
+    return;
+  }
+  let rows=entries.map((e,i)=>{
+    const laneRoutes=(e.lanes||[]).map(l=>(l.originCity||'?')+' → '+(l.destCity||'?')).join('; ');
+    return '<tr onclick="showHistDetail('+i+')" title="Click to view details">'+
+      '<td><span class="hist-qr">'+eh(e.qrId||'—')+'</span></td>'+
+      '<td>'+eh(e.date||'—')+'</td>'+
+      '<td>'+eh(e.requester||'—')+'</td>'+
+      '<td>'+eh(e.shipperName||'—')+'</td>'+
+      '<td>'+eh(e.commodity||'—')+'</td>'+
+      '<td><span class="hist-badge">'+(e.lanes||[]).length+' lane'+(e.lanes&&e.lanes.length!==1?'s':'')+'</span></td>'+
+      '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-3)">'+eh(laneRoutes)+'</td>'+
+      '</tr>';
+  }).join('');
+  wrap.innerHTML='<div class="hist-table-wrap"><table class="hist-table">'+
+    '<thead><tr>'+
+    '<th>Quote ID</th><th>Date</th><th>Requester</th><th>Shipper</th><th>Commodity</th><th>Lanes</th><th>Routes</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function showHistDetail(idx){
+  const entries=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  const e=entries[idx];
+  if(!e)return;
+  const globalFields=[
+    {label:'Quote ID',value:e.qrId},
+    {label:'Date',value:e.date},
+    {label:'Requester',value:e.requester},
+    {label:'Shipper',value:e.shipperName},
+    {label:'Commodity',value:e.commodity},
+    {label:'Submitted',value:e.submittedAt?new Date(e.submittedAt).toLocaleString():'—'}
+  ];
+  const lanesHtml=(e.lanes||[]).map((l,i)=>{
+    const fields=[
+      {label:'Rate ID',value:l.rateId},{label:'Origin City',value:l.originCity},{label:'Origin State',value:l.originState},
+      {label:'Origin Country',value:l.originCountry},{label:'BC City',value:l.bcCity},{label:'Dest City',value:l.destCity},
+      {label:'Dest State',value:l.destState},{label:'Dest Country',value:l.destCountry},
+      {label:'Equipment',value:l.equipType},{label:'Service',value:l.serviceType},
+      {label:'Fuel Incl.',value:l.fuelIncluded},{label:'Nuvo BC',value:l.nuvoBC},
+      {label:'Food Grade',value:l.foodGrade},{label:'Fumigation',value:l.fumigation},
+      {label:'Team Driver',value:l.teamDriver},{label:'# Straps',value:l.numStraps},
+      {label:'Load/Unload Hrs',value:l.loadUnloadHrs},{label:'Days at Border',value:l.daysAtBorder},
+      {label:'Target Rate',value:l.targetRate?'$'+l.targetRate:'—'},{label:'Potential LPM',value:l.potentialLPM||'—'}
+    ];
+    return '<div class="hist-lane-card">'+
+      '<div class="hist-lane-header">'+
+        '<span class="hist-lane-title">Lane '+(i+1)+'</span>'+
+        '<span class="hist-badge">'+eh(l.rateId||'')+'</span>'+
+        '<span class="hist-route-arrow">'+eh((l.originCity||'?'))+' → '+eh((l.destCity||'?'))+'</span>'+
+      '</div>'+
+      '<div class="hist-lane-body">'+fields.map(f=>'<div class="hist-field"><div class="hist-field-label">'+eh(f.label)+'</div><div class="hist-field-value">'+eh(String(f.value||'—'))+'</div></div>').join('')+'</div>'+
+    '</div>';
+  }).join('');
+  document.getElementById('histDetailCard').innerHTML=
+    '<div class="hist-detail-header">'+
+      '<div><div class="hist-detail-title">'+eh(e.qrId||'Quote')+'</div>'+
+        '<div class="hist-detail-sub">'+eh(e.shipperName||'')+(e.date?' · '+eh(e.date):'')+'</div></div>'+
+      '<button class="btn-hist-close" onclick="closeHistDetail()">×</button>'+
+    '</div>'+
+    '<div class="hist-detail-body">'+
+      '<div class="hist-global">'+globalFields.map(f=>'<div class="hist-field"><div class="hist-field-label">'+eh(f.label)+'</div><div class="hist-field-value">'+eh(String(f.value||'—'))+'</div></div>').join('')+'</div>'+
+      '<div class="hist-lanes-title">Lanes ('+( e.lanes||[]).length+')</div>'+
+      lanesHtml+
+      (e.notes?'<div class="hist-notes"><div class="hist-notes-label">Notes</div><div class="hist-notes-text">'+eh(e.notes)+'</div></div>':'')+
+    '</div>';
+  document.getElementById('histDetailOverlay').classList.add('show');
+}
+
+function closeHistDetail(){document.getElementById('histDetailOverlay').classList.remove('show');}
+document.getElementById('histDetailOverlay').addEventListener('click',function(ev){if(ev.target===this)closeHistDetail();});
+
+// Init badge on load
+updateHistBadge();
 </script>
 </body>
 </html>
