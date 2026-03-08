@@ -116,10 +116,20 @@ module.exports = async function handler(req, res) {
 
     const text = await upstream.text();
     let json;
-    try { json = JSON.parse(text); } catch { json = { raw: text }; }
+    try { json = JSON.parse(text); } catch (parseErr) {
+      // Google Apps Script returns HTTP 200 with an HTML error page on uncaught exceptions.
+      // If we can't parse JSON it means the script threw without returning ContentService output.
+      console.error('Apps Script returned non-JSON:', text.substring(0, 300));
+      throw new Error('Apps Script error — response was not JSON. Check the script deployment and try again.');
+    }
 
     if (!upstream.ok || json.status === 'error') {
       throw new Error(json.message || json.error || `Upstream error ${upstream.status}`);
+    }
+
+    // Apps Script must return { status: 'ok' } — anything else is treated as failure
+    if (json.status !== 'ok') {
+      throw new Error(`Unexpected response from Apps Script: ${JSON.stringify(json)}`);
     }
 
     return res.status(200).json({
