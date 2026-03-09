@@ -33,9 +33,38 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { originCity, originState, destCity, destState } = req.query;
-  if (!originCity || !originState || !destCity || !destState) {
-    return res.status(400).json({ error: 'originCity, originState, destCity, destState are all required' });
+  const { originCity, originState, destCity, destState, originCityList, destCityList } = req.query;
+
+  // Build WHERE filters — either a single exact lane or expanded city lists for radius search.
+  // originCityList / destCityList format: "City1|State1,City2|State2,..."
+  let originFilter, destFilter, binds;
+
+  if (originCityList && destCityList) {
+    const parsePairs = list =>
+      list.split(',')
+          .map(p => { const sep = p.lastIndexOf('|'); return { city: p.slice(0, sep), state: p.slice(sep + 1) }; })
+          .filter(p => p.city && p.state);
+
+    const oPairs = parsePairs(originCityList);
+    const dPairs = parsePairs(destCityList);
+    if (!oPairs.length || !dPairs.length) {
+      return res.status(400).json({ error: 'Invalid originCityList / destCityList format' });
+    }
+
+    let idx = 1;
+    const oConds = oPairs.map(() => { const c = idx++, s = idx++; return `(UPPER(TRIM(ORIGIN_CITY))=UPPER(:${c}) AND UPPER(TRIM(ORIGIN_STATE))=UPPER(:${s}))`; });
+    const dConds = dPairs.map(() => { const c = idx++, s = idx++; return `(UPPER(TRIM(DESTINATION_CITY))=UPPER(:${c}) AND UPPER(TRIM(DESTINATION_STATE))=UPPER(:${s}))`; });
+
+    originFilter = `(${oConds.join(' OR ')})`;
+    destFilter   = `(${dConds.join(' OR ')})`;
+    binds = [...oPairs.flatMap(p => [p.city, p.state]), ...dPairs.flatMap(p => [p.city, p.state])];
+  } else {
+    if (!originCity || !originState || !destCity || !destState) {
+      return res.status(400).json({ error: 'originCity, originState, destCity, destState are all required' });
+    }
+    originFilter = `UPPER(TRIM(ORIGIN_CITY))=UPPER(TRIM(:1)) AND UPPER(TRIM(ORIGIN_STATE))=UPPER(TRIM(:2))`;
+    destFilter   = `UPPER(TRIM(DESTINATION_CITY))=UPPER(TRIM(:3)) AND UPPER(TRIM(DESTINATION_STATE))=UPPER(TRIM(:4))`;
+    binds = [originCity, originState, destCity, destState];
   }
 
   const conn = createConn();
@@ -89,10 +118,8 @@ module.exports = async (req, res) => {
         COUNT(*)                          AS SHIPMENT_COUNT
       FROM ANALYTICS.DATA_OPS.PERFORMANCE_DASH
       WHERE
-        UPPER(TRIM(ORIGIN_CITY))           = UPPER(TRIM(:1))
-        AND UPPER(TRIM(ORIGIN_STATE))      = UPPER(TRIM(:2))
-        AND UPPER(TRIM(DESTINATION_CITY))  = UPPER(TRIM(:3))
-        AND UPPER(TRIM(DESTINATION_STATE)) = UPPER(TRIM(:4))
+        ${originFilter}
+        AND ${destFilter}
         AND ${dateExpr} IS NOT NULL
         AND FREIGHT_COST IS NOT NULL
         AND FREIGHT_COST > 0
@@ -101,7 +128,7 @@ module.exports = async (req, res) => {
       ORDER BY 1 ASC
     `;
 
-    const rows = await query(conn, sql, [originCity, originState, destCity, destState]);
+    const rows = await query(conn, sql, binds);
 
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
     res.status(200).json({
