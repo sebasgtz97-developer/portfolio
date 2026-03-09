@@ -1,9 +1,9 @@
-// carrier-bids — fetch carrier bid from nuvoOS for a given lane
-// GET /api/carrier-bids?carrierId=&originCity=&originState=&originZip=&destCity=&destState=&destZip=&weight=
+// carrier-bids — fetch all carrier bids from nuvoOS for a given lane
+// GET /api/carrier-bids?originCity=&originState=&originZip=&destCity=&destState=&destZip=&weight=
 //
 // Requires NUVO_API_TOKEN environment variable.
-// Calls GET https://os.nuvocargo.com/api/internal/carriers/:id/bids
-// with the minimum required shipment payload.
+// Calls GET https://os.nuvocargo.com/api/internal/bids with a lane payload
+// and returns aggregated bid data (average, min, max, count).
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,21 +14,17 @@ module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const {
-    carrierId,
     originCity, originState, originZip = '00000',
     destCity,   destState,   destZip   = '00000',
     weight = '20000',
   } = req.query;
 
-  if (!carrierId)              return res.status(400).json({ error: 'carrierId is required' });
   if (!originCity || !originState) return res.status(400).json({ error: 'originCity and originState are required' });
   if (!destCity   || !destState)   return res.status(400).json({ error: 'destCity and destState are required' });
 
   const token = process.env.NUVO_API_TOKEN;
   if (!token) return res.status(503).json({ error: 'NUVO_API_TOKEN is not configured' });
 
-  // Build nested query-string params for the nuvoOS bids endpoint.
-  // Rails-style bracket notation: shipment[pickup][address][city]=...
   const enc = encodeURIComponent;
   const parts = [
     `shipment[pickup][name]=${enc(originCity)}`,
@@ -47,7 +43,8 @@ module.exports = async (req, res) => {
     `shipment[cargo_details][][weight]=${enc(weight)}`,
   ];
 
-  const url = `https://os.nuvocargo.com/api/internal/carriers/${enc(carrierId)}/bids?${parts.join('&')}`;
+  // Lane-level bids endpoint — returns bids from all carriers for this lane
+  const url = `https://os.nuvocargo.com/api/internal/bids?${parts.join('&')}`;
 
   try {
     const upstream = await fetch(url, {
@@ -67,20 +64,29 @@ module.exports = async (req, res) => {
       return res.status(upstream.status).json({ error: msg });
     }
 
-    // Normalise the response: try common paths for the bid amount.
-    // The API docs do not specify the response schema, so we probe the most
-    // likely fields and fall back to returning the raw payload.
-    let amount = null;
-    const probe = data.bid ?? data.amount ?? data.bid_amount ?? data.price ?? data.total_amount ?? data.data;
-    if (typeof probe === 'number') {
-      amount = probe;
-    } else if (probe && typeof probe === 'object') {
-      amount = probe.amount ?? probe.total ?? probe.price ?? probe.bid_amount ?? null;
-      if (typeof amount === 'string') amount = parseFloat(amount) || null;
+    // Normalise: the response may be an array of bids or an object wrapping one
+    const bidsArr = Array.isArray(data)         ? data
+                  : Array.isArray(data.bids)    ? data.bids
+                  : Array.isArray(data.data)    ? data.data
+                  : [];
+
+    // Extract numeric amount from each bid object
+    const amounts = bidsArr
+      .map(b => {
+        const v = b.amount ?? b.bid_amount ?? b.price ?? b.total_amount ?? b.total ?? null;
+        return typeof v === 'number' ? v : (typeof v === 'string' ? parseFloat(v) || null : null);
+      })
+      .filter(v => v !== null && v > 0);
+
+    let average = null, min = null, max = null;
+    if (amounts.length) {
+      average = Math.round(amounts.reduce((s, v) => s + v, 0) / amounts.length);
+      min = Math.min(...amounts);
+      max = Math.max(...amounts);
     }
 
     res.setHeader('Cache-Control', 'no-store');
-    res.status(200).json({ amount, raw: data });
+    res.status(200).json({ average, min, max, count: amounts.length, raw: data });
   } catch (err) {
     res.status(502).json({ error: err.message });
   }

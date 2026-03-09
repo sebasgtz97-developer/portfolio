@@ -719,41 +719,10 @@ button,input,select,textarea{font-family:inherit;}
                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/><line x1="9.5" y1="9.5" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                 Search Lane
               </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Carrier Bid section -->
-        <div class="section-card">
-          <div class="section-header">
-            <div class="section-icon si-blue">
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.8 3.6L13 5.4l-3 2.9.7 4.1L7 10.4 3.3 12.4l.7-4.1-3-2.9 4.2-.8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/></svg>
-            </div>
-            <span class="section-title">Carrier Bid</span>
-            <span class="section-sub">Optional overlay</span>
-          </div>
-          <div class="section-body">
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div class="field">
-                <label class="field-label" for="piCarrierId">Carrier ID</label>
-                <input type="text" id="piCarrierId" placeholder="e.g. 42" autocomplete="off">
-                <div class="field-hint">Leave blank to skip carrier bid</div>
-              </div>
-              <div class="fg fg-2" style="gap:10px;">
-                <div class="field">
-                  <label class="field-label" for="piOriginZip">Origin ZIP</label>
-                  <input type="text" id="piOriginZip" placeholder="e.g. 78201" maxlength="10" autocomplete="off">
-                </div>
-                <div class="field">
-                  <label class="field-label" for="piDestZip">Dest ZIP</label>
-                  <input type="text" id="piDestZip" placeholder="e.g. 44805" maxlength="10" autocomplete="off">
-                </div>
-              </div>
-              <div class="field">
-                <label class="field-label" for="piWeight">Weight (lbs)</label>
-                <input type="number" id="piWeight" placeholder="20000" min="1" autocomplete="off">
-                <div class="field-hint">Defaults to 20,000 lbs</div>
-              </div>
+              <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;margin-top:2px;">
+                <input type="checkbox" id="piRadiusToggle" style="cursor:pointer;accent-color:var(--brand);">
+                <span style="font-size:12px;color:var(--muted);">Include ~50 km radius</span>
+              </label>
             </div>
           </div>
         </div>
@@ -854,7 +823,7 @@ button,input,select,textarea{font-family:inherit;}
               <div class="pi-legend">
                 <div class="pi-legend-item"><span class="pi-dot pi-dot-cost"></span>Avg Freight Cost</div>
                 <div class="pi-legend-item"><span class="pi-dot pi-dot-rec"></span>Recommended Rate (+12%)</div>
-                <div class="pi-legend-item" id="piLegendBid" style="display:none;"><span class="pi-dot pi-dot-bid"></span>Carrier Bid</div>
+                <div class="pi-legend-item" id="piLegendBid" style="display:none;"><span class="pi-dot pi-dot-bid"></span>Market Bid Avg</div>
               </div>
               <button class="pi-dl-btn" id="piDownloadBtn" onclick="downloadPricingReport()">
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -907,6 +876,166 @@ const CA_PROVINCES=['Alberta','British Columbia','Manitoba','New Brunswick','New
 const ALL_CITIES=[...new Set([...MX_CITIES,...US_CITIES,...CA_CITIES])].sort();
 const ALL_STATES=[...new Set([...MX_STATES,...US_STATES,...CA_PROVINCES])].sort();
 const BC_CITIES=['Laredo / Nuevo Laredo','El Paso / Ciudad Ju\u00e1rez','McAllen / Reynosa','Eagle Pass / Piedras Negras','Del Rio / Ciudad Acuna','Brownsville / Matamoros','San Diego / Tijuana','Douglas / Agua Prieta','Nogales / Nogales','Calexico / Mexicali','Presidio / Ojinaga','Hidalgo / Reynosa'];
+
+// ─── City Coordinates (for 50km radius search) ───────────────────────────────
+// lat/lng + state for each city in our static lists
+const CITY_COORDS={
+  // Mexican cities
+  'Aguascalientes':{lat:21.88,lng:-102.30,state:'Aguascalientes'},
+  'Celaya':{lat:20.52,lng:-100.82,state:'Guanajuato'},
+  'Chihuahua':{lat:28.63,lng:-106.07,state:'Chihuahua'},
+  'Ciudad de Mexico':{lat:19.43,lng:-99.13,state:'Ciudad de M\u00e9xico'},
+  'Ciudad Ju\u00e1rez':{lat:31.74,lng:-106.49,state:'Chihuahua'},
+  'Ciudad Obreg\u00f3n':{lat:27.49,lng:-109.94,state:'Sonora'},
+  'Coatzacoalcos':{lat:18.14,lng:-94.44,state:'Veracruz'},
+  'Culiac\u00e1n':{lat:24.80,lng:-107.39,state:'Sinaloa'},
+  'Durango':{lat:24.02,lng:-104.66,state:'Durango'},
+  'Ensenada':{lat:31.87,lng:-116.60,state:'Baja California'},
+  'Guadalajara':{lat:20.66,lng:-103.35,state:'Jalisco'},
+  'Hermosillo':{lat:29.10,lng:-110.95,state:'Sonora'},
+  'Irapuato':{lat:20.67,lng:-101.35,state:'Guanajuato'},
+  'La Paz':{lat:24.14,lng:-110.31,state:'Baja California Sur'},
+  'Le\u00f3n':{lat:21.12,lng:-101.68,state:'Guanajuato'},
+  'Los Mochis':{lat:25.79,lng:-108.99,state:'Sinaloa'},
+  'Manzanillo':{lat:19.05,lng:-104.32,state:'Colima'},
+  'Matamoros':{lat:25.87,lng:-97.50,state:'Tamaulipas'},
+  'Mazatl\u00e1n':{lat:23.23,lng:-106.41,state:'Sinaloa'},
+  'M\u00e9rida':{lat:20.97,lng:-89.62,state:'Yucat\u00e1n'},
+  'Mexicali':{lat:32.65,lng:-115.47,state:'Baja California'},
+  'Monterrey':{lat:25.69,lng:-100.32,state:'Nuevo Le\u00f3n'},
+  'Morelia':{lat:19.70,lng:-101.19,state:'Michoac\u00e1n'},
+  'Nuevo Laredo':{lat:27.48,lng:-99.52,state:'Tamaulipas'},
+  'Oaxaca':{lat:17.07,lng:-96.72,state:'Oaxaca'},
+  'Piedras Negras':{lat:28.70,lng:-100.52,state:'Coahuila'},
+  'Puebla':{lat:19.04,lng:-98.21,state:'Puebla'},
+  'Quer\u00e9taro':{lat:20.59,lng:-100.39,state:'Quer\u00e9taro'},
+  'Reynosa':{lat:26.09,lng:-98.29,state:'Tamaulipas'},
+  'Saltillo':{lat:25.42,lng:-101.00,state:'Coahuila'},
+  'San Luis Potos\u00ed':{lat:22.15,lng:-100.98,state:'San Luis Potos\u00ed'},
+  'Silao':{lat:20.94,lng:-101.44,state:'Guanajuato'},
+  'Tampico':{lat:22.27,lng:-97.87,state:'Tamaulipas'},
+  'Tijuana':{lat:32.53,lng:-117.04,state:'Baja California'},
+  'Tlalnepantla':{lat:19.54,lng:-99.20,state:'Estado de M\u00e9xico'},
+  'Toluca':{lat:19.29,lng:-99.66,state:'Estado de M\u00e9xico'},
+  'Torre\u00f3n':{lat:25.54,lng:-103.45,state:'Coahuila'},
+  'Veracruz':{lat:19.17,lng:-96.13,state:'Veracruz'},
+  'Villahermosa':{lat:17.99,lng:-92.93,state:'Tabasco'},
+  'Xalapa':{lat:19.54,lng:-96.93,state:'Veracruz'},
+  // US cities
+  'Albuquerque':{lat:35.08,lng:-106.65,state:'New Mexico'},
+  'Ashland':{lat:40.87,lng:-82.32,state:'Ohio'},
+  'Atlanta':{lat:33.75,lng:-84.39,state:'Georgia'},
+  'Austin':{lat:30.27,lng:-97.74,state:'Texas'},
+  'Baltimore':{lat:39.29,lng:-76.61,state:'Maryland'},
+  'Birmingham':{lat:33.52,lng:-86.80,state:'Alabama'},
+  'Boston':{lat:42.36,lng:-71.06,state:'Massachusetts'},
+  'Buffalo':{lat:42.89,lng:-78.88,state:'New York'},
+  'Charlotte':{lat:35.23,lng:-80.84,state:'North Carolina'},
+  'Chicago':{lat:41.88,lng:-87.63,state:'Illinois'},
+  'Cincinnati':{lat:39.10,lng:-84.51,state:'Ohio'},
+  'Cleveland':{lat:41.50,lng:-81.69,state:'Ohio'},
+  'Columbus':{lat:39.96,lng:-82.99,state:'Ohio'},
+  'Dallas':{lat:32.78,lng:-96.80,state:'Texas'},
+  'Denver':{lat:39.74,lng:-104.98,state:'Colorado'},
+  'Detroit':{lat:42.33,lng:-83.05,state:'Michigan'},
+  'El Paso':{lat:31.76,lng:-106.49,state:'Texas'},
+  'Fort Worth':{lat:32.75,lng:-97.33,state:'Texas'},
+  'Fresno':{lat:36.75,lng:-119.77,state:'California'},
+  'Grand Rapids':{lat:42.96,lng:-85.67,state:'Michigan'},
+  'Houston':{lat:29.76,lng:-95.37,state:'Texas'},
+  'Indianapolis':{lat:39.77,lng:-86.16,state:'Indiana'},
+  'Jacksonville':{lat:30.33,lng:-81.66,state:'Florida'},
+  'Kansas City':{lat:39.10,lng:-94.58,state:'Missouri'},
+  'Laredo':{lat:27.51,lng:-99.51,state:'Texas'},
+  'Las Vegas':{lat:36.17,lng:-115.14,state:'Nevada'},
+  'Los Angeles':{lat:34.05,lng:-118.24,state:'California'},
+  'Louisville':{lat:38.25,lng:-85.76,state:'Kentucky'},
+  'McAllen':{lat:26.20,lng:-98.23,state:'Texas'},
+  'Memphis':{lat:35.15,lng:-90.05,state:'Tennessee'},
+  'Miami':{lat:25.77,lng:-80.21,state:'Florida'},
+  'Milwaukee':{lat:43.04,lng:-87.91,state:'Wisconsin'},
+  'Minneapolis':{lat:44.98,lng:-93.27,state:'Minnesota'},
+  'Nashville':{lat:36.17,lng:-86.78,state:'Tennessee'},
+  'New York':{lat:40.71,lng:-74.01,state:'New York'},
+  'Newark':{lat:40.74,lng:-74.17,state:'New Jersey'},
+  'Oklahoma City':{lat:35.47,lng:-97.52,state:'Oklahoma'},
+  'Omaha':{lat:41.26,lng:-96.00,state:'Nebraska'},
+  'Orlando':{lat:28.54,lng:-81.38,state:'Florida'},
+  'Philadelphia':{lat:39.95,lng:-75.17,state:'Pennsylvania'},
+  'Phoenix':{lat:33.45,lng:-112.07,state:'Arizona'},
+  'Pittsburgh':{lat:40.44,lng:-79.98,state:'Pennsylvania'},
+  'Portland':{lat:45.52,lng:-122.68,state:'Oregon'},
+  'Raleigh':{lat:35.78,lng:-78.64,state:'North Carolina'},
+  'Sacramento':{lat:38.58,lng:-121.49,state:'California'},
+  'Salt Lake City':{lat:40.76,lng:-111.89,state:'Utah'},
+  'San Antonio':{lat:29.42,lng:-98.49,state:'Texas'},
+  'San Diego':{lat:32.72,lng:-117.16,state:'California'},
+  'San Francisco':{lat:37.77,lng:-122.42,state:'California'},
+  'Seattle':{lat:47.61,lng:-122.33,state:'Washington'},
+  'St. Louis':{lat:38.63,lng:-90.20,state:'Missouri'},
+  'Tampa':{lat:27.95,lng:-82.46,state:'Florida'},
+  'Torrance':{lat:33.84,lng:-118.34,state:'California'},
+  'Tucson':{lat:32.22,lng:-110.97,state:'Arizona'},
+  'Washington DC':{lat:38.91,lng:-77.04,state:'Virginia'},
+  // Canadian cities
+  'Calgary':{lat:51.05,lng:-114.07,state:'Alberta'},
+  'Edmonton':{lat:53.55,lng:-113.49,state:'Alberta'},
+  'Hamilton':{lat:43.26,lng:-79.87,state:'Ontario'},
+  'Montreal':{lat:45.51,lng:-73.56,state:'Quebec'},
+  'Ottawa':{lat:45.42,lng:-75.69,state:'Ontario'},
+  'Toronto':{lat:43.70,lng:-79.42,state:'Ontario'},
+  'Vancouver':{lat:49.25,lng:-123.12,state:'British Columbia'},
+  'Windsor':{lat:42.30,lng:-83.02,state:'Ontario'},
+  'Winnipeg':{lat:49.90,lng:-97.14,state:'Manitoba'},
+};
+
+function haversineKm(lat1,lon1,lat2,lon2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function normalizeCityKey(name){
+  if(CITY_COORDS[name])return name;
+  const n=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  for(const k of Object.keys(CITY_COORDS)){
+    if(k.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()===n)return k;
+  }
+  return null;
+}
+
+async function geocodeCityLatLng(city,state){
+  try{
+    const q=encodeURIComponent(city+', '+state);
+    const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1&addressdetails=0',{headers:{'User-Agent':'NuvoCargo-PricingTool/1.0'}});
+    const d=await r.json();
+    if(d&&d[0])return{lat:parseFloat(d[0].lat),lng:parseFloat(d[0].lon)};
+  }catch{}
+  return null;
+}
+
+async function getNearbyLanes(city,state,radiusKm){
+  // Step 1: find coords for the entered city
+  const key=normalizeCityKey(city);
+  let lat,lng;
+  if(key){lat=CITY_COORDS[key].lat;lng=CITY_COORDS[key].lng;}
+  else{
+    const c=await geocodeCityLatLng(city,state);
+    if(!c)return[{city,state}]; // can't expand without coords
+    lat=c.lat;lng=c.lng;
+  }
+  // Step 2: collect all cities in CITY_COORDS within radiusKm
+  const nearby=[];
+  for(const[name,c]of Object.entries(CITY_COORDS)){
+    if(haversineKm(lat,lng,c.lat,c.lng)<=radiusKm){
+      nearby.push({city:name,state:c.state});
+    }
+  }
+  // Always include the exact entered city+state even if not in our table
+  const hasExact=nearby.some(p=>p.city.toLowerCase()===city.toLowerCase()&&p.state.toLowerCase()===state.toLowerCase());
+  if(!hasExact)nearby.unshift({city,state});
+  return nearby;
+}
 const COMMODITIES=['Aerospace Components','Agricultural Products','Auto Parts / Automotive','Beverages (Ambient)','Beverages (Refrigerated)','Building Materials','Chemicals / Hazmat','Chocolate / Confectionery','Consumer Electronics','Dairy Products','Electrical / Cable','Food (Ambient)','Food (Frozen)','Food (Refrigerated)','Fresh Produce','Furniture / Home Goods','Glass / Fragile','Hardware / Tools','Health & Beauty','Industrial Equipment','Machinery / Heavy Equipment','Meat / Poultry','Medical Supplies','Metal / Steel','Paper / Packaging','Personal Care Products','Pet Food','Pharmaceuticals','Plastics / Resins','Retail / E-commerce','Snacks / Dry Goods','Textiles / Apparel','Tires / Rubber','Tobacco','Toys / Seasonal Goods'];
 
 // ─── QR ID Generation ───────────────────────────────────────────────────────
@@ -1599,7 +1728,6 @@ async function searchPricing(){
   const destCity    = document.getElementById('piDestCity').value.trim();
   const destState   = document.getElementById('piDestState').value.trim();
 
-  // Validate
   let missing=[];
   if(!originCity)missing.push('Origin City');
   if(!originState)missing.push('Origin State');
@@ -1611,31 +1739,38 @@ async function searchPricing(){
     return;
   }
 
-  const carrierId = document.getElementById('piCarrierId').value.trim();
-  const originZip = document.getElementById('piOriginZip').value.trim();
-  const destZip   = document.getElementById('piDestZip').value.trim();
-  const weight    = document.getElementById('piWeight').value.trim();
-
-  // Update loading label based on whether carrier bid will be fetched
-  document.getElementById('piLoadingLabel').textContent =
-    carrierId ? 'Querying Snowflake & carrier bid…' : 'Querying Snowflake…';
-
+  const useRadius=document.getElementById('piRadiusToggle').checked;
+  document.getElementById('piLoadingLabel').textContent=
+    useRadius?'Finding nearby cities…':'Querying Snowflake…';
   showPiState('loading');
   document.getElementById('piSearchBtn').disabled=true;
 
   try{
-    const params=new URLSearchParams({originCity,originState,destCity,destState});
-    const insightsPromise=fetch('/api/pricing-insights?'+params.toString());
+    const params=new URLSearchParams();
+    let originLabel=originCity+', '+originState;
+    let destLabel=destCity+', '+destState;
 
-    // Fetch carrier bid in parallel if a carrier ID was provided
-    let bidPromise=null;
-    if(carrierId){
-      const bidParams=new URLSearchParams({carrierId,originCity,originState,destCity,destState});
-      if(originZip)bidParams.set('originZip',originZip);
-      if(destZip)bidParams.set('destZip',destZip);
-      if(weight)bidParams.set('weight',weight);
-      bidPromise=fetch('/api/carrier-bids?'+bidParams.toString());
+    if(useRadius){
+      const[oNearby,dNearby]=await Promise.all([
+        getNearbyLanes(originCity,originState,50),
+        getNearbyLanes(destCity,destState,50),
+      ]);
+      params.set('originCityList',oNearby.map(p=>p.city+'|'+p.state).join(','));
+      params.set('destCityList',dNearby.map(p=>p.city+'|'+p.state).join(','));
+      originLabel=originCity+' area (±50 km)';
+      destLabel=destCity+' area (±50 km)';
+      document.getElementById('piLoadingLabel').textContent=
+        'Querying Snowflake ('+oNearby.length+' × '+dNearby.length+' cities)…';
+    }else{
+      params.set('originCity',originCity);
+      params.set('originState',originState);
+      params.set('destCity',destCity);
+      params.set('destState',destState);
     }
+
+    // Fetch insights + market bids in parallel
+    const insightsPromise=fetch('/api/pricing-insights?'+params.toString());
+    const bidPromise=fetch('/api/carrier-bids?'+new URLSearchParams({originCity,originState,destCity,destState}).toString());
 
     const resp=await insightsPromise;
     const data=await resp.json();
@@ -1647,20 +1782,18 @@ async function searchPricing(){
       return;
     }
 
-    // Resolve carrier bid (best-effort, never blocks chart rendering)
-    let carrierBid=null;
-    if(bidPromise){
-      try{
-        const bidResp=await bidPromise;
-        if(bidResp.ok){
-          const bidData=await bidResp.json();
-          carrierBid=typeof bidData.amount==='number'?bidData.amount:null;
-        }
-      }catch{/* ignore bid errors */}
-    }
+    // Market bids — best-effort, never blocks chart
+    let carrierBidData=null;
+    try{
+      const bidResp=await bidPromise;
+      if(bidResp.ok){
+        const bd=await bidResp.json();
+        if(bd.average&&bd.average>0)carrierBidData=bd;
+      }
+    }catch{/* ignore */}
 
-    const route=originCity+', '+originState+' → '+destCity+', '+destState;
-    renderPricingChart(rows,route,carrierId,carrierBid);
+    const route=originLabel+' → '+destLabel;
+    renderPricingChart(rows,route,carrierBidData);
   }catch(err){
     document.getElementById('piErrorMsg').textContent='Error: '+err.message;
     showPiState('error');
@@ -1669,10 +1802,10 @@ async function searchPricing(){
   }
 }
 
-function renderPricingChart(rows,route,carrierId,carrierBid){
+function renderPricingChart(rows,route,carrierBidData){
   // Parse & sort rows
   const sorted=rows.slice().sort((a,b)=>new Date(a.MONTH)-new Date(b.MONTH));
-  piLastData={sorted,route,carrierId,carrierBid};
+  piLastData={sorted,route,carrierBidData};
   const labels=sorted.map(r=>{
     const d=new Date(r.MONTH);
     return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
@@ -1730,10 +1863,10 @@ function renderPricingChart(rows,route,carrierId,carrierBid){
     }
   ];
 
-  if(carrierBid&&carrierBid>0){
-    const bidFlat=sorted.map(()=>Math.round(carrierBid));
+  if(carrierBidData&&carrierBidData.average>0){
+    const bidFlat=sorted.map(()=>Math.round(carrierBidData.average));
     datasets.push({
-      label:'Carrier Bid'+(carrierId?' (ID '+carrierId+')':''),
+      label:'Market Bid Avg'+(carrierBidData.count?' ('+carrierBidData.count+' carriers)':''),
       data:bidFlat,
       borderColor:'#2563EB',
       backgroundColor:'transparent',
@@ -1800,10 +1933,10 @@ function renderPricingChart(rows,route,carrierId,carrierBid){
 
 function downloadPricingReport(){
   if(!piLastData)return;
-  const {sorted,route,carrierId,carrierBid}=piLastData;
-  const hasBid=carrierBid&&carrierBid>0;
+  const {sorted,route,carrierBidData}=piLastData;
+  const hasBid=carrierBidData&&carrierBidData.average>0;
   const headers=['Month','Avg Freight Cost','Recommended Rate (+12%)','Min Freight Cost','Max Freight Cost','Shipment Count'];
-  if(hasBid)headers.push('Carrier Bid'+(carrierId?' (ID '+carrierId+')':''));
+  if(hasBid)headers.push('Market Bid Avg');
   const csvRows=[headers.join(',')];
   sorted.forEach(r=>{
     const d=new Date(r.MONTH);
@@ -1818,7 +1951,7 @@ function downloadPricingReport(){
       (parseFloat(r.MAX_FREIGHT_COST)||0).toFixed(2),
       r.SHIPMENT_COUNT||0
     ];
-    if(hasBid)row.push(Math.round(carrierBid).toFixed(2));
+    if(hasBid)row.push(Math.round(carrierBidData.average).toFixed(2));
     csvRows.push(row.join(','));
   });
   // Summary rows
@@ -1829,7 +1962,7 @@ function downloadPricingReport(){
   csvRows.push('"Overall Avg Freight Cost","$'+overallAvg+'"');
   csvRows.push('"Recommended Rate","$'+Math.round(overallAvg*1.12)+'"');
   csvRows.push('"Total Shipments","'+sorted.reduce((s,r)=>s+(parseInt(r.SHIPMENT_COUNT)||0),0)+'"');
-  if(hasBid)csvRows.push('"Carrier Bid'+(carrierId?' (ID '+carrierId+')':'')+'","$'+Math.round(carrierBid)+'"');
+  if(hasBid)csvRows.push('"Market Bid Avg","$'+Math.round(carrierBidData.average)+'"');
   const blob=new Blob([csvRows.join('\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
