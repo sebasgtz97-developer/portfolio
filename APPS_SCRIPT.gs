@@ -13,6 +13,7 @@ function doPost(e) {
 
     lanes.forEach(function(lane) {
       sheet.appendRow([
+        d.qrId,
         d.date,
         d.requester,
         d.shipperName,
