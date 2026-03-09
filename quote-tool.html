@@ -273,6 +273,8 @@ button,input,select,textarea{font-family:inherit;}
 .hist-detail-sub{font-size:11px;color:var(--text-3);margin-top:2px;}
 .btn-hist-close{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;}
 .btn-hist-close:hover{background:var(--red-bg);color:var(--red);}
+.btn-hist-template{height:30px;padding:0 14px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .14s;}
+.btn-hist-template:hover{background:var(--brand-dark);}
 .hist-detail-body{padding:20px;}
 .hist-global{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
 .hist-field{display:flex;flex-direction:column;gap:3px;}
@@ -590,7 +592,7 @@ button,input,select,textarea{font-family:inherit;}
           <div class="ops-row"><div class="ops-row-label">Fumigation?<small>Fumigation certificate required</small></div>
             <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="fumigation" id="fumigationYes" value="YES"><label for="fumigationYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="fumigation" id="fumigationNo" value="NO" checked><label for="fumigationNo" class="no-label">NO</label></div></div>
           </div>
-          <div class="ops-row" style="grid-column:span 2"><div class="ops-row-label">Team Driver Required?<small>Two-driver team needed</small></div>
+          <div class="ops-row"><div class="ops-row-label">Team Driver Required?<small>Two-driver team needed</small></div>
             <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="teamDriver" id="teamDriverYes" value="YES"><label for="teamDriverYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="teamDriver" id="teamDriverNo" value="NO" checked><label for="teamDriverNo" class="no-label">NO</label></div></div>
           </div>
         </div>
@@ -1040,14 +1042,36 @@ async function getNearbyLanes(city,state,radiusKm){
 }
 const COMMODITIES=['Aerospace Components','Agricultural Products','Auto Parts / Automotive','Beverages (Ambient)','Beverages (Refrigerated)','Building Materials','Chemicals / Hazmat','Chocolate / Confectionery','Consumer Electronics','Dairy Products','Electrical / Cable','Food (Ambient)','Food (Frozen)','Food (Refrigerated)','Fresh Produce','Furniture / Home Goods','Glass / Fragile','Hardware / Tools','Health & Beauty','Industrial Equipment','Machinery / Heavy Equipment','Meat / Poultry','Medical Supplies','Metal / Steel','Paper / Packaging','Personal Care Products','Pet Food','Pharmaceuticals','Plastics / Resins','Retail / E-commerce','Snacks / Dry Goods','Textiles / Apparel','Tires / Rubber','Tobacco','Toys / Seasonal Goods'];
 
-// ─── QR ID Generation ───────────────────────────────────────────────────────
-function generateQRId(){
-  let seq=parseInt(localStorage.getItem('qt_qr_seq')||'5499')+1;
-  localStorage.setItem('qt_qr_seq',String(seq));
-  return 'QR-'+seq;
+// ─── QR ID Generation (per-requester prefix) ────────────────────────────────
+// Format: QR-{prefix}{counter}  e.g. QR-55101 (Diego, 1st quote)
+const QR_PREFIX_MAP={
+  'Diego Lozano':551,
+  'Rich Solarte':552,
+  'Justin Diaz':553,
+  'Luis Garcia':554,
+  'Meghan Holmquist':555,
+};
+function getQrPrefix(requester){
+  return QR_PREFIX_MAP[requester]||550;
 }
-const _qrId=generateQRId();
-document.getElementById('qrIdDisplay').textContent=_qrId;
+function generateQRId(requester){
+  const prefix=getQrPrefix(requester||'');
+  const seqKey='qt_qr_seq_'+prefix;
+  let seq=parseInt(localStorage.getItem(seqKey)||'0')+1;
+  localStorage.setItem(seqKey,String(seq));
+  return 'QR-'+prefix+String(seq).padStart(2,'0');
+}
+let _qrId='—';
+let _qrLastRequester='';
+function refreshQrId(){
+  const req=document.getElementById('requester')?.value.trim()||'';
+  if(!req){document.getElementById('qrIdDisplay').textContent='—';_qrId='—';return;}
+  if(req===_qrLastRequester)return; // same person — don't burn a new number
+  _qrLastRequester=req;
+  _qrId=generateQRId(req);
+  document.getElementById('qrIdDisplay').textContent=_qrId;
+}
+document.getElementById('qrIdDisplay').textContent='—';
 
 // ─── Date Init ──────────────────────────────────────────────────────────────
 const _today=new Date();
@@ -1263,6 +1287,8 @@ function renderLaneCard(id,rateId,num){
 
 // ─── ZIP Code Lookup ──────────────────────────────────────────────────────────
 const _zipCache={};
+const _zipGen={};   // generation counter per hint element — prevents stale async overwrite
+const _zipTimers={}; // debounce timers per hint element
 async function tryZipCc(clean,cc){
   const key=cc+':'+clean;
   if(_zipCache[key]===null)return null;
@@ -1285,40 +1311,45 @@ async function tryZipCc(clean,cc){
 function lookupZip(zip,preferredCc,cityId,stateId,hintId,countryId){
   const hint=document.getElementById(hintId);
   if(!hint)return;
-  const clean=zip.replace(/\D/g,'');
-  if(clean.length<4){hint.textContent='';hint.className='zip-hint';return;}
-  hint.textContent='Looking up…';
-  hint.className='zip-hint loading';
-  // Try preferred country first, then fallbacks
-  const order=[preferredCc,...['us','mx','ca'].filter(c=>c!==preferredCc)];
-  (async()=>{
-    let result=null;
-    for(const cc of order){
-      result=await tryZipCc(clean,cc);
-      if(result)break;
-    }
-    if(!result){
-      hint.textContent='ZIP not found';
-      hint.className='zip-hint err';
-      return;
-    }
-    const{city,state,cc}=result;
-    const cityEl=document.getElementById(cityId);
-    const stateEl=document.getElementById(stateId);
-    if(cityEl&&!cityEl.value)cityEl.value=city;
-    if(stateEl&&!stateEl.value)stateEl.value=state;
-    // Update country selector to match resolved country
-    if(countryId){
-      const countryEl=document.getElementById(countryId);
-      if(countryEl){
-        if(cc==='us')countryEl.value='United States';
-        else if(cc==='mx')countryEl.value='Mexico';
-        else if(cc==='ca')countryEl.value='Canada';
+  // Debounce: wait 350ms after last keystroke before calling the API
+  clearTimeout(_zipTimers[hintId]);
+  _zipTimers[hintId]=setTimeout(()=>{
+    const clean=zip.replace(/\D/g,'');
+    if(clean.length<4){hint.textContent='';hint.className='zip-hint';return;}
+    // Bump generation — any older async that resolves later will be ignored
+    const gen=(_zipGen[hintId]=(_zipGen[hintId]||0)+1);
+    hint.textContent='Looking up…';
+    hint.className='zip-hint loading';
+    const order=[preferredCc,...['us','mx','ca'].filter(c=>c!==preferredCc)];
+    (async()=>{
+      let result=null;
+      for(const cc of order){
+        result=await tryZipCc(clean,cc);
+        if(result)break;
       }
-    }
-    hint.innerHTML='&#10003; '+city+', '+state;
-    hint.className='zip-hint';
-  })();
+      if(_zipGen[hintId]!==gen)return; // stale — a newer lookup already ran
+      if(!result){
+        hint.textContent='ZIP not found';
+        hint.className='zip-hint err';
+        return;
+      }
+      const{city,state,cc}=result;
+      const cityEl=document.getElementById(cityId);
+      const stateEl=document.getElementById(stateId);
+      if(cityEl&&!cityEl.value)cityEl.value=city;
+      if(stateEl&&!stateEl.value)stateEl.value=state;
+      if(countryId){
+        const countryEl=document.getElementById(countryId);
+        if(countryEl){
+          if(cc==='us')countryEl.value='United States';
+          else if(cc==='mx')countryEl.value='Mexico';
+          else if(cc==='ca')countryEl.value='Canada';
+        }
+      }
+      hint.innerHTML='&#10003; '+city+', '+state;
+      hint.className='zip-hint';
+    })();
+  },350);
 }
 
 // ─── Duplicate Lane ───────────────────────────────────────────────────────────
@@ -1474,6 +1505,9 @@ function initCombo(inputId,dropId,data){
   document.addEventListener('click',e=>{if(!input.contains(e.target)&&!drop.contains(e.target))close();});
 }
 initCombo('requester','requesterDrop',REQUESTER_NAMES);
+// Regenerate QR ID whenever the requester changes
+document.getElementById('requester').addEventListener('change',refreshQrId);
+document.getElementById('requester').addEventListener('blur',refreshQrId);
 
 // ─── Combobox (Lane) ──────────────────────────────────────────────────────────
 function initLaneCombo(inputId,dropId,data){
@@ -1598,6 +1632,10 @@ document.getElementById('quoteForm').addEventListener('submit',async function(e)
   }
   valSum.classList.remove('show');
 
+  // Ensure QR ID is generated (user may have typed requester without triggering blur)
+  if(_qrId==='—'||!_qrId){refreshQrId();}
+  if(_qrId==='—'||!_qrId){_qrId=generateQRId(g('requester'));}
+
   const btn=document.getElementById('btnSubmit');
   btn.disabled=true;btn.classList.add('loading');
   setStatus('loading','Submitting quote request to pricing sheet…');
@@ -1648,6 +1686,9 @@ function resetForm(){
   document.querySelectorAll('.error').forEach(el=>el.classList.remove('error'));
   document.getElementById('valSummary').classList.remove('show');
   clearStatus();
+  // Reset QR ID
+  _qrId='—';_qrLastRequester='';
+  document.getElementById('qrIdDisplay').textContent='—';
   // Remove all lanes and add one fresh
   _lanes.forEach(({id})=>{const el=document.getElementById(id);if(el)el.remove();});
   _lanes=[];_laneSeq=0;
@@ -1768,7 +1809,13 @@ function showHistDetail(idx){
     '<div class="hist-detail-header">'+
       '<div><div class="hist-detail-title">'+eh(e.qrId||'Quote')+'</div>'+
         '<div class="hist-detail-sub">'+eh(e.shipperName||'')+(e.date?' · '+eh(e.date):'')+'</div></div>'+
-      '<button class="btn-hist-close" onclick="closeHistDetail()">×</button>'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+        '<button class="btn-hist-template" onclick="loadQuoteAsTemplate('+idx+')">'+
+          '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 10V4h8v2"/><rect x="4" y="6" width="8" height="6" rx="1.5"/></svg>'+
+          'Use as Template'+
+        '</button>'+
+        '<button class="btn-hist-close" onclick="closeHistDetail()">×</button>'+
+      '</div>'+
     '</div>'+
     '<div class="hist-detail-body">'+
       '<div class="hist-global">'+globalFields.map(f=>'<div class="hist-field"><div class="hist-field-label">'+eh(f.label)+'</div><div class="hist-field-value">'+eh(String(f.value||'—'))+'</div></div>').join('')+'</div>'+
@@ -1777,6 +1824,61 @@ function showHistDetail(idx){
       (e.notes?'<div class="hist-notes"><div class="hist-notes-label">Notes</div><div class="hist-notes-text">'+eh(e.notes)+'</div></div>':'')+
     '</div>';
   document.getElementById('histDetailOverlay').classList.add('show');
+}
+
+function loadQuoteAsTemplate(idx){
+  const entries=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+  const e=entries[idx];
+  if(!e)return;
+
+  closeHistDetail();
+  resetForm(); // clears everything and adds 1 fresh lane
+
+  // Fill global fields
+  const sv=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
+  sv('shipperName',e.shipperName);
+  sv('requester',e.requester);
+  sv('commodity',e.commodity);
+  sv('notes',e.notes);
+
+  // Generate a new QR ID for this requester
+  _qrLastRequester=''; // force regeneration
+  refreshQrId();
+
+  // Fill lanes (resetForm leaves exactly 1 fresh lane)
+  const saved=e.lanes||[];
+  saved.forEach((sl,i)=>{
+    let lid;
+    if(i===0){
+      lid=_lanes[0].id; // reuse the fresh lane
+    }else{
+      addLane();
+      lid=_lanes[_lanes.length-1].id;
+    }
+    const slv=(sfx,v)=>{const el=document.getElementById(lid+sfx);if(el&&v!=null&&v!=='')el.value=v;};
+    slv('_originZip',sl.originZip);
+    slv('_originCity',sl.originCity);
+    slv('_originState',sl.originState);
+    slv('_bcCity',sl.bcCity);
+    slv('_destZip',sl.destZip);
+    slv('_destCity',sl.destCity);
+    slv('_destState',sl.destState);
+    slv('_targetRate',sl.targetRate);
+    slv('_potentialLPM',sl.potentialLPM);
+    const ss=(sfx,v)=>{const el=document.getElementById(lid+sfx);if(el&&v)el.value=v;};
+    ss('_originCountry',sl.originCountry);
+    ss('_destCountry',sl.destCountry);
+    // If the saved lane had overridden equipment, enable override and fill
+    if(sl.equipType||sl.serviceType){
+      const ov=document.getElementById(lid+'_overrideEquip');
+      if(ov&&!ov.checked){ov.checked=true;toggleLaneEquipOverride(lid);}
+      slv('_equipType',sl.equipType);
+      slv('_serviceType',sl.serviceType);
+    }
+  });
+
+  switchTab('form');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function closeHistDetail(){document.getElementById('histDetailOverlay').classList.remove('show');}
