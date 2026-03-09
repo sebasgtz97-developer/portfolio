@@ -6,22 +6,25 @@
 
 function doPost(e) {
   try {
-    var ss = SpreadsheetApp.openById('18QrUBOPT6NQjtoTwhNgtH4zaSvTPPwar6syoJS661ic');
-    var sheet = ss.getSheets()[0];
+    var ss = SpreadsheetApp.openById('11qEMtIFWxyQNw-1kfqesCFOWdAkDWIEQSulgCQoJd_I');
+    var sheet = ss.getSheetByName('QR_RAW2.0');
     var d = JSON.parse(e.postData.contents);
     var lanes = d.lanes || [];
 
     lanes.forEach(function(lane) {
       sheet.appendRow([
         d.qrId,
+        lane.rateId        || '',
         d.date,
         d.requester,
         d.shipperName,
         d.commodity,
+        lane.originZip     || '',
         lane.originCity,
         lane.originState,
         lane.originCountry,
         lane.bcCity,
+        lane.destZip       || '',
         lane.destCity,
         lane.destState,
         lane.destCountry,
