@@ -148,6 +148,11 @@ button,input,select,textarea{font-family:inherit;}
 .rate-id-badge{font-size:10px;font-weight:700;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);border-radius:999px;padding:2px 8px;letter-spacing:.02em;}
 .btn-rm-lane{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text-4);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;font-size:14px;line-height:1;}
 .btn-rm-lane:hover{border-color:var(--red-border);background:var(--red-bg);color:var(--red);}
+.btn-dup-lane{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text-4);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;font-size:11px;line-height:1;}
+.btn-dup-lane:hover{border-color:var(--blue-border);background:var(--blue-bg);color:var(--blue);}
+.zip-hint{font-size:10px;color:var(--green);font-weight:600;margin-top:2px;min-height:14px;display:flex;align-items:center;gap:3px;}
+.zip-hint.err{color:var(--red);}
+.zip-hint.loading{color:var(--text-4);font-style:italic;}
 .lane-card-body{padding:14px;}
 .lane-section-sep{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-4);padding:8px 0 4px;border-top:1px solid var(--border);margin-top:8px;}
 .lane-section-sep:first-child{border-top:none;padding-top:0;margin-top:0;}
@@ -500,10 +505,7 @@ button,input,select,textarea{font-family:inherit;}
         </div>
         <div class="field">
           <label class="field-label" for="commodity">Commodity Description <span class="field-req">*</span></label>
-          <div class="combo-wrap">
-            <input type="text" id="commodity" name="commodity" placeholder="Type or select commodity…" autocomplete="off">
-            <div class="combo-drop" id="commodityDrop"></div>
-          </div>
+          <input type="text" id="commodity" name="commodity" placeholder="Describe the commodity freely…">
         </div>
       </div>
     </div>
@@ -599,7 +601,7 @@ button,input,select,textarea{font-family:inherit;}
           <div class="ops-row"><div class="ops-row-label">Load / Unload Hours<small>Hours at facility</small></div>
             <div class="num-wrap"><input type="number" id="loadUnloadHrs" name="loadUnloadHrs" value="4" min="0" max="72"><span class="num-unit">hrs</span></div>
           </div>
-          <div class="ops-row" style="grid-column:span 2"><div class="ops-row-label">Days at Border<small>Expected border dwell time</small></div>
+          <div class="ops-row"><div class="ops-row-label">Days at Border<small>Expected border dwell time</small></div>
             <div class="num-wrap"><input type="number" id="daysAtBorder" name="daysAtBorder" value="3" min="0" max="30"><span class="num-unit">days</span></div>
           </div>
         </div>
@@ -1040,10 +1042,9 @@ const COMMODITIES=['Aerospace Components','Agricultural Products','Auto Parts / 
 
 // ─── QR ID Generation ───────────────────────────────────────────────────────
 function generateQRId(){
-  const d=new Date();
-  const ymd=d.getFullYear().toString()+(d.getMonth()+1).toString().padStart(2,'0')+d.getDate().toString().padStart(2,'0');
-  const rand=Math.floor(1000+Math.random()*9000);
-  return 'QR-'+ymd+'-'+rand;
+  let seq=parseInt(localStorage.getItem('qt_qr_seq')||'5499')+1;
+  localStorage.setItem('qt_qr_seq',String(seq));
+  return 'QR-'+seq;
 }
 const _qrId=generateQRId();
 document.getElementById('qrIdDisplay').textContent=_qrId;
@@ -1061,7 +1062,7 @@ let _laneSeq=0;
 let _lanes=[];   // array of { id, rateId }
 
 function generateRateId(seq){
-  return 'RTE-'+String(seq).padStart(3,'0');
+  return 'RTE-'+(2899+seq);
 }
 
 // ─── Add Lane ────────────────────────────────────────────────────────────────
@@ -1103,12 +1104,22 @@ function renderLaneCard(id,rateId,num){
         <span class="lane-num">Lane ${num}</span>
         <span class="rate-id-badge" id="${id}_rateId">${rateId}</span>
       </div>
-      <button type="button" class="btn-rm-lane" onclick="removeLane('${id}')" title="Remove lane">&times;</button>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <button type="button" class="btn-dup-lane" onclick="duplicateLane('${id}')" title="Duplicate lane">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="8" rx="1.5"/><path d="M2 10V2h8"/></svg>
+        </button>
+        <button type="button" class="btn-rm-lane" onclick="removeLane('${id}')" title="Remove lane">&times;</button>
+      </div>
     </div>
     <div class="lane-card-body">
 
       <div class="lane-section-sep">Route</div>
       <div class="lane-fields">
+        <div class="lf">
+          <div class="lf-label">Origin ZIP</div>
+          <input type="text" id="${id}_originZip" autocomplete="off" placeholder="e.g. 66050" maxlength="10" style="letter-spacing:.04em;">
+          <div class="zip-hint" id="${id}_originZipHint"></div>
+        </div>
         <div class="lf">
           <div class="lf-label">Origin City <span class="lf-req">*</span></div>
           <div class="lf-combo">
@@ -1136,6 +1147,11 @@ function renderLaneCard(id,rateId,num){
             <input type="text" id="${id}_bcCity" autocomplete="off" placeholder="BC city pair">
             <div class="lf-drop" id="${id}_bcCityDrop"></div>
           </div>
+        </div>
+        <div class="lf">
+          <div class="lf-label">Dest ZIP</div>
+          <input type="text" id="${id}_destZip" autocomplete="off" placeholder="e.g. 44805" maxlength="10" style="letter-spacing:.04em;">
+          <div class="zip-hint" id="${id}_destZipHint"></div>
         </div>
         <div class="lf">
           <div class="lf-label">Dest City <span class="lf-req">*</span></div>
@@ -1230,6 +1246,86 @@ function renderLaneCard(id,rateId,num){
     const v=dc.value.trim();
     const el=document.getElementById(id+'_destCountry');
     if(el){if(US_CITIES.includes(v))el.value='United States';else if(MX_CITIES.includes(v))el.value='Mexico';}
+  });
+
+  // ZIP auto-lookup
+  const oZip=document.getElementById(id+'_originZip');
+  const dZip=document.getElementById(id+'_destZip');
+  if(oZip)oZip.addEventListener('input',()=>{
+    const cc=document.getElementById(id+'_originCountry')?.value==='United States'?'us':'mx';
+    lookupZip(oZip.value.trim(),cc,id+'_originCity',id+'_originState',id+'_originZipHint');
+  });
+  if(dZip)dZip.addEventListener('input',()=>{
+    const cc=document.getElementById(id+'_destCountry')?.value==='Mexico'?'mx':'us';
+    lookupZip(dZip.value.trim(),cc,id+'_destCity',id+'_destState',id+'_destZipHint');
+  });
+}
+
+// ─── ZIP Code Lookup ──────────────────────────────────────────────────────────
+const _zipCache={};
+function lookupZip(zip,cc,cityId,stateId,hintId){
+  const hint=document.getElementById(hintId);
+  if(!hint)return;
+  const clean=zip.replace(/\D/g,'');
+  if(clean.length<4){hint.textContent='';hint.className='zip-hint';return;}
+  const key=cc+':'+clean;
+  if(_zipCache[key]===null){hint.textContent='ZIP not found';hint.className='zip-hint err';return;}
+  if(_zipCache[key]){
+    const{city,state}=_zipCache[key];
+    const cityEl=document.getElementById(cityId);
+    const stateEl=document.getElementById(stateId);
+    if(cityEl&&!cityEl.value)cityEl.value=city;
+    if(stateEl&&!stateEl.value)stateEl.value=state;
+    hint.innerHTML='&#10003; '+city+', '+state;
+    hint.className='zip-hint';
+    return;
+  }
+  hint.textContent='Looking up…';
+  hint.className='zip-hint loading';
+  fetch('https://api.zippopotam.us/'+cc+'/'+clean)
+    .then(r=>{if(!r.ok)throw new Error('not found');return r.json();})
+    .then(data=>{
+      const place=data.places&&data.places[0];
+      if(!place)throw new Error('no place');
+      const city=place['place name']||'';
+      const state=place['state']||place['state abbreviation']||'';
+      _zipCache[key]={city,state};
+      const cityEl=document.getElementById(cityId);
+      const stateEl=document.getElementById(stateId);
+      if(cityEl&&!cityEl.value)cityEl.value=city;
+      if(stateEl&&!stateEl.value)stateEl.value=state;
+      hint.innerHTML='&#10003; '+city+', '+state;
+      hint.className='zip-hint';
+    })
+    .catch(()=>{
+      _zipCache[key]=null;
+      hint.textContent='ZIP not found';
+      hint.className='zip-hint err';
+    });
+}
+
+// ─── Duplicate Lane ───────────────────────────────────────────────────────────
+function duplicateLane(sourceId){
+  addLane();
+  const newLane=_lanes[_lanes.length-1];
+  const newId=newLane.id;
+  // Copy route fields
+  ['_originZip','_originCity','_originState','_bcCity','_destZip','_destCity','_destState','_targetRate','_potentialLPM'].forEach(sfx=>{
+    const src=document.getElementById(sourceId+sfx);
+    const dst=document.getElementById(newId+sfx);
+    if(src&&dst)dst.value=src.value;
+  });
+  // Copy country selects
+  ['_originCountry','_destCountry'].forEach(sfx=>{
+    const src=document.getElementById(sourceId+sfx);
+    const dst=document.getElementById(newId+sfx);
+    if(src&&dst)dst.value=src.value;
+  });
+  // Copy ZIP hints
+  ['_originZipHint','_destZipHint'].forEach(sfx=>{
+    const src=document.getElementById(sourceId+sfx);
+    const dst=document.getElementById(newId+sfx);
+    if(src&&dst){dst.textContent=src.textContent;dst.className=src.className;}
   });
 }
 
@@ -1360,7 +1456,6 @@ function initCombo(inputId,dropId,data){
   drop.addEventListener('mousedown',e=>{const it=e.target.closest('.combo-item');if(it){e.preventDefault();input.value=it.dataset.val;close();}});
   document.addEventListener('click',e=>{if(!input.contains(e.target)&&!drop.contains(e.target))close();});
 }
-initCombo('commodity','commodityDrop',COMMODITIES);
 initCombo('requester','requesterDrop',REQUESTER_NAMES);
 
 // ─── Combobox (Lane) ──────────────────────────────────────────────────────────
@@ -1425,10 +1520,12 @@ function collectLane(laneId,rateId){
 
   return{
     rateId,
+    originZip:g(laneId+'_originZip'),
     originCity:g(laneId+'_originCity'),
     originState:g(laneId+'_originState'),
     originCountry:g(laneId+'_originCountry'),
     bcCity:g(laneId+'_bcCity'),
+    destZip:g(laneId+'_destZip'),
     destCity:g(laneId+'_destCity'),
     destState:g(laneId+'_destState'),
     destCountry:g(laneId+'_destCountry'),
