@@ -363,6 +363,7 @@ button,input,select,textarea{font-family:inherit;}
 .pi-dot-line{width:16px;height:3px;border-radius:2px;flex-shrink:0;}
 .pi-dot-cost{background:#3C6B4E;}
 .pi-dot-rec{background:#D97706;}
+.pi-dot-bid{background:#2563EB;}
 .pi-chart-wrap{position:relative;height:280px;}
 .pi-dl-btn{height:30px;padding:0 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;font-weight:600;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:background .12s,border-color .12s;}
 .pi-dl-btn:hover{background:var(--brand-light);border-color:var(--brand);color:var(--brand);}
@@ -722,6 +723,40 @@ button,input,select,textarea{font-family:inherit;}
           </div>
         </div>
 
+        <!-- Carrier Bid section -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-icon si-blue">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.8 3.6L13 5.4l-3 2.9.7 4.1L7 10.4 3.3 12.4l.7-4.1-3-2.9 4.2-.8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/></svg>
+            </div>
+            <span class="section-title">Carrier Bid</span>
+            <span class="section-sub">Optional overlay</span>
+          </div>
+          <div class="section-body">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div class="field">
+                <label class="field-label" for="piCarrierId">Carrier ID</label>
+                <input type="text" id="piCarrierId" placeholder="e.g. 42" autocomplete="off">
+                <div class="field-hint">Leave blank to skip carrier bid</div>
+              </div>
+              <div class="fg fg-2" style="gap:10px;">
+                <div class="field">
+                  <label class="field-label" for="piOriginZip">Origin ZIP</label>
+                  <input type="text" id="piOriginZip" placeholder="e.g. 78201" maxlength="10" autocomplete="off">
+                </div>
+                <div class="field">
+                  <label class="field-label" for="piDestZip">Dest ZIP</label>
+                  <input type="text" id="piDestZip" placeholder="e.g. 44805" maxlength="10" autocomplete="off">
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="piWeight">Weight (lbs)</label>
+                <input type="number" id="piWeight" placeholder="20000" min="1" autocomplete="off">
+                <div class="field-hint">Defaults to 20,000 lbs</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
 
@@ -778,7 +813,7 @@ button,input,select,textarea{font-family:inherit;}
         <!-- Loading -->
         <div class="pi-loading" id="piLoading" style="display:none;">
           <div class="pi-loading-spinner"></div>
-          Querying Snowflake…
+          <span id="piLoadingLabel">Querying Snowflake…</span>
         </div>
         <!-- Error -->
         <div class="pi-error" id="piErrorMsg" style="display:none;"></div>
@@ -819,6 +854,7 @@ button,input,select,textarea{font-family:inherit;}
               <div class="pi-legend">
                 <div class="pi-legend-item"><span class="pi-dot pi-dot-cost"></span>Avg Freight Cost</div>
                 <div class="pi-legend-item"><span class="pi-dot pi-dot-rec"></span>Recommended Rate (+12%)</div>
+                <div class="pi-legend-item" id="piLegendBid" style="display:none;"><span class="pi-dot pi-dot-bid"></span>Carrier Bid</div>
               </div>
               <button class="pi-dl-btn" id="piDownloadBtn" onclick="downloadPricingReport()">
                 <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1575,12 +1611,33 @@ async function searchPricing(){
     return;
   }
 
+  const carrierId = document.getElementById('piCarrierId').value.trim();
+  const originZip = document.getElementById('piOriginZip').value.trim();
+  const destZip   = document.getElementById('piDestZip').value.trim();
+  const weight    = document.getElementById('piWeight').value.trim();
+
+  // Update loading label based on whether carrier bid will be fetched
+  document.getElementById('piLoadingLabel').textContent =
+    carrierId ? 'Querying Snowflake & carrier bid…' : 'Querying Snowflake…';
+
   showPiState('loading');
   document.getElementById('piSearchBtn').disabled=true;
 
   try{
     const params=new URLSearchParams({originCity,originState,destCity,destState});
-    const resp=await fetch('/api/pricing-insights?'+params.toString());
+    const insightsPromise=fetch('/api/pricing-insights?'+params.toString());
+
+    // Fetch carrier bid in parallel if a carrier ID was provided
+    let bidPromise=null;
+    if(carrierId){
+      const bidParams=new URLSearchParams({carrierId,originCity,originState,destCity,destState});
+      if(originZip)bidParams.set('originZip',originZip);
+      if(destZip)bidParams.set('destZip',destZip);
+      if(weight)bidParams.set('weight',weight);
+      bidPromise=fetch('/api/carrier-bids?'+bidParams.toString());
+    }
+
+    const resp=await insightsPromise;
     const data=await resp.json();
     if(!resp.ok)throw new Error(data.error||'API error '+resp.status);
     const rows=data.rows||[];
@@ -1589,8 +1646,21 @@ async function searchPricing(){
       showPiState('error');
       return;
     }
+
+    // Resolve carrier bid (best-effort, never blocks chart rendering)
+    let carrierBid=null;
+    if(bidPromise){
+      try{
+        const bidResp=await bidPromise;
+        if(bidResp.ok){
+          const bidData=await bidResp.json();
+          carrierBid=typeof bidData.amount==='number'?bidData.amount:null;
+        }
+      }catch{/* ignore bid errors */}
+    }
+
     const route=originCity+', '+originState+' → '+destCity+', '+destState;
-    renderPricingChart(rows,route);
+    renderPricingChart(rows,route,carrierId,carrierBid);
   }catch(err){
     document.getElementById('piErrorMsg').textContent='Error: '+err.message;
     showPiState('error');
@@ -1599,10 +1669,10 @@ async function searchPricing(){
   }
 }
 
-function renderPricingChart(rows,route){
+function renderPricingChart(rows,route,carrierId,carrierBid){
   // Parse & sort rows
   const sorted=rows.slice().sort((a,b)=>new Date(a.MONTH)-new Date(b.MONTH));
-  piLastData={sorted,route};
+  piLastData={sorted,route,carrierId,carrierBid};
   const labels=sorted.map(r=>{
     const d=new Date(r.MONTH);
     return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
@@ -1630,38 +1700,62 @@ function renderPricingChart(rows,route){
   // Destroy previous chart
   if(piChart){piChart.destroy();piChart=null;}
 
+  // Build datasets — carrier bid is an optional flat reference line
+  const bidLegendEl=document.getElementById('piLegendBid');
+  const datasets=[
+    {
+      label:'Avg Freight Cost',
+      data:avgCosts,
+      borderColor:'#3C6B4E',
+      backgroundColor:'rgba(60,107,78,0.08)',
+      borderWidth:2,
+      pointRadius:4,
+      pointHoverRadius:6,
+      pointBackgroundColor:'#3C6B4E',
+      fill:true,
+      tension:0.3
+    },
+    {
+      label:'Recommended Rate (+12%)',
+      data:recRates,
+      borderColor:'#D97706',
+      backgroundColor:'transparent',
+      borderWidth:2,
+      borderDash:[6,3],
+      pointRadius:4,
+      pointHoverRadius:6,
+      pointBackgroundColor:'#D97706',
+      fill:false,
+      tension:0.3
+    }
+  ];
+
+  if(carrierBid&&carrierBid>0){
+    const bidFlat=sorted.map(()=>Math.round(carrierBid));
+    datasets.push({
+      label:'Carrier Bid'+(carrierId?' (ID '+carrierId+')':''),
+      data:bidFlat,
+      borderColor:'#2563EB',
+      backgroundColor:'transparent',
+      borderWidth:2,
+      borderDash:[3,4],
+      pointRadius:3,
+      pointHoverRadius:5,
+      pointBackgroundColor:'#2563EB',
+      fill:false,
+      tension:0
+    });
+    if(bidLegendEl)bidLegendEl.style.display='';
+  }else{
+    if(bidLegendEl)bidLegendEl.style.display='none';
+  }
+
   const ctx=document.getElementById('piChart').getContext('2d');
   piChart=new Chart(ctx,{
     type:'line',
     data:{
       labels,
-      datasets:[
-        {
-          label:'Avg Freight Cost',
-          data:avgCosts,
-          borderColor:'#3C6B4E',
-          backgroundColor:'rgba(60,107,78,0.08)',
-          borderWidth:2,
-          pointRadius:4,
-          pointHoverRadius:6,
-          pointBackgroundColor:'#3C6B4E',
-          fill:true,
-          tension:0.3
-        },
-        {
-          label:'Recommended Rate (+12%)',
-          data:recRates,
-          borderColor:'#D97706',
-          backgroundColor:'transparent',
-          borderWidth:2,
-          borderDash:[6,3],
-          pointRadius:4,
-          pointHoverRadius:6,
-          pointBackgroundColor:'#D97706',
-          fill:false,
-          tension:0.3
-        }
-      ]
+      datasets
     },
     options:{
       responsive:true,
@@ -1706,22 +1800,26 @@ function renderPricingChart(rows,route){
 
 function downloadPricingReport(){
   if(!piLastData)return;
-  const {sorted,route}=piLastData;
+  const {sorted,route,carrierId,carrierBid}=piLastData;
+  const hasBid=carrierBid&&carrierBid>0;
   const headers=['Month','Avg Freight Cost','Recommended Rate (+12%)','Min Freight Cost','Max Freight Cost','Shipment Count'];
+  if(hasBid)headers.push('Carrier Bid'+(carrierId?' (ID '+carrierId+')':''));
   const csvRows=[headers.join(',')];
   sorted.forEach(r=>{
     const d=new Date(r.MONTH);
     const month=d.toLocaleDateString('en-US',{month:'short',year:'numeric'});
     const avg=parseFloat(r.AVG_FREIGHT_COST)||0;
     const rec=Math.round(avg*1.12);
-    csvRows.push([
+    const row=[
       '"'+month+'"',
       avg.toFixed(2),
       rec.toFixed(2),
       (parseFloat(r.MIN_FREIGHT_COST)||0).toFixed(2),
       (parseFloat(r.MAX_FREIGHT_COST)||0).toFixed(2),
       r.SHIPMENT_COUNT||0
-    ].join(','));
+    ];
+    if(hasBid)row.push(Math.round(carrierBid).toFixed(2));
+    csvRows.push(row.join(','));
   });
   // Summary rows
   const avgCosts=sorted.map(r=>parseFloat(r.AVG_FREIGHT_COST)||0);
@@ -1731,6 +1829,7 @@ function downloadPricingReport(){
   csvRows.push('"Overall Avg Freight Cost","$'+overallAvg+'"');
   csvRows.push('"Recommended Rate","$'+Math.round(overallAvg*1.12)+'"');
   csvRows.push('"Total Shipments","'+sorted.reduce((s,r)=>s+(parseInt(r.SHIPMENT_COUNT)||0),0)+'"');
+  if(hasBid)csvRows.push('"Carrier Bid'+(carrierId?' (ID '+carrierId+')':'')+'","$'+Math.round(carrierBid)+'"');
   const blob=new Blob([csvRows.join('\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
