@@ -160,6 +160,14 @@ button,input,select,textarea{font-family:inherit;}
 .lf{display:flex;flex-direction:column;gap:3px;}
 .lf-label{font-size:9px;font-weight:700;color:var(--text-4);text-transform:uppercase;letter-spacing:.07em;}
 .lf-req{color:var(--red);}
+.stops-section{display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:var(--surface-2,#F9FAFB);border:1px solid var(--border);border-radius:var(--radius-xs);margin-top:2px;}
+.stop-entry{display:flex;align-items:center;gap:6px;}
+.stop-entry input{flex:1;height:28px;padding:0 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;color:var(--text-1);background:var(--surface);outline:none;transition:border-color .14s;letter-spacing:.04em;}
+.stop-entry input:focus{border-color:var(--brand);box-shadow:0 0 0 2px rgba(60,107,78,.08);}
+.btn-rm-stop{flex-shrink:0;width:22px;height:22px;border:none;border-radius:4px;background:transparent;color:var(--text-4);font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s,color .1s;}
+.btn-rm-stop:hover{background:#FEE2E2;color:var(--red);}
+.btn-add-stop{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border:1px dashed var(--border);border-radius:var(--radius-xs);background:transparent;color:var(--text-3);font-size:11px;font-weight:600;cursor:pointer;transition:border-color .12s,color .12s;}
+.btn-add-stop:hover{border-color:var(--brand);color:var(--brand);}
 .lf input,.lf select{height:30px;padding:0 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;color:var(--text-1);background:var(--surface);outline:none;transition:border-color .14s;width:100%;}
 .lf input:focus,.lf select:focus{border-color:var(--brand);box-shadow:0 0 0 2px rgba(60,107,78,.08);}
 .lf input.error,.lf select.error{border-color:var(--red)!important;}
@@ -1203,6 +1211,21 @@ function renderLaneCard(id,rateId,num){
           </div>
         </div>
         <div class="lf">
+          <div class="lf-label">Has Stops?</div>
+          <div class="toggle-group" style="width:fit-content">
+            <div class="toggle-opt"><input type="radio" name="${id}_hasStops" id="${id}_hasStopsNo" value="NO" checked onchange="toggleLaneStops('${id}')"><label for="${id}_hasStopsNo" class="no-label">NO</label></div>
+            <div class="toggle-sep"></div>
+            <div class="toggle-opt"><input type="radio" name="${id}_hasStops" id="${id}_hasStopsYes" value="YES" onchange="toggleLaneStops('${id}')"><label for="${id}_hasStopsYes" class="yes-label">YES</label></div>
+          </div>
+        </div>
+        <div class="lf" id="${id}_stopsSection" style="display:none">
+          <div class="lf-label">Stop ZIP(s)</div>
+          <div class="stops-section">
+            <div id="${id}_stopsList"></div>
+            <button type="button" class="btn-add-stop" onclick="addStop('${id}')">+ Add Stop</button>
+          </div>
+        </div>
+        <div class="lf">
           <div class="lf-label">Dest ZIP</div>
           <input type="text" id="${id}_destZip" autocomplete="off" placeholder="e.g. 44805" maxlength="10" style="letter-spacing:.04em;">
           <div class="zip-hint" id="${id}_destZipHint"></div>
@@ -1416,6 +1439,18 @@ function duplicateLane(sourceId){
     const dst=document.getElementById(newId+sfx);
     if(src&&dst){dst.textContent=src.textContent;dst.className=src.className;}
   });
+  // Copy stops
+  const srcHasStops=document.querySelector('input[name="'+sourceId+'_hasStops"]:checked')?.value;
+  if(srcHasStops==='YES'){
+    const ysEl=document.getElementById(newId+'_hasStopsYes');
+    if(ysEl){ysEl.checked=true;toggleLaneStops(newId);}
+    document.querySelectorAll('#'+sourceId+'_stopsList .stop-zip').forEach(input=>{
+      addStop(newId);
+      const list=document.getElementById(newId+'_stopsList');
+      const rows=list.querySelectorAll('.stop-zip');
+      if(rows.length)rows[rows.length-1].value=input.value;
+    });
+  }
 }
 
 function renderEquipFields(id){
@@ -1584,6 +1619,35 @@ function r(name){return document.querySelector('input[name="'+name+'"]:checked')
 function n(id){const v=parseFloat(document.getElementById(id)?.value);return isNaN(v)?'':v;}
 function eh(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
+// ─── Stops ────────────────────────────────────────────────────────────────────
+function toggleLaneStops(id){
+  const yes=document.getElementById(id+'_hasStopsYes')?.checked;
+  const sec=document.getElementById(id+'_stopsSection');
+  if(!sec)return;
+  sec.style.display=yes?'':'none';
+  if(yes){
+    const list=document.getElementById(id+'_stopsList');
+    if(list&&!list.children.length)addStop(id);
+  }
+}
+function addStop(id){
+  const list=document.getElementById(id+'_stopsList');
+  if(!list)return;
+  const row=document.createElement('div');
+  row.className='stop-entry';
+  row.innerHTML='<input type="text" class="stop-zip" placeholder="ZIP code" maxlength="10">'+
+    '<button type="button" class="btn-rm-stop" onclick="removeStop(this,\''+id+'\')" title="Remove stop">\u00d7</button>';
+  list.appendChild(row);
+}
+function removeStop(btn,id){
+  btn.closest('.stop-entry')?.remove();
+  const list=document.getElementById(id+'_stopsList');
+  if(list&&!list.children.length){
+    const no=document.getElementById(id+'_hasStopsNo');
+    if(no){no.checked=true;toggleLaneStops(id);}
+  }
+}
+
 // ─── Collect Lane Data ────────────────────────────────────────────────────────
 function collectLane(laneId,rateId){
   const syncEquip=document.getElementById('syncEquip')?.checked;
@@ -1616,6 +1680,10 @@ function collectLane(laneId,rateId){
   const daysAtBorder=n('daysAtBorder');
   const numLoadBars=n('numLoadBars');
   const numTarps=n('numTarps');
+  const hasStops=document.querySelector('input[name="'+laneId+'_hasStops"]:checked')?.value||'NO';
+  const stops=hasStops==='YES'
+    ?Array.from(document.querySelectorAll('#'+laneId+'_stopsList .stop-zip')).map(el=>el.value.trim()).filter(Boolean).join(' | ')
+    :'';
 
   return{
     rateId,
@@ -1624,6 +1692,7 @@ function collectLane(laneId,rateId){
     originState:g(laneId+'_originState'),
     originCountry:g(laneId+'_originCountry'),
     bcCity:g(laneId+'_bcCity'),
+    hasStops,stops,
     destZip:g(laneId+'_destZip'),
     destCity:g(laneId+'_destCity'),
     destState:g(laneId+'_destState'),
@@ -1838,7 +1907,9 @@ function showHistDetail(idx){
   const lanesHtml=(e.lanes||[]).map((l,i)=>{
     const fields=[
       {label:'Rate ID',value:l.rateId},{label:'Origin City',value:l.originCity},{label:'Origin State',value:l.originState},
-      {label:'Origin Country',value:l.originCountry},{label:'BC City',value:l.bcCity},{label:'Dest City',value:l.destCity},
+      {label:'Origin Country',value:l.originCountry},{label:'BC City',value:l.bcCity},
+      {label:'Stops',value:l.hasStops==='YES'&&l.stops?l.stops:'—'},
+      {label:'Dest City',value:l.destCity},
       {label:'Dest State',value:l.destState},{label:'Dest Country',value:l.destCountry},
       {label:'Equipment',value:l.equipType},{label:'Service',value:l.serviceType},
       {label:'Fuel Incl.',value:l.fuelIncluded},{label:'Nuvo BC',value:l.nuvoBC},
@@ -1933,6 +2004,17 @@ function loadQuoteAsTemplate(idx){
       if(ov&&!ov.checked){ov.checked=true;toggleLaneEquipOverride(lid);}
       slv('_equipType',sl.equipType);
       slv('_serviceType',sl.serviceType);
+    }
+    // Restore stops
+    if(sl.hasStops==='YES'&&sl.stops){
+      const ysEl=document.getElementById(lid+'_hasStopsYes');
+      if(ysEl){ysEl.checked=true;toggleLaneStops(lid);}
+      sl.stops.split(' | ').filter(Boolean).forEach(zip=>{
+        addStop(lid);
+        const list=document.getElementById(lid+'_stopsList');
+        const rows=list.querySelectorAll('.stop-zip');
+        if(rows.length)rows[rows.length-1].value=zip;
+      });
     }
   });
 

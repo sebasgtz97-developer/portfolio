@@ -13,34 +13,55 @@ function doPost(e) {
 
     lanes.forEach(function(lane) {
       sheet.appendRow([
-        d.qrId,
-        lane.rateId        || '',
-        d.date,
-        d.requester,
-        d.shipperName,
-        d.commodity,
-        lane.originZip     || '',
-        lane.originCity,
-        lane.originState,
-        lane.originCountry,
-        lane.bcCity,
-        lane.destZip       || '',
-        lane.destCity,
-        lane.destState,
-        lane.destCountry,
-        lane.equipType     || '',
-        lane.serviceType   || '',
-        lane.fuelIncluded  || 'YES',
-        lane.nuvoBC        || 'YES',
-        lane.numStraps     || 2,
-        lane.loadUnloadHrs || 4,
-        lane.daysAtBorder  || 3,
-        lane.foodGrade     || 'NO',
-        lane.fumigation    || 'NO',
-        lane.teamDriver    || 'NO',
-        lane.targetRate    || '',
-        lane.potentialLPM  || '',
-        d.notes            || ''
+        // ── Global (cols 1–6) ──────────────────────────────────────────────
+        d.qrId,                        // 1  QR ID
+        lane.rateId        || '',       // 2  Rate ID
+        d.date,                        // 3  Date
+        d.requester,                   // 4  Requester
+        d.shipperName,                 // 5  Shipper Name
+        d.commodity,                   // 6  Commodity
+        // ── Route (cols 7–15) ─────────────────────────────────────────────
+        lane.originZip     || '',       // 7  Origin ZIP
+        lane.originCity,               // 8  Origin City
+        lane.originState,              // 9  Origin State
+        lane.originCountry,            // 10 Origin Country
+        lane.bcCity,                   // 11 BC City
+        lane.destZip       || '',       // 12 Dest ZIP
+        lane.destCity,                 // 13 Dest City
+        lane.destState,                // 14 Dest State
+        lane.destCountry,              // 15 Dest Country
+        // ── Equipment (cols 16–17) ────────────────────────────────────────
+        lane.equipType     || '',       // 16 Equip Type
+        lane.serviceType   || '',       // 17 Service Type
+        // ── Operational flags (cols 18–25) ───────────────────────────────
+        lane.fuelIncluded  || 'YES',    // 18 Fuel Included
+        lane.nuvoBC        || 'YES',    // 19 Nuvo BC
+        lane.foodGrade     || 'NO',     // 20 Food Grade
+        lane.fumigation    || 'NO',     // 21 Fumigation
+        lane.teamDriver    || 'NO',     // 22 Team Driver
+        lane.leakproof     || 'NO',     // 23 Leakproof
+        lane.liftGate      || 'NO',     // 24 Lift Gate
+        lane.airRide       || 'NO',     // 25 Air Ride Suspension
+        lane.modernUnit    || 'NO',     // 26 Modern Unit
+        lane.swingDoor     || 'NO',     // 27 Swing Door
+        lane.twicCard      || 'NO',     // 28 TWIC Card
+        lane.tankerEndorsed || 'NO',    // 29 Tanker Endorsed
+        lane.hazmatEndorsed || 'NO',    // 30 Hazmat Endorsed
+        // ── Numeric requirements (cols 31–34) ────────────────────────────
+        lane.numStraps     || 2,        // 31 # of Straps
+        lane.loadUnloadHrs || 4,        // 32 Load/Unload Hrs
+        lane.daysAtBorder  || 3,        // 33 Days at Border
+        lane.numLoadBars   || 0,        // 34 # of Load Bars
+        lane.numTarps      || 0,        // 35 # of Tarps
+        // ── Pricing (cols 36–39) ──────────────────────────────────────────
+        lane.targetRate    || '',       // 36 Target Rate
+        lane.potentialLPM  || '',       // 37 Potential LPM
+        lane.shipmentValue || 100000,   // 38 Shipment Value (USD)
+        lane.shipmentWeight || 45000,   // 39 Shipment Weight (lbs)
+        // ── Notes (col 40) ────────────────────────────────────────────────
+        d.notes            || '',       // 40 Notes
+        // ── Stops (col 41) ────────────────────────────────────────────────
+        lane.stops         || ''        // 41 Stop ZIPs (pipe-separated)
       ]);
     });
 
