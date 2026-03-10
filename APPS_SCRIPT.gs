@@ -59,7 +59,9 @@ function doPost(e) {
         lane.shipmentValue || 100000,   // 38 Shipment Value (USD)
         lane.shipmentWeight || 45000,   // 39 Shipment Weight (lbs)
         // ── Notes (col 40) ────────────────────────────────────────────────
-        d.notes            || ''        // 40 Notes
+        d.notes            || '',       // 40 Notes
+        // ── Stops (col 41) ────────────────────────────────────────────────
+        lane.stops         || ''        // 41 Stop ZIPs (pipe-separated)
       ]);
     });
 
