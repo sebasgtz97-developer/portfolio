@@ -1243,6 +1243,20 @@ function renderLaneCard(id,rateId,num){
           <div class="lf-label">Potential LPM</div>
           <input type="number" id="${id}_potentialLPM" placeholder="Loads/month" min="0">
         </div>
+        <div class="lf">
+          <div class="lf-label">Shipment Value (USD)</div>
+          <div class="lf-currency">
+            <span>$</span>
+            <input type="number" id="${id}_shipmentValue" min="0" step="1" value="100000">
+          </div>
+        </div>
+        <div class="lf">
+          <div class="lf-label">Shipment Weight</div>
+          <div class="num-wrap">
+            <input type="number" id="${id}_shipmentWeight" min="0" step="1" value="45000" style="width:100%;height:28px;padding:0 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;outline:none;background:var(--surface);color:var(--text-1);">
+            <span class="num-unit">lbs</span>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -1356,7 +1370,7 @@ function duplicateLane(sourceId){
   const newLane=_lanes[_lanes.length-1];
   const newId=newLane.id;
   // Copy route fields
-  ['_originZip','_originCity','_originState','_bcCity','_destZip','_destCity','_destState','_targetRate','_potentialLPM'].forEach(sfx=>{
+  ['_originZip','_originCity','_originState','_bcCity','_destZip','_destCity','_destState','_targetRate','_potentialLPM','_shipmentValue','_shipmentWeight'].forEach(sfx=>{
     const src=document.getElementById(sourceId+sfx);
     const dst=document.getElementById(newId+sfx);
     if(src&&dst)dst.value=src.value;
@@ -1583,6 +1597,8 @@ function collectLane(laneId,rateId){
     numStraps,loadUnloadHrs,daysAtBorder,
     targetRate:n(laneId+'_targetRate'),
     potentialLPM:n(laneId+'_potentialLPM'),
+    shipmentValue:n(laneId+'_shipmentValue'),
+    shipmentWeight:n(laneId+'_shipmentWeight'),
   };
 }
 
@@ -1792,7 +1808,8 @@ function showHistDetail(idx){
       {label:'Food Grade',value:l.foodGrade},{label:'Fumigation',value:l.fumigation},
       {label:'Team Driver',value:l.teamDriver},{label:'# Straps',value:l.numStraps},
       {label:'Load/Unload Hrs',value:l.loadUnloadHrs},{label:'Days at Border',value:l.daysAtBorder},
-      {label:'Target Rate',value:l.targetRate?'$'+l.targetRate:'—'},{label:'Potential LPM',value:l.potentialLPM||'—'}
+      {label:'Target Rate',value:l.targetRate?'$'+l.targetRate:'—'},{label:'Potential LPM',value:l.potentialLPM||'—'},
+      {label:'Shipment Value',value:l.shipmentValue?'$'+Number(l.shipmentValue).toLocaleString():'—'},{label:'Shipment Weight',value:l.shipmentWeight?Number(l.shipmentWeight).toLocaleString()+' lbs':'—'}
     ];
     return '<div class="hist-lane-card">'+
       '<div class="hist-lane-header">'+
@@ -1863,6 +1880,8 @@ function loadQuoteAsTemplate(idx){
     slv('_destState',sl.destState);
     slv('_targetRate',sl.targetRate);
     slv('_potentialLPM',sl.potentialLPM);
+    slv('_shipmentValue',sl.shipmentValue);
+    slv('_shipmentWeight',sl.shipmentWeight);
     const ss=(sfx,v)=>{const el=document.getElementById(lid+sfx);if(el&&v)el.value=v;};
     ss('_originCountry',sl.originCountry);
     ss('_destCountry',sl.destCountry);
