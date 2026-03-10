@@ -544,10 +544,12 @@ button,input,select,textarea{font-family:inherit;}
           <label class="field-label" for="masterEquipType">Equipment Type</label>
           <select id="masterEquipType" name="masterEquipType">
             <option value="">Select equipment…</option>
-            <optgroup label="Temperature Controlled"><option value="Reefer">Reefer (Refrigerated)</option></optgroup>
-            <optgroup label="Dry"><option value="Dry Van">Dry Van</option><option value="Box Truck">Box Truck</option></optgroup>
-            <optgroup label="Open Deck"><option value="Flatbed">Flatbed</option><option value="Step Deck">Step Deck</option><option value="Double Drop">Double Drop</option><option value="Oversize">Oversize / Overweight</option></optgroup>
-            <optgroup label="Other"><option value="Tanker">Tanker</option><option value="Intermodal">Intermodal Container</option></optgroup>
+            <option value="Dry Van">Dry Van</option>
+            <option value="Flatbed">Flatbed</option>
+            <option value="Reefer">Reefer</option>
+            <option value="Straight Box">Straight Box</option>
+            <option value="Container">Container</option>
+            <option value="Power Only">Power Only</option>
           </select>
         </div>
         <div class="field">
@@ -595,6 +597,30 @@ button,input,select,textarea{font-family:inherit;}
           <div class="ops-row"><div class="ops-row-label">Team Driver Required?<small>Two-driver team needed</small></div>
             <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="teamDriver" id="teamDriverYes" value="YES"><label for="teamDriverYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="teamDriver" id="teamDriverNo" value="NO" checked><label for="teamDriverNo" class="no-label">NO</label></div></div>
           </div>
+          <div class="ops-row"><div class="ops-row-label">Leakproof?<small>Leakproof trailer required</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="leakproof" id="leakproofYes" value="YES"><label for="leakproofYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="leakproof" id="leakproofNo" value="NO" checked><label for="leakproofNo" class="no-label">NO</label></div></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label">Lift Gate?<small>Lift gate required</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="liftGate" id="liftGateYes" value="YES"><label for="liftGateYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="liftGate" id="liftGateNo" value="NO" checked><label for="liftGateNo" class="no-label">NO</label></div></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label">Air Ride Suspension?<small>Air ride suspension required</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="airRide" id="airRideYes" value="YES"><label for="airRideYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="airRide" id="airRideNo" value="NO" checked><label for="airRideNo" class="no-label">NO</label></div></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label">Modern Unit?<small>Modern trailer unit required</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="modernUnit" id="modernUnitYes" value="YES"><label for="modernUnitYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="modernUnit" id="modernUnitNo" value="NO" checked><label for="modernUnitNo" class="no-label">NO</label></div></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label">Swing Door?<small>Swing door trailer required</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="swingDoor" id="swingDoorYes" value="YES"><label for="swingDoorYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="swingDoor" id="swingDoorNo" value="NO" checked><label for="swingDoorNo" class="no-label">NO</label></div></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label">TWIC Card?<small>Driver TWIC card required</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="twicCard" id="twicCardYes" value="YES"><label for="twicCardYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="twicCard" id="twicCardNo" value="NO" checked><label for="twicCardNo" class="no-label">NO</label></div></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label">Tanker Endorsed?<small>Tanker endorsement required</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="tankerEndorsed" id="tankerEndorsedYes" value="YES"><label for="tankerEndorsedYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="tankerEndorsed" id="tankerEndorsedNo" value="NO" checked><label for="tankerEndorsedNo" class="no-label">NO</label></div></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label">Hazmat Endorsed?<small>Hazmat endorsement required</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="hazmatEndorsed" id="hazmatEndorsedYes" value="YES"><label for="hazmatEndorsedYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="hazmatEndorsed" id="hazmatEndorsedNo" value="NO" checked><label for="hazmatEndorsedNo" class="no-label">NO</label></div></div>
+          </div>
           <div class="ops-row"><div class="ops-row-label">Load / Unload Hours<small>Hours at facility</small></div>
             <div class="num-wrap"><input type="number" id="loadUnloadHrs" name="loadUnloadHrs" value="4" min="0" max="72"><span class="num-unit">hrs</span></div>
           </div>
@@ -603,6 +629,12 @@ button,input,select,textarea{font-family:inherit;}
           </div>
           <div class="ops-row"><div class="ops-row-label">Days at Border<small>Expected border dwell time</small></div>
             <div class="num-wrap"><input type="number" id="daysAtBorder" name="daysAtBorder" value="3" min="0" max="30"><span class="num-unit">days</span></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label"># of Load Bars<small>Load bar securement</small></div>
+            <div class="num-wrap"><input type="number" id="numLoadBars" name="numLoadBars" value="0" min="0" max="20"><span class="num-unit">bars</span></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label"># of Tarps<small>Tarp coverage required</small></div>
+            <div class="num-wrap"><input type="number" id="numTarps" name="numTarps" value="0" min="0" max="10"><span class="num-unit">tarps</span></div>
           </div>
         </div>
       </div>
@@ -1396,15 +1428,12 @@ function renderEquipFields(id){
         <div class="lf-label">Equipment Type</div>
         <select id="${id}_equipType">
           <option value="">Select…</option>
-          <option value="Reefer">Reefer</option>
           <option value="Dry Van">Dry Van</option>
-          <option value="Box Truck">Box Truck</option>
           <option value="Flatbed">Flatbed</option>
-          <option value="Step Deck">Step Deck</option>
-          <option value="Double Drop">Double Drop</option>
-          <option value="Oversize">Oversize / OW</option>
-          <option value="Tanker">Tanker</option>
-          <option value="Intermodal">Intermodal</option>
+          <option value="Reefer">Reefer</option>
+          <option value="Straight Box">Straight Box</option>
+          <option value="Container">Container</option>
+          <option value="Power Only">Power Only</option>
         </select>
       </div>
       <div class="lf">
@@ -1577,9 +1606,19 @@ function collectLane(laneId,rateId){
   const foodGrade=useOps?r('foodGrade'):(r(laneId+'_fg')||r('foodGrade'));
   const fumigation=useOps?r('fumigation'):(r(laneId+'_fum')||r('fumigation'));
   const teamDriver=r('teamDriver');
+  const leakproof=r('leakproof');
+  const liftGate=r('liftGate');
+  const airRide=r('airRide');
+  const modernUnit=r('modernUnit');
+  const swingDoor=r('swingDoor');
+  const twicCard=r('twicCard');
+  const tankerEndorsed=r('tankerEndorsed');
+  const hazmatEndorsed=r('hazmatEndorsed');
   const numStraps=n('numStraps');
   const loadUnloadHrs=n('loadUnloadHrs');
   const daysAtBorder=n('daysAtBorder');
+  const numLoadBars=n('numLoadBars');
+  const numTarps=n('numTarps');
 
   return{
     rateId,
@@ -1594,7 +1633,8 @@ function collectLane(laneId,rateId){
     destCountry:g(laneId+'_destCountry'),
     equipType,serviceType,
     fuelIncluded,nuvoBC,foodGrade,fumigation,teamDriver,
-    numStraps,loadUnloadHrs,daysAtBorder,
+    leakproof,liftGate,airRide,modernUnit,swingDoor,twicCard,tankerEndorsed,hazmatEndorsed,
+    numStraps,loadUnloadHrs,daysAtBorder,numLoadBars,numTarps,
     targetRate:n(laneId+'_targetRate'),
     potentialLPM:n(laneId+'_potentialLPM'),
     shipmentValue:n(laneId+'_shipmentValue'),
@@ -1806,8 +1846,13 @@ function showHistDetail(idx){
       {label:'Equipment',value:l.equipType},{label:'Service',value:l.serviceType},
       {label:'Fuel Incl.',value:l.fuelIncluded},{label:'Nuvo BC',value:l.nuvoBC},
       {label:'Food Grade',value:l.foodGrade},{label:'Fumigation',value:l.fumigation},
-      {label:'Team Driver',value:l.teamDriver},{label:'# Straps',value:l.numStraps},
+      {label:'Team Driver',value:l.teamDriver},{label:'Leakproof',value:l.leakproof},
+      {label:'Lift Gate',value:l.liftGate},{label:'Air Ride',value:l.airRide},
+      {label:'Modern Unit',value:l.modernUnit},{label:'Swing Door',value:l.swingDoor},
+      {label:'TWIC Card',value:l.twicCard},{label:'Tanker End.',value:l.tankerEndorsed},
+      {label:'Hazmat End.',value:l.hazmatEndorsed},{label:'# Straps',value:l.numStraps},
       {label:'Load/Unload Hrs',value:l.loadUnloadHrs},{label:'Days at Border',value:l.daysAtBorder},
+      {label:'# Load Bars',value:l.numLoadBars},{label:'# Tarps',value:l.numTarps},
       {label:'Target Rate',value:l.targetRate?'$'+l.targetRate:'—'},{label:'Potential LPM',value:l.potentialLPM||'—'},
       {label:'Shipment Value',value:l.shipmentValue?'$'+Number(l.shipmentValue).toLocaleString():'—'},{label:'Shipment Weight',value:l.shipmentWeight?Number(l.shipmentWeight).toLocaleString()+' lbs':'—'}
     ];
