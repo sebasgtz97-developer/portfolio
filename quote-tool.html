@@ -629,6 +629,12 @@ button,input,select,textarea{font-family:inherit;}
           <div class="ops-row"><div class="ops-row-label">Hazmat Endorsed?<small>Hazmat endorsement required</small></div>
             <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="hazmatEndorsed" id="hazmatEndorsedYes" value="YES"><label for="hazmatEndorsedYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="hazmatEndorsed" id="hazmatEndorsedNo" value="NO" checked><label for="hazmatEndorsedNo" class="no-label">NO</label></div></div>
           </div>
+          <div class="ops-row"><div class="ops-row-label">Shipment Value &gt; $100k?<small>Declared value over $100,000</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="shipmentValue100k" id="sv100kYes" value="YES"><label for="sv100kYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="shipmentValue100k" id="sv100kNo" value="NO" checked><label for="sv100kNo" class="no-label">NO</label></div></div>
+          </div>
+          <div class="ops-row"><div class="ops-row-label">Shipment Weight &gt; 45k lbs?<small>Over 45,000 lbs gross weight</small></div>
+            <div class="toggle-group"><div class="toggle-opt"><input type="radio" name="shipmentWeight45k" id="sw45kYes" value="YES"><label for="sw45kYes" class="yes-label">YES</label></div><div class="toggle-sep"></div><div class="toggle-opt"><input type="radio" name="shipmentWeight45k" id="sw45kNo" value="NO" checked><label for="sw45kNo" class="no-label">NO</label></div></div>
+          </div>
           <div class="ops-row"><div class="ops-row-label">Load / Unload Hours<small>Hours at facility</small></div>
             <div class="num-wrap"><input type="number" id="loadUnloadHrs" name="loadUnloadHrs" value="4" min="0" max="72"><span class="num-unit">hrs</span></div>
           </div>
@@ -907,7 +913,7 @@ button,input,select,textarea{font-family:inherit;}
 
 <script>
 // ─── Data ───────────────────────────────────────────────────────────────────
-const REQUESTER_NAMES=['Diego Lozano','Justin Diaz','Rich Solarte','Luis Garcia','Meghan Holmquist'];
+const REQUESTER_NAMES=['diego.lozano@nuvocargo.com','rich.solarte@nuvocargo.com','justin.diaz@nuvocargo.com','meghan.holmquist@nuvocargo.com','luis.garcia@nuvocargo.com'];
 
 const MX_CITIES=['Aguascalientes','Celaya','Chihuahua','Ciudad de Mexico','Ciudad Ju\u00e1rez','Ciudad Obreg\u00f3n','Coatzacoalcos','Culiac\u00e1n','Durango','Ensenada','Guadalajara','Hermosillo','Irapuato','La Paz','Le\u00f3n','Los Mochis','Manzanillo','Matamoros','Mazatl\u00e1n','M\u00e9rida','Mexicali','Monterrey','Morelia','Nuevo Laredo','Oaxaca','Piedras Negras','Puebla','Quer\u00e9taro','Reynosa','Saltillo','San Luis Potos\u00ed','Silao','Tampico','Tijuana','Tlalnepantla','Toluca','Torre\u00f3n','Veracruz','Villahermosa','Xalapa'];
 const US_CITIES=['Albuquerque','Atlanta','Ashland','Austin','Baltimore','Birmingham','Boston','Buffalo','Charlotte','Chicago','Cincinnati','Cleveland','Columbus','Dallas','Denver','Detroit','El Paso','Fort Worth','Fresno','Grand Rapids','Houston','Indianapolis','Jacksonville','Kansas City','Laredo','Las Vegas','Los Angeles','Louisville','McAllen','Memphis','Miami','Milwaukee','Minneapolis','Nashville','New York','Newark','Oklahoma City','Omaha','Orlando','Philadelphia','Phoenix','Pittsburgh','Portland','Raleigh','Sacramento','Salt Lake City','San Antonio','San Diego','San Francisco','Seattle','St. Louis','Tampa','Torrance','Tucson','Washington DC'];
@@ -1081,13 +1087,13 @@ async function getNearbyLanes(city,state,radiusKm){
 const COMMODITIES=['Aerospace Components','Agricultural Products','Auto Parts / Automotive','Beverages (Ambient)','Beverages (Refrigerated)','Building Materials','Chemicals / Hazmat','Chocolate / Confectionery','Consumer Electronics','Dairy Products','Electrical / Cable','Food (Ambient)','Food (Frozen)','Food (Refrigerated)','Fresh Produce','Furniture / Home Goods','Glass / Fragile','Hardware / Tools','Health & Beauty','Industrial Equipment','Machinery / Heavy Equipment','Meat / Poultry','Medical Supplies','Metal / Steel','Paper / Packaging','Personal Care Products','Pet Food','Pharmaceuticals','Plastics / Resins','Retail / E-commerce','Snacks / Dry Goods','Textiles / Apparel','Tires / Rubber','Tobacco','Toys / Seasonal Goods'];
 
 // ─── QR ID Generation (per-requester prefix) ────────────────────────────────
-// Format: QR-{prefix}{counter}  e.g. QR-55101 (Diego, 1st quote)
+// Format: {prefix}{counter}  e.g. 55101 (Diego, 1st quote)
 const QR_PREFIX_MAP={
-  'Diego Lozano':551,
-  'Rich Solarte':552,
-  'Justin Diaz':553,
-  'Luis Garcia':554,
-  'Meghan Holmquist':555,
+  'diego.lozano@nuvocargo.com':551,
+  'rich.solarte@nuvocargo.com':552,
+  'justin.diaz@nuvocargo.com':553,
+  'meghan.holmquist@nuvocargo.com':555,
+  'luis.garcia@nuvocargo.com':554,
 };
 function getQrPrefix(requester){
   return QR_PREFIX_MAP[requester]||550;
@@ -1097,7 +1103,7 @@ function generateQRId(requester){
   const seqKey='qt_qr_seq_'+prefix;
   let seq=parseInt(localStorage.getItem(seqKey)||'0')+1;
   localStorage.setItem(seqKey,String(seq));
-  return 'QR-'+prefix+String(seq).padStart(2,'0');
+  return ''+prefix+String(seq).padStart(2,'0');
 }
 let _qrId='—';
 let _qrLastRequester='';
@@ -1123,15 +1129,17 @@ document.getElementById('qrMeta').innerHTML=
 let _laneSeq=0;
 let _lanes=[];   // array of { id, rateId }
 
-function generateRateId(seq){
-  return 'RTE-'+(2899+seq);
+function generateRateId(){
+  let seq=parseInt(localStorage.getItem('qt_rate_seq')||'2899')+1;
+  localStorage.setItem('qt_rate_seq',String(seq));
+  return String(seq);
 }
 
 // ─── Add Lane ────────────────────────────────────────────────────────────────
 function addLane(){
   _laneSeq++;
   const id='lane_'+_laneSeq;
-  const rateId=generateRateId(_laneSeq);
+  const rateId=generateRateId();
   _lanes.push({id,rateId});
   renderLaneCard(id,rateId,_laneSeq);
   updateLaneCount();
@@ -1298,17 +1306,6 @@ function renderLaneCard(id,rateId,num){
           <div class="lf-label">Potential LPM</div>
           <input type="number" id="${id}_potentialLPM" placeholder="Loads/month" min="0">
         </div>
-        <div class="lf">
-          <div class="lf-label">Shipment Value (USD)</div>
-          <div class="lf-currency">
-            <span>$</span>
-            <input type="number" id="${id}_shipmentValue" min="0" step="1" value="100000">
-          </div>
-        </div>
-        <div class="lf">
-          <div class="lf-label">Shipment Weight <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-4)">lbs</span></div>
-          <input type="number" id="${id}_shipmentWeight" min="0" step="1" value="45000">
-        </div>
       </div>
 
     </div>
@@ -1358,6 +1355,18 @@ async function tryZipCc(clean,cc){
   if(_zipCache[key]===null)return null;
   if(_zipCache[key])return{..._zipCache[key],cc};
   try{
+    if(cc==='mx'){
+      const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=5',{headers:{'Accept-Language':'es'}});
+      if(!r.ok)throw new Error('not found');
+      const data=await r.json();
+      if(!data.length)throw new Error('no place');
+      const addr=data[0].address;
+      const city=addr.city||addr.town||addr.county||addr.municipality||addr.state_district||'';
+      const state=addr.state||'';
+      if(!city)throw new Error('no city');
+      _zipCache[key]={city,state};
+      return{city,state,cc};
+    }
     const r=await fetch('https://api.zippopotam.us/'+cc+'/'+clean);
     if(!r.ok)throw new Error('not found');
     const data=await r.json();
@@ -1422,7 +1431,7 @@ function duplicateLane(sourceId){
   const newLane=_lanes[_lanes.length-1];
   const newId=newLane.id;
   // Copy route fields
-  ['_originZip','_originCity','_originState','_bcCity','_destZip','_destCity','_destState','_targetRate','_potentialLPM','_shipmentValue','_shipmentWeight'].forEach(sfx=>{
+  ['_originZip','_originCity','_originState','_bcCity','_destZip','_destCity','_destState','_targetRate','_potentialLPM'].forEach(sfx=>{
     const src=document.getElementById(sourceId+sfx);
     const dst=document.getElementById(newId+sfx);
     if(src&&dst)dst.value=src.value;
@@ -1703,8 +1712,8 @@ function collectLane(laneId,rateId){
     numStraps,loadUnloadHrs,daysAtBorder,numLoadBars,numTarps,
     targetRate:n(laneId+'_targetRate'),
     potentialLPM:n(laneId+'_potentialLPM'),
-    shipmentValue:n(laneId+'_shipmentValue'),
-    shipmentWeight:n(laneId+'_shipmentWeight'),
+    shipmentValue:r('shipmentValue100k'),
+    shipmentWeight:r('shipmentWeight45k'),
   };
 }
 
@@ -1717,11 +1726,32 @@ function validate(){
 
   if(!_lanes.length){errors.push('At least one lane is required');}
 
+  // Master equip/service — only required when sync is ON and no lane overrides it
+  const syncEquipOn=document.getElementById('syncEquip')?.checked;
+  if(syncEquipOn){
+    [{id:'masterEquipType',label:'Equipment Type'},{id:'masterServiceType',label:'Service Type'}]
+      .forEach(({id,label})=>{const el=document.getElementById(id);const v=el?el.value.trim():'';if(!v){errors.push(label);if(el)el.classList.add('error');}else{if(el)el.classList.remove('error');}});
+  }
+
   // Per-lane required
-  _lanes.forEach(({id,rateId},i)=>{
+  _lanes.forEach(({id},i)=>{
     const num=i+1;
+    // City/State/BC always required
     [{sfx:'_originCity',label:`Lane ${num} Origin City`},{sfx:'_originState',label:`Lane ${num} Origin State`},{sfx:'_bcCity',label:`Lane ${num} Border Crossing`},{sfx:'_destCity',label:`Lane ${num} Dest City`},{sfx:'_destState',label:`Lane ${num} Dest State`}]
       .forEach(({sfx,label})=>{const el=document.getElementById(id+sfx);const v=el?el.value.trim():'';if(!v){errors.push(label);if(el)el.classList.add('error');}else{if(el)el.classList.remove('error');}});
+    // ZIP codes required
+    [{sfx:'_originZip',label:`Lane ${num} Origin ZIP`},{sfx:'_destZip',label:`Lane ${num} Dest ZIP`}]
+      .forEach(({sfx,label})=>{const el=document.getElementById(id+sfx);const v=el?el.value.trim():'';if(!v){errors.push(label);if(el)el.classList.add('error');}else{if(el)el.classList.remove('error');}});
+    // Equip/Service: only required per-lane when sync is OFF or lane overrides
+    const overrideEquip=document.getElementById(id+'_overrideEquip')?.checked;
+    if(!syncEquipOn||overrideEquip){
+      [{sfx:'_equipType',label:`Lane ${num} Equipment Type`},{sfx:'_serviceType',label:`Lane ${num} Service Type`}]
+        .forEach(({sfx,label})=>{const el=document.getElementById(id+sfx);const v=el?el.value.trim():'';if(!v){errors.push(label);if(el)el.classList.add('error');}else{if(el)el.classList.remove('error');}});
+    }
+    // Potential LPM required
+    const lpmEl=document.getElementById(id+'_potentialLPM');
+    const lpmV=lpmEl?lpmEl.value.trim():'';
+    if(!lpmV){errors.push(`Lane ${num} Potential LPM`);if(lpmEl)lpmEl.classList.add('error');}else{if(lpmEl)lpmEl.classList.remove('error');}
   });
 
   return errors;
