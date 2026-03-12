@@ -549,7 +549,7 @@ button,input,select,textarea{font-family:inherit;}
       </div>
       <div class="fg fg-2" style="margin-bottom:20px" id="masterEquipFields">
         <div class="field">
-          <label class="field-label" for="masterEquipType">Equipment Type</label>
+          <label class="field-label" for="masterEquipType">Equipment Type <span class="field-req">*</span></label>
           <select id="masterEquipType" name="masterEquipType">
             <option value="">Select equipment…</option>
             <option value="Dry Van">Dry Van</option>
@@ -561,7 +561,7 @@ button,input,select,textarea{font-family:inherit;}
           </select>
         </div>
         <div class="field">
-          <label class="field-label" for="masterServiceType">Service Type</label>
+          <label class="field-label" for="masterServiceType">Service Type <span class="field-req">*</span></label>
           <select id="masterServiceType" name="masterServiceType">
             <option value="">Select service…</option>
             <option value="Direct">Direct</option>
@@ -1114,6 +1114,7 @@ function refreshQrId(){
   _qrLastRequester=req;
   _qrId=generateQRId(req);
   document.getElementById('qrIdDisplay').textContent=_qrId;
+  refreshLaneRateIds();
 }
 document.getElementById('qrIdDisplay').textContent='—';
 
@@ -1133,6 +1134,17 @@ function generateRateId(){
   let seq=parseInt(localStorage.getItem('qt_rate_seq')||'2899')+1;
   localStorage.setItem('qt_rate_seq',String(seq));
   return String(seq);
+}
+function fmtRateId(seq){
+  const req=document.getElementById('requester')?.value.trim()||'';
+  if(!req)return String(seq);
+  return getQrPrefix(req)+'-'+seq;
+}
+function refreshLaneRateIds(){
+  _lanes.forEach(({id,rateId})=>{
+    const badge=document.getElementById(id+'_rateId');
+    if(badge)badge.textContent=fmtRateId(rateId);
+  });
 }
 
 // ─── Add Lane ────────────────────────────────────────────────────────────────
@@ -1172,7 +1184,7 @@ function renderLaneCard(id,rateId,num){
     <div class="lane-card-header">
       <div class="lane-card-title">
         <span class="lane-num">Lane ${num}</span>
-        <span class="rate-id-badge" id="${id}_rateId">${rateId}</span>
+        <span class="rate-id-badge" id="${id}_rateId">${fmtRateId(rateId)}</span>
       </div>
       <div style="display:flex;gap:4px;align-items:center;">
         <button type="button" class="btn-dup-lane" onclick="duplicateLane('${id}')" title="Duplicate lane">
@@ -1186,7 +1198,7 @@ function renderLaneCard(id,rateId,num){
       <div class="lane-section-sep">Route</div>
       <div class="lane-fields">
         <div class="lf">
-          <div class="lf-label">Origin ZIP</div>
+          <div class="lf-label">Origin ZIP <span class="field-req">*</span></div>
           <input type="text" id="${id}_originZip" autocomplete="off" placeholder="e.g. 66050" maxlength="10" style="letter-spacing:.04em;">
           <div class="zip-hint" id="${id}_originZipHint"></div>
         </div>
@@ -1234,7 +1246,7 @@ function renderLaneCard(id,rateId,num){
           </div>
         </div>
         <div class="lf">
-          <div class="lf-label">Dest ZIP</div>
+          <div class="lf-label">Dest ZIP <span class="field-req">*</span></div>
           <input type="text" id="${id}_destZip" autocomplete="off" placeholder="e.g. 44805" maxlength="10" style="letter-spacing:.04em;">
           <div class="zip-hint" id="${id}_destZipHint"></div>
         </div>
@@ -1303,7 +1315,7 @@ function renderLaneCard(id,rateId,num){
           </div>
         </div>
         <div class="lf">
-          <div class="lf-label">Potential LPM</div>
+          <div class="lf-label">Potential LPM <span class="field-req">*</span></div>
           <input type="number" id="${id}_potentialLPM" placeholder="Loads/month" min="0">
         </div>
       </div>
@@ -1466,7 +1478,7 @@ function renderEquipFields(id){
   return `<div class="lane-override-area show" id="${id}_equipOverrideArea">
     <div class="lane-fields" style="margin-top:4px">
       <div class="lf">
-        <div class="lf-label">Equipment Type</div>
+        <div class="lf-label">Equipment Type <span class="field-req">*</span></div>
         <select id="${id}_equipType">
           <option value="">Select…</option>
           <option value="Dry Van">Dry Van</option>
@@ -1478,7 +1490,7 @@ function renderEquipFields(id){
         </select>
       </div>
       <div class="lf">
-        <div class="lf-label">Service Type</div>
+        <div class="lf-label">Service Type <span class="field-req">*</span></div>
         <select id="${id}_serviceType">
           <option value="">Select…</option>
           <option value="Direct">Direct</option>
@@ -1695,7 +1707,7 @@ function collectLane(laneId,rateId){
     :'';
 
   return{
-    rateId,
+    rateId:fmtRateId(rateId),
     originZip:g(laneId+'_originZip'),
     originCity:g(laneId+'_originCity'),
     originState:g(laneId+'_originState'),
