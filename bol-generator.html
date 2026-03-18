@@ -1327,6 +1327,16 @@ function getBrand(legalName){
   return legalName.trim();
 }
 
+// ── Wiseway / Maquilados Fronterizos fixed config ─────────────────────────────
+// Third party billing is always PERFECT SUNRISE INC. for these invoices
+const WISEWAY_CONFIG = {
+  shipperName: "MAQUILADOS FRONTERIZOS DEL NORTE, S.A. DE C.V.",
+  shipperAddr: "Pino Seco 2, 32599 Juarez, Chihuahua, Mexico",
+  tpName: "PERFECT SUNRISE INC.",
+  tpAddr: "9415 GREENLEAF AVE SANTA FE SPRINGS, CA 90670",
+  tpCity: "TAX ID: 33-3624659",
+};
+
 // ── Product type → BOL description ───────────────────────────────────────────
 const PRODUCT_MAP = {
   "footwear":"Boots","boots":"Boots","calzado":"Boots",
@@ -1380,6 +1390,9 @@ function detectExcelTemplate(data){
   // Tresmontes Excel: scan first 20 rows for "Tresmontes" or "Florida" PO pattern
   const top20 = data.slice(0,20).map(r=>r.join(" ")).join("\n").toLowerCase();
   if(/tresmontes|lucchetti/.test(top20)) return "tresmontes_excel";
+
+  // Wiseway / Maquilados Fronterizos commercial invoice
+  if(/maquilados\s+fronterizos|mfn031210at9|balata\s+automotriz/.test(top20)) return "wiseway_invoice";
 
   // Commercial invoice: look for "INVOICE", "FACTURA", "COMERCIAL"
   const top10 = data.slice(0,10).map(r=>r.join(" ")).join("\n");
@@ -1763,6 +1776,10 @@ async function parseExcel(file){
     result = parseTBCTemplate(data);
     result._template = "tbc";
     result._source = "TBC PL 2025 Excel";
+  } else if(template === "wiseway_invoice"){
+    result = parseWisewayInvoice(data.map(r=>r.join(" ")));
+    result._template = "wiseway_invoice";
+    result._source = "Wiseway Commercial Invoice (Excel)";
   } else if(template === "commercial_invoice"){
     result = parseGenericDocument(data, "excel_invoice");
     result._template = "commercial_invoice";
@@ -1774,6 +1791,97 @@ async function parseExcel(file){
   }
 
   return result;
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+//  PARSER 3: Wiseway / Maquilados Fronterizos Commercial Invoice
+//  Detects: "MAQUILADOS FRONTERIZOS DEL NORTE" or RFC "MFN031210AT9"
+//  Extracts invoice ref (EXPO RT XX-XXX), date, total CANTIDAD, total weight.
+//  Applies fixed shipper address and PERFECT SUNRISE INC. third-party billing.
+// ════════════════════════════════════════════════════════════════════════════════
+function parseWisewayInvoice(allLines) {
+  const r = { _warnings: [], _confidence: [] };
+  const flat = allLines.join("\n");
+
+  // Fixed shipper (always MAQUILADOS FRONTERIZOS)
+  r.shipperName = WISEWAY_CONFIG.shipperName;
+  r.shipperAddr = WISEWAY_CONFIG.shipperAddr;
+
+  // Invoice reference: "INV#: EXPO RT 26- 030" or "EXPO RT 26-030"
+  const invM = flat.match(/INV#?\s*[:\s]+\s*(EXPO[\s\w]*RT[\s\w\-]*\d+)/i)
+            || flat.match(/(EXPO\s+RT\s+\d[\d\s\-]*\d)/i);
+  if (invM) {
+    r.invoiceRef = invM[1].replace(/\s{2,}/g, " ").replace(/\s*-\s*/g, "-").trim();
+    r._confidence.push("invoiceRef");
+  }
+
+  // Date: "DATE 11/03/2026" — Mexican format DD/MM/YYYY
+  const dateM = flat.match(/DATE\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+  if (dateM) {
+    try {
+      const parts = dateM[1].split(/[\/\-]/);
+      // Interpret as DD/MM/YYYY
+      r.shipDate = `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
+    } catch(e) {}
+  }
+
+  // Description: BALATA AUTOMOTRIZ → Brake Pads
+  r.description = "Brake Pads";
+
+  // Sum CANTIDAD from line items ("90 SET", "72 SET", etc.)
+  let totalQty = 0;
+  for (const line of allLines) {
+    if (!/BALATA\s+AUTOMOTRIZ/i.test(line)) continue;
+    const qtyM = line.match(/\b(\d+)\s+SET\b/i);
+    if (qtyM) totalQty += parseInt(qtyM[1]);
+  }
+
+  // Also try to find an explicit grand total quantity on a "Total" row
+  const grandQtyM = flat.match(/Total[\s\S]{0,60}?\b(\d[\d,]+)\s+SET/i);
+  if (grandQtyM) {
+    const n = parseInt(grandQtyM[1].replace(/,/g, ""));
+    if (n > totalQty) totalQty = n; // prefer explicit total
+  }
+
+  if (totalQty > 0) {
+    r.totalPkgs  = String(totalQty);
+    r.totalBoxes = r.totalPkgs;
+    r._confidence.push("totalPkgs");
+  }
+
+  // Sum PESO BRUTO — appears as standalone numbers between "MEX" and price columns
+  // Strategy: scan for numbers on lines that also contain quantity+SET pattern
+  // and accumulate unique peso bruto values from merged cells.
+  // Also look for a total weight line.
+  const totalWtM = flat.match(/(?:total\s*(?:gross\s*)?weight|peso\s*(?:bruto\s*)?total)[^\n]*?([\d,]+\.?\d*)/i)
+                || flat.match(/(?:grand\s*total)[^\n]*([\d,]+\.\d{2})\s*(?:kg|KG)?/i);
+  if (totalWtM) {
+    const n = parseNum(totalWtM[1]);
+    if (!isNaN(n) && n > 10) {
+      r.totalWeightKg = String(n.toFixed(2));
+      r._confidence.push("weight");
+    }
+  }
+
+  // Fallback: accumulate PESO BRUTO merged-cell values from standalone number lines
+  if (!r.totalWeightKg) {
+    let sumWt = 0;
+    // PESO BRUTO values appear on lines that contain only a number (merged cell rows)
+    for (const line of allLines) {
+      const trimmed = line.trim();
+      if (/^\d+$/.test(trimmed)) {
+        const n = parseInt(trimmed);
+        if (n > 50 && n < 5000) sumWt += n; // plausible PESO BRUTO range per group
+      }
+    }
+    if (sumWt > 0) {
+      r.totalWeightKg = String(sumWt.toFixed(2));
+      r._confidence.push("weight_estimated");
+      r._warnings.push("Weight estimated from PESO BRUTO column — verify before printing.");
+    }
+  }
+
+  return r;
 }
 
 async function parsePDF(file){
@@ -1811,13 +1919,17 @@ async function parsePDF(file){
     };
   }
 
-  // Detect Tresmontes vs generic
+  // Detect invoice type
   const flatLines = allLines.join("\n").toLowerCase();
   let result;
   if(/tresmontes|lucchetti|florida\s+flo/.test(flatLines)){
     result = parseTresmontesPDF(allLines);
     result._template = "tresmontes_pdf";
     result._source = "Tresmontes PDF";
+  } else if(/maquilados\s+fronterizos|mfn031210at9|balata\s+automotriz/.test(flatLines)){
+    result = parseWisewayInvoice(allLines);
+    result._template = "wiseway_invoice";
+    result._source = "Wiseway Commercial Invoice";
   } else {
     // Use generic document parser on flattened lines
     result = parseGenericDocument(allLines.map(l=>[l]), "pdf");
@@ -1846,13 +1958,14 @@ async function parseCSV(file){
 function consolidateResults(results, files){
   const merged = { cargoRows:[], _allWarnings:[] };
 
-  // Detect Thursday mode: any TBC template → Thursday mode
-  const hasTBC = results.some(r=>r._template==="tbc");
+  // Detect invoice type to set BOL mode
+  const hasTBC     = results.some(r=>r._template==="tbc");
+  const hasWiseway = results.some(r=>r._template==="wiseway_invoice");
   if(hasTBC){
     const thuR = document.querySelector('input[name="bolMode"][value="thursday"]');
     if(thuR){ thuR.checked=true; setBolMode("thursday"); }
   } else {
-    // Only switch to tresmontes if NO tbc files (don't override if mixed)
+    // Standard mode for Wiseway, Tresmontes, and generic invoices
     const treR = document.querySelector('input[name="bolMode"][value="tresmontes"]');
     if(treR){ treR.checked=true; setBolMode("tresmontes"); }
   }
@@ -1867,6 +1980,7 @@ function consolidateResults(results, files){
     if(!merged.carrierName   && r.carrierName)   merged.carrierName   = r.carrierName;
     if(!merged.trailerNo     && r.trailerNo)     merged.trailerNo     = r.trailerNo;
     if(!merged.shipmentRef   && r.shipmentRef)   merged.shipmentRef   = r.shipmentRef;
+    if(!merged.invoiceRef    && r.invoiceRef)    merged.invoiceRef    = r.invoiceRef;
 
     // Collect warnings
     if(r._warnings) merged._allWarnings.push(...r._warnings.map(w=>`${files[idx].name}: ${w}`));
@@ -1889,6 +2003,13 @@ function consolidateResults(results, files){
       if(consignee || boxes){
         merged.cargoRows.push({order:orderNo,consignee,units,boxes,pkgs:boxes,type:"CJ",desc,weight,unit:"KG",cls:""});
       }
+    } else if(r._template === "wiseway_invoice"){
+      // Wiseway: one summary row with invoice ref as order number
+      const orderNo = r.invoiceRef || r.poNumber || files[idx].name.replace(/\.[^.]+$/,"");
+      const boxes   = r.totalBoxes || r.totalPkgs || "";
+      const weight  = r.totalWeightKg || "";
+      const desc    = r.description || "Brake Pads";
+      merged.cargoRows.push({order:orderNo,pkgs:boxes,boxes,type:"SET",desc,weight,unit:"KG",cls:"60"});
     } else {
       const poNum  = r.poNumber || r.orderNos?.[0] || r.shipmentRef || files[idx].name.replace(/\.[^.]+$/,"");
       const boxes  = r.totalBoxes || r.totalPkgs || "";
@@ -1916,8 +2037,17 @@ function fillFormMulti(merged, allResults){
   set("trailerNo",     merged.trailerNo);
   if(merged.shipDate) set("shipDate", merged.shipDate);
 
+  // Wiseway / Maquilados Fronterizos: fixed address + PERFECT SUNRISE billing
+  if(merged.shipperName && /maquilados\s+fronterizos/i.test(merged.shipperName)){
+    set("shipperName", WISEWAY_CONFIG.shipperName);
+    set("shipperAddr", WISEWAY_CONFIG.shipperAddr);
+    set("tpName",      WISEWAY_CONFIG.tpName);
+    set("tpAddr",      WISEWAY_CONFIG.tpAddr);
+    set("tpCity",      WISEWAY_CONFIG.tpCity);
+    // Put invoice reference in special instructions
+    if(merged.invoiceRef) set("specInstr", merged.invoiceRef);
   // Tresmontes: always use verified warehouse address + 3P billing
-  if(merged.shipperName && /tresmontes|lucchetti/i.test(merged.shipperName)){
+  } else if(merged.shipperName && /tresmontes|lucchetti/i.test(merged.shipperName)){
     set("shipperName", merged.shipperName);
     set("shipperAddr", "Av. Guadalajara 105, km11+034.11. Parque Industrial Centro Logistico Jalisco.");
     set("tpName", "Tresmontes Lucchetti Mexico SA de CV");
@@ -1965,7 +2095,13 @@ async function doUpload(file){ doUploadMulti([file]); }
 function fillForm(ex){
   const set=(id,val)=>{const el=document.getElementById(id);if(el&&val&&String(val).trim()){el.value=String(val).trim();el.classList.add("autofill");}};
   set("shipperName",ex.shipperName);
-  if(ex.shipperName&&/tresmontes|lucchetti/i.test(ex.shipperName)){
+  if(ex.shipperName&&/maquilados\s+fronterizos/i.test(ex.shipperName)){
+    set("shipperAddr",WISEWAY_CONFIG.shipperAddr);
+    set("tpName",WISEWAY_CONFIG.tpName);
+    set("tpAddr",WISEWAY_CONFIG.tpAddr);
+    set("tpCity",WISEWAY_CONFIG.tpCity);
+    if(ex.invoiceRef)set("specInstr",ex.invoiceRef);
+  }else if(ex.shipperName&&/tresmontes|lucchetti/i.test(ex.shipperName)){
     set("shipperAddr","Av. Guadalajara 105, km11+034.11. Parque Industrial Centro Logistico Jalisco.");
     set("tpName","Tresmontes Lucchetti Mexico SA de CV");
     set("tpAddr","Blvd Manuel Avila Camacho No. 88 Piso 4");
