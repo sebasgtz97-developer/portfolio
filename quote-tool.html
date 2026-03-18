@@ -1377,7 +1377,7 @@ async function tryZipCc(clean,cc){
       const data=await r.json();
       if(!data.length)throw new Error('no place');
       const addr=data[0].address;
-      const city=addr.city||addr.town||addr.county||addr.municipality||addr.state_district||'';
+      const city=addr.city||addr.town||addr.municipality||addr.village||addr.suburb||addr.quarter||addr.neighbourhood||addr.county||addr.state_district||'';
       const state=addr.state||'';
       if(!city)throw new Error('no city');
       _zipCache[key]={city,state};
@@ -1404,7 +1404,14 @@ function lookupZip(zip,preferredCc,cityId,stateId,hintId,countryId){
   clearTimeout(_zipTimers[hintId]);
   _zipTimers[hintId]=setTimeout(()=>{
     const clean=zip.replace(/\D/g,'');
-    if(clean.length<4){hint.textContent='';hint.className='zip-hint';return;}
+    if(clean.length<4){
+      hint.textContent='';hint.className='zip-hint';
+      const cityEl=document.getElementById(cityId);
+      const stateEl=document.getElementById(stateId);
+      if(cityEl)cityEl.value='';
+      if(stateEl)stateEl.value='';
+      return;
+    }
     // Bump generation — any older async that resolves later will be ignored
     const gen=(_zipGen[hintId]=(_zipGen[hintId]||0)+1);
     hint.textContent='Looking up…';
