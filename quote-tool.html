@@ -1105,7 +1105,9 @@ function getQrPrefix(requester){
 function generateQRId(requester){
   const prefix=getQrPrefix(requester||'');
   const seqKey='qt_qr_seq_'+prefix;
-  let seq=parseInt(localStorage.getItem(seqKey)||'0')+1;
+  // Use a random 4-digit seed on fresh devices so different machines never start at the same value
+  const dflt=String(Math.floor(Math.random()*9000)+1000);
+  let seq=parseInt(localStorage.getItem(seqKey)??dflt)+1;
   localStorage.setItem(seqKey,String(seq));
   return ''+prefix+String(seq).padStart(2,'0');
 }
@@ -1135,7 +1137,9 @@ let _laneSeq=0;
 let _lanes=[];   // array of { id, rateId }
 
 function generateRateId(){
-  let seq=parseInt(localStorage.getItem('qt_rate_seq')||'2899')+1;
+  // Use a random 5-digit seed on fresh devices so different machines never start at the same value
+  const dflt=String(Math.floor(Math.random()*90000)+10000);
+  let seq=parseInt(localStorage.getItem('qt_rate_seq')??dflt)+1;
   localStorage.setItem('qt_rate_seq',String(seq));
   return String(seq);
 }
