@@ -15,6 +15,12 @@
     },
     "api/pricing-meta.js": {
       "maxDuration": 25
+    },
+    "api/kb-chat.js": {
+      "maxDuration": 60
+    },
+    "api/kb-upload.js": {
+      "maxDuration": 60
     }
   }
 }
