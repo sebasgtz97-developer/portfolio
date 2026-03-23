@@ -927,7 +927,7 @@ const US_STATES=['Alabama','Alaska','Arizona','Arkansas','California','Colorado'
 const CA_PROVINCES=['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon'];
 const ALL_CITIES=[...new Set([...MX_CITIES,...US_CITIES,...CA_CITIES])].sort();
 const ALL_STATES=[...new Set([...MX_STATES,...US_STATES,...CA_PROVINCES])].sort();
-const BC_CITIES=['Laredo / Nuevo Laredo','El Paso / Ciudad Ju\u00e1rez','McAllen / Reynosa','Eagle Pass / Piedras Negras','Del Rio / Ciudad Acuna','Brownsville / Matamoros','San Diego / Tijuana','Douglas / Agua Prieta','Nogales / Nogales','Calexico / Mexicali','Presidio / Ojinaga','Hidalgo / Reynosa'];
+const BC_CITIES=['Intra US shipment','Intra MX shipment','Laredo / Nuevo Laredo','El Paso / Ciudad Ju\u00e1rez','McAllen / Reynosa','Eagle Pass / Piedras Negras','Del Rio / Ciudad Acuna','Brownsville / Matamoros','San Diego / Tijuana','Douglas / Agua Prieta','Nogales / Nogales','Calexico / Mexicali','Presidio / Ojinaga','Hidalgo / Reynosa'];
 
 // ─── City Coordinates (for 50km radius search) ───────────────────────────────
 // lat/lng + state for each city in our static lists
@@ -1339,6 +1339,18 @@ function renderLaneCard(id,rateId,num){
   initLaneCombo(id+'_destCity', id+'_destCityDrop', ALL_CITIES);
   initLaneCombo(id+'_destState', id+'_destStateDrop', ALL_STATES);
 
+  // Auto-set border crossing for domestic lanes
+  function autoSetBcCity(){
+    const orig=document.getElementById(id+'_originCountry')?.value;
+    const dest=document.getElementById(id+'_destCountry')?.value;
+    const bc=document.getElementById(id+'_bcCity');
+    if(!bc)return;
+    const intraValues=['Intra US shipment','Intra MX shipment'];
+    if(orig==='United States'&&dest==='United States'){bc.value='Intra US shipment';}
+    else if(orig==='Mexico'&&dest==='Mexico'){bc.value='Intra MX shipment';}
+    else if(intraValues.includes(bc.value)){bc.value='';}
+  }
+
   // Auto-sync countries
   const oc=document.getElementById(id+'_originCity');
   const dc=document.getElementById(id+'_destCity');
@@ -1346,12 +1358,20 @@ function renderLaneCard(id,rateId,num){
     const v=oc.value.trim();
     const el=document.getElementById(id+'_originCountry');
     if(el){if(MX_CITIES.includes(v))el.value='Mexico';else if(US_CITIES.includes(v))el.value='United States';}
+    autoSetBcCity();
   });
   if(dc)dc.addEventListener('input',()=>{
     const v=dc.value.trim();
     const el=document.getElementById(id+'_destCountry');
     if(el){if(US_CITIES.includes(v))el.value='United States';else if(MX_CITIES.includes(v))el.value='Mexico';}
+    autoSetBcCity();
   });
+
+  // Also fire when country dropdowns are changed manually
+  const oCtr=document.getElementById(id+'_originCountry');
+  const dCtr=document.getElementById(id+'_destCountry');
+  if(oCtr)oCtr.addEventListener('change',autoSetBcCity);
+  if(dCtr)dCtr.addEventListener('change',autoSetBcCity);
 
   // ZIP auto-lookup
   const oZip=document.getElementById(id+'_originZip');
@@ -1446,6 +1466,7 @@ function lookupZip(zip,preferredCc,cityId,stateId,hintId,countryId){
             if(cc==='us')countryEl.value='United States';
             else if(cc==='mx')countryEl.value='Mexico';
             else if(cc==='ca')countryEl.value='Canada';
+            countryEl.dispatchEvent(new Event('change'));
           }
         }
         hint.innerHTML='&#10003; '+city+', '+state;
