@@ -1883,6 +1883,8 @@ document.getElementById('quoteForm').addEventListener('submit',async function(e)
       '<div class="ss-detail-row"><span class="ss-detail-label">Lanes</span><span class="ss-detail-value">'+lanes.length+'</span></div>'+
       lanes.map((l,i)=>'<div class="ss-detail-row"><span class="ss-detail-label">'+eh(l.rateId)+'</span><span class="ss-detail-value">'+eh((l.originCity||'?')+' \u2192 '+(l.destCity||'?'))+'</span></div>').join('');
     saveToHistory(global,lanes);
+    // Invalidate current QR/rate IDs so a re-submit (e.g. via Go Back) always generates new ones
+    _qrId='—';_qrLastRequester='';
     const si=document.getElementById('successInner');
     si.classList.remove('animate');
     void si.offsetWidth; // reflow to restart animation
