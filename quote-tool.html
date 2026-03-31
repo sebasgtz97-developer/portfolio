@@ -1396,12 +1396,26 @@ async function tryZipCc(clean,cc){
   if(_zipCache[key])return{..._zipCache[key],cc};
   try{
     if(cc==='mx'){
+      // Try zippopotam.us first — same API as US/CA, broader MX coverage
+      try{
+        const rz=await fetch('https://api.zippopotam.us/mx/'+clean);
+        if(rz.ok){
+          const dz=await rz.json();
+          const place=dz.places&&dz.places[0];
+          if(place&&place['place name']){
+            const city=place['place name']||'';
+            const state=place['state']||place['state abbreviation']||'';
+            if(city){_zipCache[key]={city,state};return{city,state,cc};}
+          }
+        }
+      }catch{}
+      // Fall back to Nominatim
       const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=5',{headers:{'Accept-Language':'es'}});
       if(!r.ok)throw new Error('not found');
       const data=await r.json();
       if(!data.length)throw new Error('no place');
       const addr=data[0].address;
-      const city=addr.city||addr.town||addr.municipality||addr.village||addr.suburb||addr.quarter||addr.neighbourhood||addr.county||addr.state_district||'';
+      const city=addr.city||addr.town||addr.municipality||addr.village||addr.locality||addr.hamlet||addr.suburb||addr.quarter||addr.neighbourhood||addr.county||addr.state_district||'';
       const state=addr.state||'';
       if(!city)throw new Error('no city');
       _zipCache[key]={city,state};
