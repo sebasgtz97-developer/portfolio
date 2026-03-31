@@ -1402,7 +1402,7 @@ async function tryZipCc(clean,cc){
         if(rs.ok){
           const ds=await rs.json();
           const z=(ds.zip_codes||[])[0];
-          const city=z&&(z.d_ciudad||z.D_mnpio)||'';
+          const city=z&&(z.D_mnpio||z.d_ciudad)||'';
           const state=z&&z.d_estado||'';
           if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
         }
