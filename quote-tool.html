@@ -1396,45 +1396,45 @@ async function tryZipCc(clean,cc){
   if(_zipCache[key])return{..._zipCache[key],cc};
   try{
     if(cc==='mx'){
-      // Step 1: Try Nominatim forward postal-code search
-      // It returns municipality-level data (the real city) when it has coverage
+      // Step 1: zippopotam.us for coordinates — its colonia coordinates are physically
+      // correct (the colonia IS inside the right city), so reverse-geocoding them at
+      // city zoom level reliably returns the municipality, unlike Nominatim's postal
+      // code boundary data which can be assigned to the wrong place.
       try{
-        const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=5',{headers:{'Accept-Language':'es'}});
-        if(r.ok){
-          const data=await r.json();
-          if(data.length){
-            const addr=data[0].address;
-            // Prefer municipality over lower-level fields (suburb/neighbourhood = colonia, not city)
-            const city=addr.municipality||addr.city||addr.town||addr.county||addr.state_district||'';
-            const state=addr.state||'';
-            if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
+        const rz=await fetch('https://api.zippopotam.us/mx/'+clean);
+        if(rz.ok){
+          const dz=await rz.json();
+          const place=dz.places&&dz.places[0];
+          if(place){
+            const state=place['state']||place['state abbreviation']||'';
+            const lat=place.latitude;const lon=place.longitude;
+            if(lat&&lon){
+              try{
+                const rv=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&zoom=10&addressdetails=1',{headers:{'Accept-Language':'es'}});
+                if(rv.ok){
+                  const rd=await rv.json();
+                  const ra=rd.address||{};
+                  const city=ra.municipality||ra.city||ra.town||ra.county||'';
+                  if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
+                }
+              }catch{}
+            }
+            // zippopotam confirmed ZIP exists; reverse geocode failed — use state as fallback
+            if(state){_zipCache[key]={city:state,state};return{city:state,state,cc};}
           }
         }
       }catch{}
-      // Step 2: zippopotam.us has the ZIP — use its coordinates for a Nominatim reverse lookup
-      // at city zoom level (zoom=10) to get the municipality, not the colonia
-      const rz=await fetch('https://api.zippopotam.us/mx/'+clean);
-      if(!rz.ok)throw new Error('not found');
-      const dz=await rz.json();
-      const place=dz.places&&dz.places[0];
-      if(!place)throw new Error('no place');
-      const state=place['state']||place['state abbreviation']||'';
-      const lat=place.latitude;const lon=place.longitude;
-      if(lat&&lon){
-        try{
-          const rv=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&zoom=10&addressdetails=1',{headers:{'Accept-Language':'es'}});
-          if(rv.ok){
-            const rd=await rv.json();
-            const ra=rd.address||{};
-            const city=ra.municipality||ra.city||ra.town||ra.county||'';
-            if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
-          }
-        }catch{}
-      }
-      // Last resort: ZIP confirmed valid, use state as city placeholder
-      if(!state)throw new Error('no data');
-      _zipCache[key]={city:state,state};
-      return{city:state,state,cc};
+      // Step 2: Fallback — Nominatim forward postal-code search
+      const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=5',{headers:{'Accept-Language':'es'}});
+      if(!r.ok)throw new Error('not found');
+      const data=await r.json();
+      if(!data.length)throw new Error('no place');
+      const addr=data[0].address;
+      const city=addr.municipality||addr.city||addr.town||addr.county||addr.state_district||'';
+      const state=addr.state||'';
+      if(!city)throw new Error('no city');
+      _zipCache[key]={city,state};
+      return{city,state,cc};
     }
     const r=await fetch('https://api.zippopotam.us/'+cc+'/'+clean);
     if(!r.ok)throw new Error('not found');
