@@ -1396,52 +1396,28 @@ async function tryZipCc(clean,cc){
   if(_zipCache[key])return{..._zipCache[key],cc};
   try{
     if(cc==='mx'){
-      // Step 1: api-sepomex.hckdrk.mx — uses official SEPOMEX data, returns ciudad + municipio
+      // Primary: IcaliaLabs SEPOMEX API — official SEPOMEX data, returns d_ciudad / D_mnpio
       try{
-        const rs=await fetch('https://api-sepomex.hckdrk.mx/query/info_cp/'+clean);
+        const rs=await fetch('https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code='+clean);
         if(rs.ok){
           const ds=await rs.json();
-          const info=Array.isArray(ds)?ds[0]:ds;
-          const city=info&&(info.ciudad||info.municipio)||'';
-          const state=info&&info.estado||'';
+          const z=(ds.zip_codes||[])[0];
+          const city=z&&(z.d_ciudad||z.D_mnpio)||'';
+          const state=z&&z.d_estado||'';
           if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
         }
       }catch{}
-      // Step 2: Nominatim forward postal-code search
-      try{
-        const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=5',{headers:{'Accept-Language':'es'}});
-        if(r.ok){
-          const data=await r.json();
-          if(data.length){
-            const addr=data[0].address;
-            const city=addr.municipality||addr.city||addr.town||addr.county||addr.state_district||'';
-            const state=addr.state||'';
-            if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
-          }
-        }
-      }catch{}
-      // Step 3: zippopotam.us coordinates + Nominatim reverse geocode at city level
-      const rz=await fetch('https://api.zippopotam.us/mx/'+clean);
-      if(!rz.ok)throw new Error('not found');
-      const dz=await rz.json();
-      const place=dz.places&&dz.places[0];
-      if(!place)throw new Error('no place');
-      const state=place['state']||place['state abbreviation']||'';
-      const lat=place.latitude;const lon=place.longitude;
-      if(lat&&lon){
-        try{
-          const rv=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json&zoom=10&addressdetails=1',{headers:{'Accept-Language':'es'}});
-          if(rv.ok){
-            const rd=await rv.json();
-            const ra=rd.address||{};
-            const city=ra.municipality||ra.city||ra.town||ra.county||'';
-            if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
-          }
-        }catch{}
-      }
-      if(!state)throw new Error('no data');
-      _zipCache[key]={city:state,state};
-      return{city:state,state,cc};
+      // Fallback: Nominatim — prioritise city over municipality (MX OSM municipality data is unreliable)
+      const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=1',{headers:{'Accept-Language':'es'}});
+      if(!r.ok)throw new Error('not found');
+      const data=await r.json();
+      if(!data.length)throw new Error('no place');
+      const addr=data[0].address;
+      const city=addr.city||addr.town||addr.municipality||addr.county||addr.state_district||'';
+      const state=addr.state||'';
+      if(!city)throw new Error('no city');
+      _zipCache[key]={city,state};
+      return{city,state,cc};
     }
     const r=await fetch('https://api.zippopotam.us/'+cc+'/'+clean);
     if(!r.ok)throw new Error('not found');
