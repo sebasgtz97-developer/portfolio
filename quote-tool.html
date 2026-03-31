@@ -1407,14 +1407,27 @@ async function tryZipCc(clean,cc){
           if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
         }
       }catch{}
-      // Fallback: Nominatim — prioritise city over municipality (MX OSM municipality data is unreliable)
-      const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=1',{headers:{'Accept-Language':'es'}});
-      if(!r.ok)throw new Error('not found');
-      const data=await r.json();
-      if(!data.length)throw new Error('no place');
-      const addr=data[0].address;
-      const city=addr.city||addr.town||addr.municipality||addr.county||addr.state_district||'';
-      const state=addr.state||'';
+      // Fallback 2: Nominatim — prioritise city over municipality (MX OSM municipality data is unreliable)
+      try{
+        const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=1',{headers:{'Accept-Language':'es'}});
+        if(r.ok){
+          const data=await r.json();
+          if(data.length){
+            const addr=data[0].address;
+            const city=addr.city||addr.town||addr.municipality||addr.county||addr.state_district||'';
+            const state=addr.state||'';
+            if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
+          }
+        }
+      }catch{}
+      // Fallback 3: zippopotam.us — may return colonia as city but confirms ZIP is valid
+      const rz=await fetch('https://api.zippopotam.us/mx/'+clean);
+      if(!rz.ok)throw new Error('not found');
+      const dz=await rz.json();
+      const place=dz.places&&dz.places[0];
+      if(!place)throw new Error('no place');
+      const city=place['place name']||'';
+      const state=place['state']||place['state abbreviation']||'';
       if(!city)throw new Error('no city');
       _zipCache[key]={city,state};
       return{city,state,cc};
