@@ -824,23 +824,24 @@ function getCompanies(){
 }
 
 // ── Column Detection ──────────────────────────────────────────────
-let _cm={id:null,status:null,stage:null,shipper:null,shipper2:null,carrier:null,origin:null,dest:null,pickup:null,delivery:null,lastUpdate:null,coords:null,locCity:null,ref:null};
+let _cm={id:null,status:null,stage:null,shipper:null,shipper2:null,carrier:null,origin:null,dest:null,pickup:null,delivery:null,lastUpdate:null,coords:null,originCoords:null,locCity:null,ref:null};
 function detectCols(cols){
   const find=re=>cols.find(c=>re.test(c))||null;
-  _cm.id       =find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$|^SH.?ID$|^LOAD.?ID$|^BOOKING.?ID$|^ORDER.?ID$|^REFERENCE$|^REF$/i);
-  _cm.status   =find(/LATEST.?ACTUAL.?EVENT/i)||find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$|^STATUS$/i);
-  _cm.stage    =find(/^STAGE$/i);
-  _cm.shipper  =find(/SHIPPER|CONSIGNOR/i);
-  _cm.shipper2 =find(/SHIP.FROM|ORIGIN.COMPANY|CUSTOMER.?NAME|CLIENT.?NAME/i);
-  _cm.carrier  =find(/^CARRIER/i);
-  _cm.origin   =find(/^ORIGIN$/i);
-  _cm.dest     =find(/^DESTINATION$/i);
-  _cm.pickup   =find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
-  _cm.delivery =find(/DELIVERY|APPOINTMENT|APPT/i);
-  _cm.lastUpdate=find(/LAST.?UPDATE|UPDATED.?AT|^TIMESTAMP$|^LAST_STATUS_UPDATE$/i)||find(/DATE|TIME/i);
-  _cm.coords   =find(/^COORDINATES_P$|^COORDINATES$/i);
-  _cm.locCity  =find(/LOCATION_CITY/i);
-  _cm.ref      =find(/CUSTOMER.?REF|CUST.?REF|^PO.?NUM$|^PO$/i);
+  _cm.id          =find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$|^SH.?ID$|^LOAD.?ID$|^BOOKING.?ID$|^ORDER.?ID$|^REFERENCE$|^REF$/i);
+  _cm.status      =find(/LATEST.?ACTUAL.?EVENT/i)||find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$|^STATUS$/i);
+  _cm.stage       =find(/^STAGE$/i);
+  _cm.shipper     =find(/SHIPPER|CONSIGNOR/i);
+  _cm.shipper2    =find(/SHIP.FROM|ORIGIN.COMPANY|CUSTOMER.?NAME|CLIENT.?NAME/i);
+  _cm.carrier     =find(/^CARRIER/i);
+  _cm.origin      =find(/^ORIGIN$/i);
+  _cm.dest        =find(/^DESTINATION$/i);
+  _cm.pickup      =find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
+  _cm.delivery    =find(/DELIVERY|APPOINTMENT|APPT/i);
+  _cm.lastUpdate  =find(/LAST.?UPDATE|UPDATED.?AT|^TIMESTAMP$|^LAST_STATUS_UPDATE$/i)||find(/DATE|TIME/i);
+  _cm.coords      =find(/^COORDINATES_P$|^COORDINATES$/i);
+  _cm.originCoords=find(/ORIGIN.?COORD|ORIGIN.?LAT/i);
+  _cm.locCity     =find(/LOCATION_CITY/i);
+  _cm.ref         =find(/CUSTOMER.?REF|CUST.?REF|^PO.?NUM$|^PO$/i);
 }
 
 // ── Status & Stage Helpers ────────────────────────────────────────
@@ -941,23 +942,48 @@ let _period=30;
 let _perfChart=null;
 
 // ── Column Management ─────────────────────────────────────────────
-const COL_DEFS=[
-  {key:'reference',label:'Reference'},
-  {key:'status',label:'Status'},
-  {key:'stage',label:'Stage'},
-  {key:'pickup',label:'Pickup'},
-  {key:'delivery',label:'Delivery'},
+// Semantic col keys that get special rendering — order = default display order
+const SEMANTIC_COLS=[
+  {key:'reference', label:'Reference'},
+  {key:'status',    label:'Status'},
+  {key:'stage',     label:'Stage'},
+  {key:'pickup',    label:'Pickup'},
+  {key:'delivery',  label:'Delivery'},
   {key:'lastUpdate',label:'Last Update'},
 ];
+let COL_DEFS=[];
 let _cols=null;
+
+function buildColDefs(allCols){
+  // Which raw columns are covered by semantic renderers
+  const semanticRaw=new Set([
+    _cm.id,_cm.status,_cm.stage,_cm.pickup,_cm.delivery,_cm.lastUpdate,
+    _cm.shipper,_cm.shipper2,_cm.coords,_cm.originCoords,_cm.locCity,_cm.ref,
+    _cm.origin,_cm.dest,_cm.carrier,
+  ].filter(Boolean));
+  COL_DEFS=[];
+  // Semantic columns first (only if the underlying raw column exists in data)
+  const semanticKeyToRaw={reference:_cm.id,status:_cm.status,stage:_cm.stage,pickup:_cm.pickup,delivery:_cm.delivery,lastUpdate:_cm.lastUpdate};
+  SEMANTIC_COLS.forEach(d=>{
+    if(semanticKeyToRaw[d.key])COL_DEFS.push({key:d.key,label:d.label});
+  });
+  // Then all raw data columns not covered by semantics
+  allCols.forEach(col=>{
+    if(!semanticRaw.has(col))COL_DEFS.push({key:col,label:col});
+  });
+}
+
 function loadCols(){
+  // Must be called after buildColDefs
   try{
     const s=localStorage.getItem('ct_cols');
     if(s){
       const saved=JSON.parse(s);
-      const savedKeys=saved.map(c=>c.key);
-      const merged=[...saved];
-      COL_DEFS.forEach(d=>{if(!savedKeys.includes(d.key))merged.push({key:d.key,visible:true});});
+      const allKeys=new Set(COL_DEFS.map(d=>d.key));
+      const savedKeys=new Set(saved.map(c=>c.key));
+      // Keep saved order/visibility for cols that still exist, append new ones
+      const merged=saved.filter(c=>allKeys.has(c.key));
+      COL_DEFS.forEach(d=>{if(!savedKeys.has(d.key))merged.push({key:d.key,visible:true});});
       _cols=merged;return;
     }
   }catch(e){}
@@ -1021,7 +1047,11 @@ function renderCell(r,key){
       const rel=fmtRelTime(upd);
       return`<td><div class="col-upd-main">Status update</div>${rel?`<div class="col-upd-sub">${eh(rel)}</div>`:''}</td>`;
     }
-    default:return'<td>—</td>';
+    default:{
+      // Raw data column — just render the value
+      const val=r[key];
+      return val!=null&&val!==''?`<td>${eh(String(val))}</td>`:'<td>—</td>';
+    }
   }
 }
 
@@ -1034,7 +1064,10 @@ async function loadData(){
     if(d.error)throw new Error(d.error);
     _allRows=d.rows||[];
     if(_allRows.length){
-      detectCols(Object.keys(_allRows[0]));
+      const allCols=Object.keys(_allRows[0]);
+      detectCols(allCols);
+      buildColDefs(allCols);
+      loadCols();
     }
     buildCompanySelector();
     processData();
@@ -1146,6 +1179,20 @@ async function renderPerfChart(rows){
   });
 }
 
+// ── Geocoding cache ───────────────────────────────────────────────
+const _geocodeCache={};
+async function geocodeCity(city){
+  if(!city)return null;
+  const k=city.trim().toLowerCase();
+  if(k in _geocodeCache)return _geocodeCache[k];
+  try{
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,{headers:{'Accept-Language':'en','User-Agent':'NuvocargoControlTower/1.0'}});
+    const data=await res.json();
+    _geocodeCache[k]=data.length?[parseFloat(data[0].lat),parseFloat(data[0].lon)]:null;
+  }catch(e){_geocodeCache[k]=null;}
+  return _geocodeCache[k];
+}
+
 // ── MAP RENDER ────────────────────────────────────────────────────
 async function renderMap(){
   await ensureLeaflet();
@@ -1153,34 +1200,63 @@ async function renderMap(){
   if(!document.getElementById('overviewMap'))return;
   if(!_map){
     _map=L.map('overviewMap',{zoomControl:true,scrollWheelZoom:false});
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors',maxZoom:18}).addTo(_map);
-    _map.setView([37.8,-96],4);
+    // CARTO light tiles — clean gray/white aesthetic
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains:'abcd',maxZoom:19
+    }).addTo(_map);
+    _map.setView([27,-100],5);
   }
-  // Clear existing markers
-  _map.eachLayer(l=>{if(l instanceof L.Marker||l instanceof L.Polyline)_map.removeLayer(l);});
+  // Clear existing markers and lines
+  _map.eachLayer(l=>{if(l instanceof L.Marker||l instanceof L.Polyline||l instanceof L.CircleMarker)_map.removeLayer(l);});
 
   const rows=_rows.filter(r=>!isDelivered(r));
   const bounds=[];
+  const BRAND='#3C6B4E';
+  const currentIcon=L.divIcon({
+    html:`<div style="width:12px;height:12px;border-radius:50%;background:${BRAND};border:2.5px solid #fff;box-shadow:0 1px 6px rgba(60,107,78,0.5)"></div>`,
+    className:'',iconSize:[12,12],iconAnchor:[6,6]
+  });
+  const originIcon=L.divIcon({
+    html:`<div style="width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid ${BRAND};box-shadow:0 1px 3px rgba(0,0,0,0.2)"></div>`,
+    className:'',iconSize:[8,8],iconAnchor:[4,4]
+  });
+
+  // Parse current-position coordinates for all rows first
+  const markerData=[];
   rows.forEach(r=>{
-    // Try GPS coordinates
     const coord=r[_cm.coords]||'';
     let lat=null,lng=null;
-    if(coord){
-      const m=coord.match(/(-?[\d.]+)[,\s]+(-?[\d.]+)/);
-      if(m){lat=parseFloat(m[1]);lng=parseFloat(m[2]);}
-    }
+    if(coord){const m=coord.match(/(-?[\d.]+)[,\s]+(-?[\d.]+)/);if(m){lat=parseFloat(m[1]);lng=parseFloat(m[2]);}}
     if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)){
-      const status=normalizeStatus(getStatusVal(r));
-      const color=status==='On Time'?'#16A34A':status==='Delayed'?'#DC2626':status==='At Risk'?'#D97706':'#2563EB';
-      const icon=L.divIcon({html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>`,className:'',iconSize:[12,12],iconAnchor:[6,6]});
-      const marker=L.marker([lat,lng],{icon}).addTo(_map);
-      marker.bindPopup(`<b>${r[_cm.id]||'—'}</b><br>${status}<br>${r[_cm.locCity]||''}`);
+      // Current-position marker
+      const ev=getStatusVal(r)||'—';
+      L.marker([lat,lng],{icon:currentIcon}).addTo(_map)
+        .bindPopup(`<b>${eh(r[_cm.id]||'—')}</b><br><span style="color:${BRAND}">${eh(ev)}</span><br>${eh(r[_cm.locCity]||'')}`);
       bounds.push([lat,lng]);
+      markerData.push({r,lat,lng});
     }
   });
-  if(bounds.length>1)_map.fitBounds(bounds,{padding:[30,30]});
+
+  if(bounds.length>1)_map.fitBounds(bounds,{padding:[40,40]});
   else if(bounds.length===1)_map.setView(bounds[0],8);
   if(loading)loading.style.display='none';
+
+  // Geocode origins and draw lines in the background (non-blocking)
+  const uniqueOrigins=[...new Set(markerData.map(d=>d.r[_cm.origin]||'').filter(Boolean))];
+  // Sequentially geocode to respect Nominatim rate limit
+  for(const city of uniqueOrigins){await geocodeCity(city);}
+  markerData.forEach(({r,lat,lng})=>{
+    const originCity=r[_cm.origin]||'';
+    if(!originCity)return;
+    const oc=_geocodeCache[originCity.trim().toLowerCase()];
+    if(!oc)return;
+    // Dashed line origin→current
+    L.polyline([oc,[lat,lng]],{color:BRAND,weight:1.5,opacity:0.45,dashArray:'5 6'}).addTo(_map);
+    // Origin dot
+    L.marker(oc,{icon:originIcon}).addTo(_map)
+      .bindPopup(`<b>Origin:</b> ${eh(originCity)}`);
+  });
 }
 
 // ── SHIPMENTS RENDER ──────────────────────────────────────────────
@@ -1572,7 +1648,6 @@ document.getElementById('stageList').addEventListener('click',function(e){
   const item=e.target.closest('.stage-item');
   if(item)setStage(item.dataset.stage);
 });
-loadCols();
 document.body.appendChild(document.getElementById('companyDropdown'));
 loadData();
 </script>
