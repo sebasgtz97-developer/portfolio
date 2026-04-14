@@ -122,6 +122,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .perf-stat-value{font-size:28px;font-weight:700;color:var(--text-1);letter-spacing:-0.03em;font-variant-numeric:tabular-nums;}
 .perf-stat-value.c-green{color:var(--green);}
 .perf-stat-value.c-red{color:var(--red);}
+.perf-stat-value.c-blue{color:var(--blue);}
 .perf-stat-label{font-size:12px;color:var(--text-3);margin-top:4px;}
 .perf-chart-wrap{height:120px;position:relative;}
 
@@ -404,26 +405,26 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
       <div class="perf-header">
         <div class="perf-title">Delivery Performance (Last 30 Days)</div>
         <div class="perf-legend">
-          <span><span class="legend-dot" style="background:var(--green)"></span>On Time</span>
-          <span><span class="legend-dot" style="background:var(--red)"></span>Delayed</span>
+          <span><span class="legend-dot" style="background:var(--brand)"></span>On-Time Pickup</span>
+          <span><span class="legend-dot" style="background:var(--blue)"></span>On-Time Delivery</span>
         </div>
       </div>
       <div class="perf-stats">
         <div class="perf-stat">
           <div class="perf-stat-value" id="perfDelivered">—</div>
-          <div class="perf-stat-label">Delivered</div>
+          <div class="perf-stat-label">Arrived</div>
         </div>
         <div class="perf-stat">
           <div class="perf-stat-value c-green" id="perfOnTime">—</div>
-          <div class="perf-stat-label">On Time</div>
+          <div class="perf-stat-label">On-Time Pickup</div>
         </div>
         <div class="perf-stat">
-          <div class="perf-stat-value c-red" id="perfDelayed">—</div>
-          <div class="perf-stat-label">Delayed</div>
+          <div class="perf-stat-value c-blue" id="perfDelayed">—</div>
+          <div class="perf-stat-label">On-Time Delivery</div>
         </div>
         <div class="perf-stat">
           <div class="perf-stat-value" id="perfRate">—</div>
-          <div class="perf-stat-label">On-Time Rate</div>
+          <div class="perf-stat-label">Delivery Rate</div>
         </div>
       </div>
       <div class="perf-chart-wrap">
@@ -936,6 +937,7 @@ let _stageFilter='all';
 let _statusFilter=null;
 let _customFrom=null;
 let _customTo=null;
+let _perfRows=[];  // rows from DATA_OPS.PERFORMANCE_DASH
 let _map=null;
 let _charts={};
 let _period=30;
@@ -1129,54 +1131,98 @@ function renderOverview(){
       return`<div class="kpi-card"><div class="kpi-value" style="color:${c}">${count}</div><div class="kpi-label">${eh(ev)}</div></div>`;
     }).join('');
 
-  // 30-day perf
-  const d30=rows.filter(r=>{
-    const dv=r[_cm.delivery]||r[_cm.lastUpdate];
-    if(!dv)return false;
-    try{const d=new Date(dv);return(Date.now()-d.getTime())<30*86400000;}catch(e){return false;}
-  });
-  const delivered30=d30.filter(isDelivered).length;
-  const onTime30=d30.filter(r=>isDelivered(r)&&isOnTime(r)).length;
-  const delayed30=d30.filter(r=>isDelivered(r)&&isDelayed(r)).length;
-  const rate30=delivered30?Math.round(onTime30/delivered30*100):0;
-  document.getElementById('perfDelivered').textContent=delivered30||rows.filter(isDelivered).length;
-  document.getElementById('perfOnTime').textContent=onTime30||m.onTime;
-  document.getElementById('perfDelayed').textContent=delayed30||m.delayed;
-  document.getElementById('perfRate').textContent=(rate30||0)+'%';
-  renderPerfChart(rows);
+  renderPerfChart();
 }
 
-async function renderPerfChart(rows){
+async function renderPerfChart(){
   const ctx=document.getElementById('perfChart');
   if(!ctx)return;
   await ensureChartJs();
-  // Pre-group rows by date string — O(n) single pass
+
+  if(!_perfRows.length){
+    // No perf data yet — clear the stat cards
+    ['perfDelivered','perfOnTime','perfDelayed','perfRate'].forEach(id=>{
+      document.getElementById(id).textContent='—';
+    });
+    return;
+  }
+
+  // Detect columns (case-insensitive)
+  const sampleKeys=Object.keys(_perfRows[0]);
+  const findCol=re=>sampleKeys.find(k=>re.test(k))||null;
+  const colOrigin  =findCol(/ON_TIME_AT_ORIGIN/i);
+  const colDest    =findCol(/ON_TIME_AT_DESTINATION/i);
+  const colArrived =findCol(/ACTUAL.*ARRIVED.*DEST|ACTUAL.*DEST.*ARRIVAL|ACTUAL_ARRIVAL|ARRIVED_TO_DEST/i)
+                   ||findCol(/ACTUAL.*FINAL|FINAL.*ACTUAL/i);
+  const colDate    =findCol(/^DATE$|^DELIVERY_DATE$|^ACTUAL_DATE$|^PERIOD$|PICKUP_DATE|SHIP_DATE/i)
+                   ||findCol(/DATE|PERIOD/i);
+
+  // Only rows where "actual arrived to destination" is populated
+  const arrived=colArrived
+    ? _perfRows.filter(r=>{const v=r[colArrived];return v!=null&&v!==''&&v!==false&&v!==0;})
+    : _perfRows;
+
+  // Helper: is a column value truthy (handles Y/N, 1/0, true/false, "true")
+  const isTrue=v=>{
+    if(v==null||v==='')return false;
+    if(typeof v==='boolean')return v;
+    if(typeof v==='number')return v===1;
+    return String(v).trim().toUpperCase()==='Y'||String(v).trim().toUpperCase()==='TRUE'||String(v).trim()==='1';
+  };
+
+  // Stat card totals
+  const total=arrived.length;
+  const onTimePickup=colOrigin?arrived.filter(r=>isTrue(r[colOrigin])).length:0;
+  const onTimeDest  =colDest  ?arrived.filter(r=>isTrue(r[colDest  ])).length:0;
+  const destRate    =total?Math.round(onTimeDest/total*100):0;
+  document.getElementById('perfDelivered').textContent=total;
+  document.getElementById('perfOnTime').textContent=onTimePickup;
+  document.getElementById('perfDelayed').textContent=onTimeDest;
+  document.getElementById('perfRate').textContent=destRate+'%';
+
+  // Pre-group by date — O(n) single pass
   const byDate={};
-  rows.forEach(r=>{
-    const dv=r[_cm.delivery]||r[_cm.lastUpdate];
+  arrived.forEach(r=>{
+    const dv=colDate?r[colDate]:null;
     if(!dv)return;
     try{const k=new Date(dv).toDateString();(byDate[k]||(byDate[k]=[])).push(r);}catch(e){}
   });
-  // Generate last 30 days with O(1) lookups
-  const labels=[],onTimes=[],delayeds=[];
+
+  // Generate last 30 days
+  const labels=[],pickupData=[],destData=[];
   for(let i=29;i>=0;i--){
     const d=new Date();d.setDate(d.getDate()-i);
     labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
     const day=byDate[d.toDateString()]||[];
-    onTimes.push(day.filter(isOnTime).length);
-    delayeds.push(day.filter(isDelayed).length);
+    pickupData.push(colOrigin?day.filter(r=>isTrue(r[colOrigin])).length:0);
+    destData.push(colDest  ?day.filter(r=>isTrue(r[colDest  ])).length:0);
   }
-  // Show every 7th label
+
   const shownLabels=labels.map((l,i)=>i%7===0?l:'');
   if(_perfChart)_perfChart.destroy();
   _perfChart=new Chart(ctx,{
     type:'line',
     data:{labels:shownLabels,datasets:[
-      {label:'On Time',data:onTimes,borderColor:'#16A34A',backgroundColor:'rgba(22,163,74,0.1)',tension:0.4,pointRadius:3,fill:true},
-      {label:'Delayed',data:delayeds,borderColor:'#DC2626',backgroundColor:'rgba(220,38,38,0.08)',tension:0.4,pointRadius:3,fill:true}
+      {label:'On-Time Pickup',data:pickupData,borderColor:'#3C6B4E',backgroundColor:'rgba(60,107,78,0.08)',tension:0.4,pointRadius:3,fill:true},
+      {label:'On-Time Delivery',data:destData,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.06)',tension:0.4,pointRadius:3,fill:true}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{display:false},ticks:{maxRotation:0,font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},precision:0}}}}
   });
+}
+
+// ── Perf Data Load ────────────────────────────────────────────────
+async function loadPerfData(){
+  try{
+    const r=await fetch('/api/perf?t='+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    _perfRows=d.rows||[];
+  }catch(e){
+    console.error('[perf]',e);
+    _perfRows=[];
+  }
+  renderPerfChart();
 }
 
 // ── Geocoding cache ───────────────────────────────────────────────
@@ -1650,6 +1696,7 @@ document.getElementById('stageList').addEventListener('click',function(e){
 });
 document.body.appendChild(document.getElementById('companyDropdown'));
 loadData();
+loadPerfData();
 </script>
 </body>
 </html>
