@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control Tower — Nuvocargo</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{
   --bg:#EEEEE9;--surface:#FFFFFF;--surface-2:#F5F5F0;
@@ -246,6 +244,11 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 </head>
 <script>(function(){var t=localStorage.getItem('ct_theme');if(t)document.documentElement.dataset.theme=t;})()</script>
 <body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+  </symbol>
+</svg>
 
 <!-- HEADER -->
 <header class="ct-header">
@@ -321,10 +324,10 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
       <div class="map-card">
         <div id="overviewMap"></div>
         <div class="map-legend" id="mapLegend">
-          <div class="map-legend-item"><span class="map-dot" style="background:#16A34A"></span>On Time</div>
-          <div class="map-legend-item"><span class="map-dot" style="background:#D97706"></span>At Risk</div>
-          <div class="map-legend-item"><span class="map-dot" style="background:#DC2626"></span>Delayed</div>
-          <div class="map-legend-item"><span class="map-dot" style="background:#2563EB"></span>Confirmed</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:var(--green)"></span>On Time</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:var(--amber)"></span>At Risk</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:var(--red)"></span>Delayed</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:var(--blue)"></span>Confirmed</div>
         </div>
         <div class="map-loading" id="mapLoading">
           <div class="spinner"></div>
@@ -397,8 +400,8 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
       <div class="perf-header">
         <div class="perf-title">Delivery Performance (Last 30 Days)</div>
         <div class="perf-legend">
-          <span><span class="legend-dot" style="background:#16A34A"></span>On Time</span>
-          <span><span class="legend-dot" style="background:#DC2626"></span>Delayed</span>
+          <span><span class="legend-dot" style="background:var(--green)"></span>On Time</span>
+          <span><span class="legend-dot" style="background:var(--red)"></span>Delayed</span>
         </div>
       </div>
       <div class="perf-stats">
@@ -474,9 +477,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
             <div class="ships-subtitle">Track and manage your shipment visibility</div>
           </div>
           <button class="btn-export" onclick="exportCSV()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
+            <svg width="14" height="14"><use href="#icon-download"/></svg>
             Export CSV
           </button>
         </div>
@@ -582,9 +583,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
         <div class="page-subtitle">Comprehensive shipment performance insights</div>
       </div>
       <button class="btn-pdf" onclick="downloadPDF()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
+        <svg width="14" height="14"><use href="#icon-download"/></svg>
         Download PDF Report
       </button>
     </div>
@@ -607,23 +606,23 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
     <!-- Reports KPIs -->
     <div class="r-kpi-row">
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#2563EB"></span>Total Shipments</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--blue)"></span>Total Shipments</div>
         <div class="r-kpi-value" id="rKpiTotal">—</div>
       </div>
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#16A34A"></span>Delivered</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--green)"></span>Delivered</div>
         <div class="r-kpi-value" id="rKpiDelivered">—</div>
       </div>
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#D97706"></span>In Transit</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--amber)"></span>In Transit</div>
         <div class="r-kpi-value" id="rKpiInTransit">—</div>
       </div>
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#16A34A"></span>On-Time Rate</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--green)"></span>On-Time Rate</div>
         <div class="r-kpi-value" id="rKpiOnTimeRate">—</div>
       </div>
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#7C3AED"></span>Avg Transit</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--purple)"></span>Avg Transit</div>
         <div class="r-kpi-value" id="rKpiAvgTransit">—</div>
       </div>
     </div>
@@ -679,8 +678,8 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
           </div>
         </div>
         <div class="chart-legend" style="margin-bottom:12px">
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#3C6B4E"></span>Current Period</div>
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#9CA3AF"></span>Previous Period</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--brand)"></span>Current Period</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--text-4)"></span>Previous Period</div>
         </div>
         <div class="chart-wrap"><canvas id="chartPeriod"></canvas></div>
       </div>
@@ -694,10 +693,10 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
         </div>
         <div class="chart-wrap"><canvas id="chartDelivPerf"></canvas></div>
         <div class="chart-legend" style="margin-top:12px">
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#6B7280"></span>Scheduled</div>
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#16A34A"></span>Early</div>
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#2563EB"></span>On Time</div>
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#DC2626"></span>Late</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--text-3)"></span>Scheduled</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--green)"></span>Early</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--blue)"></span>On Time</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--red)"></span>Late</div>
         </div>
       </div>
     </div>
@@ -706,8 +705,32 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 
 </div><!-- /ct-main -->
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ── Lazy Library Loaders ─────────────────────────────────────────
+let _leafletReady=null;
+function ensureLeaflet(){
+  if(!_leafletReady)_leafletReady=new Promise((resolve,reject)=>{
+    const link=document.createElement('link');
+    link.rel='stylesheet';link.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+    const s=document.createElement('script');
+    s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload=resolve;s.onerror=reject;
+    document.head.appendChild(s);
+  });
+  return _leafletReady;
+}
+let _chartJsReady=null;
+function ensureChartJs(){
+  if(!_chartJsReady)_chartJsReady=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    s.onload=resolve;s.onerror=reject;
+    document.head.appendChild(s);
+  });
+  return _chartJsReady;
+}
+
 // ── Theme ─────────────────────────────────────────────────────────
 function toggleTheme(){
   const d=document.documentElement,cur=d.dataset.theme;
@@ -897,13 +920,18 @@ function processData(){
 
 // ── Compute Metrics ───────────────────────────────────────────────
 function computeMetrics(rows){
-  const active=rows.filter(r=>!isDelivered(r));
-  const onTime=active.filter(isOnTime).length;
-  const atRisk=active.filter(isAtRisk).length;
-  const delayed=active.filter(isDelayed).length;
-  const pickupsToday=rows.filter(r=>isToday(r[_cm.pickup])).length;
-  const deliveriesToday=rows.filter(r=>isToday(r[_cm.delivery])).length;
-  return{active:active.length,onTime,atRisk,delayed,pickupsToday,deliveriesToday};
+  let activeCount=0,onTime=0,atRisk=0,delayed=0,pickupsToday=0,deliveriesToday=0;
+  rows.forEach(r=>{
+    if(isToday(r[_cm.pickup]))pickupsToday++;
+    if(isToday(r[_cm.delivery]))deliveriesToday++;
+    if(isDelivered(r))return;
+    activeCount++;
+    const s=getStatusVal(r).toLowerCase();
+    if(s.includes('on time'))onTime++;
+    else if(s.includes('at risk'))atRisk++;
+    else if(s.includes('delay'))delayed++;
+  });
+  return{active:activeCount,onTime,atRisk,delayed,pickupsToday,deliveriesToday};
 }
 
 // ── OVERVIEW RENDER ───────────────────────────────────────────────
@@ -937,19 +965,23 @@ function renderOverview(){
   renderPerfChart(rows);
 }
 
-function renderPerfChart(rows){
+async function renderPerfChart(rows){
   const ctx=document.getElementById('perfChart');
   if(!ctx)return;
-  // Generate last 30 days labels
+  await ensureChartJs();
+  // Pre-group rows by date string — O(n) single pass
+  const byDate={};
+  rows.forEach(r=>{
+    const dv=r[_cm.delivery]||r[_cm.lastUpdate];
+    if(!dv)return;
+    try{const k=new Date(dv).toDateString();(byDate[k]||(byDate[k]=[])).push(r);}catch(e){}
+  });
+  // Generate last 30 days with O(1) lookups
   const labels=[],onTimes=[],delayeds=[];
   for(let i=29;i>=0;i--){
     const d=new Date();d.setDate(d.getDate()-i);
     labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
-    const day=rows.filter(r=>{
-      const dv=r[_cm.delivery]||r[_cm.lastUpdate];
-      if(!dv)return false;
-      try{const rd=new Date(dv);return rd.toDateString()===d.toDateString();}catch(e){return false;}
-    });
+    const day=byDate[d.toDateString()]||[];
     onTimes.push(day.filter(isOnTime).length);
     delayeds.push(day.filter(isDelayed).length);
   }
@@ -967,7 +999,8 @@ function renderPerfChart(rows){
 }
 
 // ── MAP RENDER ────────────────────────────────────────────────────
-function renderMap(){
+async function renderMap(){
+  await ensureLeaflet();
   const loading=document.getElementById('mapLoading');
   if(!document.getElementById('overviewMap'))return;
   if(!_map){
@@ -1031,29 +1064,35 @@ function toggleStatusFilter(status){
 
 function renderShipments(){
   const rows=_rows;
-  // Tab counts
-  const active=rows.filter(r=>!isDelivered(r));
-  const complete=rows.filter(isDelivered);
-  const pickupsToday=rows.filter(r=>isToday(r[_cm.pickup]));
-  const deliveriesToday=rows.filter(r=>isToday(r[_cm.delivery]));
+  // Single pass: build all groups and counts at once
+  const active=[],complete=[],pickupsToday=[],deliveriesToday=[];
+  let onTimeCnt=0,atRiskCnt=0,delayedCnt=0;
+  const stageCounts={'Requested':0,'Before Pickup':0,'Pending Pickup':0,'In Transit':0,'Unknown':0};
+  rows.forEach(r=>{
+    if(isToday(r[_cm.pickup]))pickupsToday.push(r);
+    if(isToday(r[_cm.delivery]))deliveriesToday.push(r);
+    if(isDelivered(r)){complete.push(r);return;}
+    active.push(r);
+    const s=getStatusVal(r).toLowerCase();
+    if(s.includes('on time'))onTimeCnt++;
+    else if(s.includes('at risk'))atRiskCnt++;
+    else if(s.includes('delay'))delayedCnt++;
+    const stage=getStageVal(r);
+    stageCounts[stage in stageCounts?stage:'Unknown']++;
+  });
   document.getElementById('tabActiveCount').textContent=active.length;
   document.getElementById('tabPickupsCount').textContent=pickupsToday.length;
   document.getElementById('tabDeliveriesCount').textContent=deliveriesToday.length;
   document.getElementById('tabCompleteCount').textContent=complete.length;
-
-  // Status pill counts (from active)
-  document.getElementById('pillOnTimeCount').textContent=active.filter(isOnTime).length;
-  document.getElementById('pillAtRiskCount').textContent=active.filter(isAtRisk).length;
-  document.getElementById('pillDelayedCount').textContent=active.filter(isDelayed).length;
-
-  // Stage counts (from active)
+  document.getElementById('pillOnTimeCount').textContent=onTimeCnt;
+  document.getElementById('pillAtRiskCount').textContent=atRiskCnt;
+  document.getElementById('pillDelayedCount').textContent=delayedCnt;
   document.getElementById('stageAll').textContent=active.length;
-  const countStage=s=>active.filter(r=>getStageVal(r)===s).length;
-  document.getElementById('stageRequested').textContent=countStage('Requested');
-  document.getElementById('stageBeforePickup').textContent=countStage('Before Pickup');
-  document.getElementById('stagePendingPickup').textContent=countStage('Pending Pickup');
-  document.getElementById('stageInTransit').textContent=countStage('In Transit');
-  document.getElementById('stageUnknown').textContent=countStage('Unknown');
+  document.getElementById('stageRequested').textContent=stageCounts['Requested'];
+  document.getElementById('stageBeforePickup').textContent=stageCounts['Before Pickup'];
+  document.getElementById('stagePendingPickup').textContent=stageCounts['Pending Pickup'];
+  document.getElementById('stageInTransit').textContent=stageCounts['In Transit'];
+  document.getElementById('stageUnknown').textContent=stageCounts['Unknown'];
 
   // Select base by tab
   let base;
@@ -1164,7 +1203,7 @@ function setPeriod(p,el){
   renderReports();
 }
 
-function renderReports(){
+async function renderReports(){
   const now=new Date();
   const from=new Date(now);from.setDate(from.getDate()-_period);
   const fromStr=from.toISOString().slice(0,10);
@@ -1199,10 +1238,11 @@ function renderReports(){
   document.getElementById('rKpiOnTimeRate').textContent=otRate+'%';
   document.getElementById('rKpiAvgTransit').textContent=(avgTransit||'—')+(avgTransit?' days':'');
 
-  renderCharts(periodRows,_period);
+  await renderCharts(periodRows,_period);
 }
 
-function renderCharts(rows,period){
+async function renderCharts(rows,period){
+  await ensureChartJs();
   renderStatusChart(rows);
   renderStageChart(rows);
   renderVolumeChart(rows,period);
@@ -1268,22 +1308,31 @@ function renderVolumeChart(rows,period){
 
 function renderOTDRChart(rows,period){
   destroyChart('otdr');
-  const weeks=[];const weekData=[];
-  // Group by week
-  for(let i=Math.ceil(period/7)-1;i>=0;i--){
-    const wend=new Date();wend.setDate(wend.getDate()-i*7);
-    const wstart=new Date(wend);wstart.setDate(wstart.getDate()-6);
-    const label=wend.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    weeks.push(label);
-    const wrows=rows.filter(r=>{
-      const d=r[_cm.delivery]||r[_cm.lastUpdate];
-      if(!d)return false;
-      try{const rd=new Date(d);return rd>=wstart&&rd<=wend;}catch(e){return false;}
-    });
+  const weekCount=Math.ceil(period/7);
+  const now=new Date();
+  const msPerWeek=7*86400000;
+  // Build week labels
+  const weeks=[];
+  for(let i=weekCount-1;i>=0;i--){
+    const wend=new Date(now);wend.setDate(wend.getDate()-i*7);
+    weeks.push(wend.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+  }
+  // Single O(n) pass: bucket rows into weeks by arithmetic
+  const buckets=Array.from({length:weekCount},()=>[]);
+  rows.forEach(r=>{
+    const d=r[_cm.delivery]||r[_cm.lastUpdate];
+    if(!d)return;
+    try{
+      const weeksAgo=Math.floor((now-new Date(d))/msPerWeek);
+      if(weeksAgo>=0&&weeksAgo<weekCount)buckets[weekCount-1-weeksAgo].push(r);
+    }catch(e){}
+  });
+  // Compute OTDR per week bucket
+  const weekData=buckets.map(wrows=>{
     const delivered=wrows.filter(isDelivered);
     const onTimeW=delivered.filter(isOnTime);
-    weekData.push(delivered.length?Math.round(onTimeW.length/delivered.length*100):null);
-  }
+    return delivered.length?Math.round(onTimeW.length/delivered.length*100):null;
+  });
   const validData=weekData.filter(v=>v!==null);
   const avg=validData.length?Math.round(validData.reduce((a,b)=>a+b,0)/validData.length):0;
   document.getElementById('chartOTDRAvg').textContent=avg+'%';
