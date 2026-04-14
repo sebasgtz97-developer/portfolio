@@ -38,8 +38,12 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .h-company{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s;font-size:13px;font-weight:500;color:var(--text-2);background:var(--surface);margin-left:16px;flex-shrink:0;max-width:280px;position:relative;}
 .h-company:hover{border-color:var(--border-2);}
 .h-company-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.company-dropdown{position:absolute;top:calc(100%+6px);left:0;min-width:260px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:300;display:none;padding:4px 0;}
-.company-dropdown.open{display:block;}
+.company-dropdown{position:fixed;top:0;left:0;min-width:260px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:500;display:none;flex-direction:column;max-height:320px;padding:0;}
+.company-dropdown.open{display:flex;}
+.company-search-wrap{padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.company-search{width:100%;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text-1);background:var(--surface);outline:none;}
+.company-search:focus{border-color:var(--brand);}
+.company-options-list{overflow-y:auto;flex:1;}
 .company-option{padding:8px 14px;font-size:13px;color:var(--text-2);cursor:pointer;transition:background .1s;}
 .company-option:hover{background:var(--surface-2);}
 .company-option.active{font-weight:600;color:var(--brand);}
@@ -62,7 +66,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .page-subtitle{font-size:13px;color:var(--text-3);margin-top:3px;}
 
 /* ── KPI Cards ── */
-.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
 .kpi-value{font-size:32px;font-weight:700;line-height:1;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;margin-bottom:4px;}
 .kpi-label{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;}
@@ -236,6 +240,27 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .chart-sub{font-size:11px;color:var(--text-4);text-align:center;margin-top:8px;}
 .period-chg{font-size:13px;font-weight:700;color:var(--green);}
 
+/* ── Column Panel ── */
+.col-panel-overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.15);display:none;}
+.col-panel-overlay.open{display:block;}
+.col-panel{position:fixed;top:0;right:0;bottom:0;width:300px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .2s;z-index:401;}
+.col-panel-overlay.open .col-panel{transform:translateX(0);}
+.col-panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.col-panel-title{font-size:15px;font-weight:700;color:var(--text-1);}
+.col-panel-body{flex:1;overflow-y:auto;padding:8px 0;}
+.col-item{display:flex;align-items:center;gap:10px;padding:10px 20px;}
+.col-item-label{flex:1;font-size:13px;color:var(--text-1);}
+.col-toggle{width:36px;height:20px;border-radius:10px;border:none;background:var(--border-2);cursor:pointer;position:relative;transition:background .15s;flex-shrink:0;}
+.col-toggle.on{background:var(--brand);}
+.col-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.col-toggle.on::after{left:18px;}
+.col-move{display:flex;flex-direction:column;gap:2px;}
+.col-move-btn{width:22px;height:16px;border:1px solid var(--border);border-radius:3px;background:var(--surface-2);cursor:pointer;color:var(--text-3);font-size:9px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;}
+.col-move-btn:hover:not(:disabled){background:var(--border-2);color:var(--text-1);}
+.col-move-btn:disabled{opacity:.3;cursor:default;}
+.btn-cols{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:var(--text-2);transition:all .15s;cursor:pointer;}
+.btn-cols:hover{background:var(--surface-2);border-color:var(--border-2);}
+
 /* ── Responsive ── */
 @media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr);}.r-kpi-row{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:900px){.overview-grid{grid-template-columns:1fr;}.ships-wrap{grid-template-columns:1fr;}.ships-sidebar{border-right:none;border-bottom:1px solid var(--border);}.charts-row{grid-template-columns:1fr;}}
@@ -268,8 +293,8 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
     <svg width="12" height="12" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
       <path d="M1 1l5 5 5-5"/>
     </svg>
-    <div class="company-dropdown" id="companyDropdown"></div>
   </div>
+  <div class="company-dropdown" id="companyDropdown"></div>
   <nav class="h-nav">
     <button class="nav-link active" onclick="showView('overview')">Overview</button>
     <button class="nav-link" onclick="showView('shipments')">Shipments</button>
@@ -296,28 +321,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
     </div>
 
     <!-- KPI Row -->
-    <div class="kpi-row">
-      <div class="kpi-card kpi-green">
-        <div class="kpi-value" id="kpiOnTime">—</div>
-        <div class="kpi-label">On Time</div>
-      </div>
-      <div class="kpi-card kpi-amber">
-        <div class="kpi-value" id="kpiAtRisk">—</div>
-        <div class="kpi-label">At Risk</div>
-      </div>
-      <div class="kpi-card kpi-red">
-        <div class="kpi-value" id="kpiDelayed">—</div>
-        <div class="kpi-label">Delayed</div>
-      </div>
-      <div class="kpi-card kpi-blue">
-        <div class="kpi-value" id="kpiPickups">—</div>
-        <div class="kpi-label">Pickups</div>
-      </div>
-      <div class="kpi-card kpi-purple">
-        <div class="kpi-value" id="kpiDeliveries">—</div>
-        <div class="kpi-label">Deliveries</div>
-      </div>
-    </div>
+    <div class="kpi-row" id="kpiRow"></div>
 
     <!-- Map + Right Panel -->
     <div class="overview-grid">
@@ -457,10 +461,16 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
             <div class="ships-title">Shipments</div>
             <div class="ships-subtitle">Track and manage your shipment visibility</div>
           </div>
-          <button class="btn-export" onclick="exportCSV()">
-            <svg width="14" height="14"><use href="#icon-download"/></svg>
-            Export CSV
-          </button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-cols" onclick="openColPanel()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Columns
+            </button>
+            <button class="btn-export" onclick="exportCSV()">
+              <svg width="14" height="14"><use href="#icon-download"/></svg>
+              Export CSV
+            </button>
+          </div>
         </div>
 
         <!-- Tabs -->
@@ -517,7 +527,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
         <!-- Table -->
         <div class="ships-table-wrap">
           <table class="ships-table">
-            <thead>
+            <thead id="shipsTableHead">
               <tr>
                 <th>Reference</th>
                 <th>Status</th>
@@ -691,6 +701,16 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 
 </div><!-- /ct-main -->
 
+<div class="col-panel-overlay" id="colPanelOverlay" onclick="closeColPanel(event)">
+  <div class="col-panel" onclick="event.stopPropagation()">
+    <div class="col-panel-head">
+      <span class="col-panel-title">Manage Columns</span>
+      <button class="btn-icon" onclick="closeColPanel()" style="border:none;background:none;font-size:16px;cursor:pointer;color:var(--text-3)">&#x2715;</button>
+    </div>
+    <div class="col-panel-body" id="colPanelBody"></div>
+  </div>
+</div>
+
 <script>
 // ── Lazy Library Loaders ─────────────────────────────────────────
 let _leafletReady=null;
@@ -748,10 +768,26 @@ function showView(view, tab){
 // ── Company Dropdown ─────────────────────────────────────────────
 function toggleCompanyDropdown(){
   const dd=document.getElementById('companyDropdown');
-  dd.classList.toggle('open');
+  const btn=document.getElementById('companyBtn');
+  if(!dd.classList.contains('open')){
+    const rect=btn.getBoundingClientRect();
+    dd.style.top=(rect.bottom+4)+'px';
+    dd.style.left=rect.left+'px';
+    dd.classList.add('open');
+    const inp=dd.querySelector('.company-search');
+    if(inp){inp.value='';filterCompanyOptions('');setTimeout(()=>inp.focus(),50);}
+  }else{
+    dd.classList.remove('open');
+  }
+}
+function filterCompanyOptions(q){
+  const ql=q.toLowerCase();
+  document.querySelectorAll('#companyDropdown .company-option').forEach(o=>{
+    o.style.display=o.textContent.toLowerCase().includes(ql)?'':'none';
+  });
 }
 document.addEventListener('click',function(e){
-  if(!e.target.closest('.h-company')){
+  if(!e.target.closest('.h-company')&&!e.target.closest('#companyDropdown')){
     const dd=document.getElementById('companyDropdown');
     if(dd)dd.classList.remove('open');
   }
@@ -759,9 +795,9 @@ document.addEventListener('click',function(e){
 function buildCompanySelector(){
   const companies=getCompanies();
   const dd=document.getElementById('companyDropdown');
-  // Use data attributes instead of inline onclick to safely handle any company name
-  dd.innerHTML=companies.map((c,i)=>`<div class="company-option${c===_company?' active':''}" data-idx="${i}">${eh(c)}</div>`).join('');
   dd._companies=companies;
+  const opts=companies.map((c,i)=>`<div class="company-option${c===_company?' active':''}" data-idx="${i}">${eh(c)}</div>`).join('');
+  dd.innerHTML=`<div class="company-search-wrap"><input class="company-search" placeholder="Search company..." oninput="filterCompanyOptions(this.value)"></div><div class="company-options-list">${opts}</div>`;
   dd.onclick=function(e){
     const opt=e.target.closest('.company-option');
     if(opt){selectCompany(dd._companies[+opt.dataset.idx]);e.stopPropagation();}
@@ -904,6 +940,91 @@ let _charts={};
 let _period=30;
 let _perfChart=null;
 
+// ── Column Management ─────────────────────────────────────────────
+const COL_DEFS=[
+  {key:'reference',label:'Reference'},
+  {key:'status',label:'Status'},
+  {key:'stage',label:'Stage'},
+  {key:'pickup',label:'Pickup'},
+  {key:'delivery',label:'Delivery'},
+  {key:'lastUpdate',label:'Last Update'},
+];
+let _cols=null;
+function loadCols(){
+  try{
+    const s=localStorage.getItem('ct_cols');
+    if(s){
+      const saved=JSON.parse(s);
+      const savedKeys=saved.map(c=>c.key);
+      const merged=[...saved];
+      COL_DEFS.forEach(d=>{if(!savedKeys.includes(d.key))merged.push({key:d.key,visible:true});});
+      _cols=merged;return;
+    }
+  }catch(e){}
+  _cols=COL_DEFS.map(d=>({key:d.key,visible:true}));
+}
+function saveCols(){localStorage.setItem('ct_cols',JSON.stringify(_cols));}
+function openColPanel(){
+  renderColPanel();
+  document.getElementById('colPanelOverlay').classList.add('open');
+}
+function closeColPanel(e){
+  if(e&&e.target!==document.getElementById('colPanelOverlay'))return;
+  document.getElementById('colPanelOverlay').classList.remove('open');
+}
+function renderColPanel(){
+  const body=document.getElementById('colPanelBody');
+  body.innerHTML=_cols.map((c,i)=>{
+    const def=COL_DEFS.find(d=>d.key===c.key);
+    if(!def)return'';
+    return`<div class="col-item">
+      <span class="col-item-label">${def.label}</span>
+      <div class="col-move">
+        <button class="col-move-btn" onclick="moveCol(${i},-1)" ${i===0?'disabled':''}title="Move up">&#x25B2;</button>
+        <button class="col-move-btn" onclick="moveCol(${i},1)" ${i===_cols.length-1?'disabled':''}title="Move down">&#x25BC;</button>
+      </div>
+      <button class="col-toggle${c.visible?' on':''}" onclick="toggleCol(${i})" title="${c.visible?'Hide':'Show'}"></button>
+    </div>`;
+  }).join('');
+}
+function toggleCol(i){
+  _cols[i].visible=!_cols[i].visible;
+  saveCols();renderColPanel();renderShipments();
+}
+function moveCol(i,dir){
+  const j=i+dir;
+  if(j<0||j>=_cols.length)return;
+  [_cols[i],_cols[j]]=[_cols[j],_cols[i]];
+  saveCols();renderColPanel();renderShipments();
+}
+function renderCell(r,key){
+  switch(key){
+    case'reference':{
+      const id=r[_cm.id]||'—';
+      const shipper=_cm.shipper&&r[_cm.shipper]?r[_cm.shipper]:(_cm.shipper2&&r[_cm.shipper2]?r[_cm.shipper2]:'');
+      return`<td><div class="col-ref-main">${eh(id)}</div>${shipper?`<div class="col-ref-sub">${eh(shipper)}</div>`:''}</td>`;
+    }
+    case'status':return`<td>${statusBadge(r)}</td>`;
+    case'stage':return`<td>${eh(getStageVal(r))}</td>`;
+    case'pickup':{
+      const origin=r[_cm.origin]||'—';
+      const pickupDate=r[_cm.pickup]?fmtDate(r[_cm.pickup]):'—';
+      return`<td><div class="col-loc-main">${eh(origin)}</div><div class="col-loc-sub">${pickupDate}</div></td>`;
+    }
+    case'delivery':{
+      const dest=r[_cm.dest]||'—';
+      const deliveryDate=r[_cm.delivery]?fmtDate(r[_cm.delivery]):'—';
+      return`<td><div class="col-loc-main">${eh(dest)}</div><div class="col-loc-sub">${deliveryDate}</div></td>`;
+    }
+    case'lastUpdate':{
+      const upd=r[_cm.lastUpdate]||'';
+      const rel=fmtRelTime(upd);
+      return`<td><div class="col-upd-main">Status update</div>${rel?`<div class="col-upd-sub">${eh(rel)}</div>`:''}</td>`;
+    }
+    default:return'<td>—</td>';
+  }
+}
+
 // ── Load Data ─────────────────────────────────────────────────────
 async function loadData(){
   try{
@@ -922,9 +1043,7 @@ async function loadData(){
   }catch(e){
     console.error('[ct]',e);
     document.getElementById('shipsTableBody').innerHTML=
-      '<tr><td colspan="6"><div class="table-empty"><div class="table-empty-icon">&#9888;&#65039;</div><div class="table-empty-title">Unable to load data</div><div class="table-empty-sub">'+eh(e.message)+'</div></div></td></tr>';
-    // Show fallback UI
-    document.getElementById('kpiOnTime').textContent='—';
+      '<tr><td colspan="10"><div class="table-empty"><div class="table-empty-icon">&#9888;&#65039;</div><div class="table-empty-title">Unable to load data</div><div class="table-empty-sub">'+eh(e.message)+'</div></div></td></tr>';
   }
 }
 
@@ -957,15 +1076,25 @@ function computeMetrics(rows){
 function renderOverview(){
   const rows=_rows;
   const m=computeMetrics(rows);
-  document.getElementById('kpiOnTime').textContent=m.onTime;
-  document.getElementById('kpiAtRisk').textContent=m.atRisk;
-  document.getElementById('kpiDelayed').textContent=m.delayed;
-  document.getElementById('kpiPickups').textContent=m.pickupsToday;
-  document.getElementById('kpiDeliveries').textContent=m.deliveriesToday;
   document.getElementById('actPickups').textContent=m.pickupsToday;
   document.getElementById('actDeliveries').textContent=m.deliveriesToday;
   document.getElementById('pickupSub').textContent=m.pickupsToday===0?'No pickups scheduled':m.pickupsToday+' pickup(s) today';
   document.getElementById('deliverySub').textContent=m.deliveriesToday===0?'No deliveries scheduled':m.deliveriesToday+' delivery(ies) today';
+
+  // Build event counts from all rows (active + delivered)
+  const evMap=new Map();
+  rows.forEach(r=>{
+    const ev=(getStatusVal(r)||'Unknown').trim();
+    evMap.set(ev,(evMap.get(ev)||0)+1);
+  });
+  const palette=['--brand','--blue','--amber','--purple','--green','--red','--text-2'];
+  const kpiRow=document.getElementById('kpiRow');
+  kpiRow.innerHTML=Array.from(evMap.entries())
+    .sort((a,b)=>b[1]-a[1])
+    .map(([ev,count],i)=>{
+      const c=`var(${palette[i%palette.length]})`;
+      return`<div class="kpi-card"><div class="kpi-value" style="color:${c}">${count}</div><div class="kpi-label">${eh(ev)}</div></div>`;
+    }).join('');
 
   // 30-day perf
   const d30=rows.filter(r=>{
@@ -1183,31 +1312,16 @@ function statusBadge(row){
 
 function renderShipsTable(rows){
   const tbody=document.getElementById('shipsTableBody');
+  const vis=_cols.filter(c=>c.visible);
+  // Update header
+  const thead=document.getElementById('shipsTableHead');
+  if(thead)thead.innerHTML='<tr>'+vis.map(c=>{const d=COL_DEFS.find(x=>x.key===c.key);return`<th>${d?d.label:c.key}</th>`;}).join('')+'</tr>';
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="6"><div class="table-empty"><div class="table-empty-icon">&#128230;</div><div class="table-empty-title">No shipments match</div><div class="table-empty-sub">Try adjusting your search or filters.</div></div></td></tr>';
+    tbody.innerHTML=`<tr><td colspan="${vis.length}"><div class="table-empty"><div class="table-empty-icon">&#128230;</div><div class="table-empty-title">No shipments match</div><div class="table-empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
     return;
   }
-  // Limit to 200 rows for performance
   const display=rows.slice(0,200);
-  tbody.innerHTML=display.map(r=>{
-    const id=r[_cm.id]||'—';
-    const shipper=_cm.shipper&&r[_cm.shipper]?r[_cm.shipper]:(_cm.shipper2&&r[_cm.shipper2]?r[_cm.shipper2]:'');
-    const stage=getStageVal(r);
-    const origin=r[_cm.origin]||'—';
-    const pickupDate=r[_cm.pickup]?fmtDate(r[_cm.pickup]):'—';
-    const dest=r[_cm.dest]||'—';
-    const deliveryDate=r[_cm.delivery]?fmtDate(r[_cm.delivery]):'—';
-    const upd=r[_cm.lastUpdate]||'';
-    const rel=fmtRelTime(upd);
-    return`<tr>
-      <td><div class="col-ref-main">${eh(id)}</div>${shipper?`<div class="col-ref-sub">${eh(shipper)}</div>`:''}</td>
-      <td>${statusBadge(r)}</td>
-      <td>${eh(stage)}</td>
-      <td><div class="col-loc-main">${eh(origin)}</div><div class="col-loc-sub">${pickupDate}</div></td>
-      <td><div class="col-loc-main">${eh(dest)}</div><div class="col-loc-sub">${deliveryDate}</div></td>
-      <td><div class="col-upd-main">Status update</div>${rel?`<div class="col-upd-sub">${eh(rel)}</div>`:''}</td>
-    </tr>`;
-  }).join('');
+  tbody.innerHTML=display.map(r=>'<tr>'+vis.map(c=>renderCell(r,c.key)).join('')+'</tr>').join('');
 }
 
 function exportCSV(){
@@ -1458,6 +1572,8 @@ document.getElementById('stageList').addEventListener('click',function(e){
   const item=e.target.closest('.stage-item');
   if(item)setStage(item.dataset.stage);
 });
+loadCols();
+document.body.appendChild(document.getElementById('companyDropdown'));
 loadData();
 </script>
 </body>
