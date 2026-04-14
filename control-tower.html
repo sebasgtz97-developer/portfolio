@@ -423,8 +423,8 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
           <div class="perf-stat-label">On-Time Delivery</div>
         </div>
         <div class="perf-stat">
-          <div class="perf-stat-value" id="perfRate">—</div>
-          <div class="perf-stat-label">Delivery Rate</div>
+          <div class="perf-stat-value c-red" id="perfRate">—</div>
+          <div class="perf-stat-label">Late Deliveries</div>
         </div>
       </div>
       <div class="perf-chart-wrap">
@@ -1195,23 +1195,30 @@ async function renderPerfChart(){
     return String(v).trim().toUpperCase()==='Y'||String(v).trim().toUpperCase()==='TRUE'||String(v).trim()==='1';
   };
 
-  // Stat card totals
-  const total=arrived.length;
-  const onTimePickup=colOrigin?arrived.filter(r=>isTrue(r[colOrigin])).length:0;
-  const onTimeDest  =colDest  ?arrived.filter(r=>isTrue(r[colDest  ])).length:0;
-  const destRate    =total?Math.round(onTimeDest/total*100):0;
-  document.getElementById('perfDelivered').textContent=total;
-  document.getElementById('perfOnTime').textContent=onTimePickup;
-  document.getElementById('perfDelayed').textContent=onTimeDest;
-  document.getElementById('perfRate').textContent=destRate+'%';
-
-  // Pre-group by date — O(n) single pass
+  // Pre-group by date — O(n) single pass (used for both stats and chart)
   const byDate={};
   arrived.forEach(r=>{
     const dv=colDate?r[colDate]:null;
     if(!dv)return;
     try{const k=new Date(dv).toDateString();(byDate[k]||(byDate[k]=[])).push(r);}catch(e){}
   });
+
+  // Stat cards: only last 30 days by arrival date
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-29);cutoff.setHours(0,0,0,0);
+  const arrived30=arrived.filter(r=>{
+    const dv=colDate?r[colDate]:null;
+    if(!dv)return false;
+    try{return new Date(dv)>=cutoff;}catch(e){return false;}
+  });
+  const total=arrived30.length;
+  const onTimePickupCount=colOrigin?arrived30.filter(r=>isTrue(r[colOrigin])).length:0;
+  const onTimeDestCount  =colDest  ?arrived30.filter(r=>isTrue(r[colDest  ])).length:0;
+  const pickupRate=total?Math.round(onTimePickupCount/total*100):0;
+  const destRate  =total?Math.round(onTimeDestCount  /total*100):0;
+  document.getElementById('perfDelivered').textContent=total;
+  document.getElementById('perfOnTime').textContent=pickupRate+'%';
+  document.getElementById('perfDelayed').textContent=destRate+'%';
+  document.getElementById('perfRate').textContent=total-onTimeDestCount;
 
   // Generate last 30 days
   const labels=[],pickupData=[],destData=[];
