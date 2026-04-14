@@ -433,32 +433,13 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
     <div class="ships-wrap">
       <!-- Sidebar -->
       <div class="ships-sidebar">
-        <div class="sidebar-section">Stages</div>
+        <div class="sidebar-section">Latest Event</div>
         <div id="stageList">
-          <div class="stage-item active" data-stage="all" onclick="setStage('all',this)">
+          <div class="stage-item active" data-stage="all">
             <span>All Shipments</span>
             <span class="stage-badge" id="stageAll">0</span>
           </div>
-          <div class="stage-item" data-stage="Requested" onclick="setStage('Requested',this)">
-            <span>Requested</span>
-            <span class="stage-badge" id="stageRequested">0</span>
-          </div>
-          <div class="stage-item" data-stage="Before Pickup" onclick="setStage('Before Pickup',this)">
-            <span>Before Pickup</span>
-            <span class="stage-badge" id="stageBeforePickup">0</span>
-          </div>
-          <div class="stage-item" data-stage="Pending Pickup" onclick="setStage('Pending Pickup',this)">
-            <span>Pending Pickup</span>
-            <span class="stage-badge" id="stagePendingPickup">0</span>
-          </div>
-          <div class="stage-item" data-stage="In Transit" onclick="setStage('In Transit',this)">
-            <span>In Transit</span>
-            <span class="stage-badge" id="stageInTransit">0</span>
-          </div>
-          <div class="stage-item" data-stage="Unknown" onclick="setStage('Unknown',this)">
-            <span>Unknown</span>
-            <span class="stage-badge" id="stageUnknown">0</span>
-          </div>
+          <!-- dynamically populated by renderShipments -->
         </div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-section">Alerts</div>
@@ -1088,10 +1069,8 @@ function setTab(tab,el){
   renderShipments();
 }
 
-function setStage(stage,el){
+function setStage(stage){
   _stageFilter=stage;
-  document.querySelectorAll('.stage-item').forEach(s=>s.classList.remove('active'));
-  if(el)el.classList.add('active');
   renderShipments();
 }
 
@@ -1105,7 +1084,7 @@ function renderShipments(){
   // Single pass: build all groups and counts at once
   const active=[],complete=[],pickupsToday=[],deliveriesToday=[];
   let onTimeCnt=0,atRiskCnt=0,delayedCnt=0;
-  const stageCounts={'Requested':0,'Before Pickup':0,'Pending Pickup':0,'In Transit':0,'Unknown':0};
+  const eventCounts=new Map();
   rows.forEach(r=>{
     if(isPickupToday(r))pickupsToday.push(r);
     if(isDeliveryToday(r))deliveriesToday.push(r);
@@ -1115,8 +1094,8 @@ function renderShipments(){
     if(s.includes('on time'))onTimeCnt++;
     else if(s.includes('at risk'))atRiskCnt++;
     else if(s.includes('delay'))delayedCnt++;
-    const stage=getStageVal(r);
-    stageCounts[stage in stageCounts?stage:'Unknown']++;
+    const ev=getStatusVal(r).trim()||'Unknown';
+    eventCounts.set(ev,(eventCounts.get(ev)||0)+1);
   });
   document.getElementById('tabActiveCount').textContent=active.length;
   document.getElementById('tabPickupsCount').textContent=pickupsToday.length;
@@ -1125,12 +1104,24 @@ function renderShipments(){
   document.getElementById('pillOnTimeCount').textContent=onTimeCnt;
   document.getElementById('pillAtRiskCount').textContent=atRiskCnt;
   document.getElementById('pillDelayedCount').textContent=delayedCnt;
-  document.getElementById('stageAll').textContent=active.length;
-  document.getElementById('stageRequested').textContent=stageCounts['Requested'];
-  document.getElementById('stageBeforePickup').textContent=stageCounts['Before Pickup'];
-  document.getElementById('stagePendingPickup').textContent=stageCounts['Pending Pickup'];
-  document.getElementById('stageInTransit').textContent=stageCounts['In Transit'];
-  document.getElementById('stageUnknown').textContent=stageCounts['Unknown'];
+  // Rebuild event sidebar dynamically
+  const stageList=document.getElementById('stageAll');
+  stageList.textContent=active.length;
+  const listEl=document.getElementById('stageList');
+  // Restore active state on the "All" row and remove old dynamic rows
+  listEl.querySelectorAll('[data-stage]').forEach(el=>{
+    if(el.dataset.stage==='all'){el.classList.toggle('active',_stageFilter==='all');}
+    else el.remove();
+  });
+  Array.from(eventCounts.entries())
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .forEach(([ev,count])=>{
+      const div=document.createElement('div');
+      div.className='stage-item'+(_stageFilter===ev?' active':'');
+      div.dataset.stage=ev;
+      div.innerHTML=`<span>${eh(ev)}</span><span class="stage-badge">${count}</span>`;
+      listEl.appendChild(div);
+    });
 
   // Select base by tab
   let base;
@@ -1139,8 +1130,8 @@ function renderShipments(){
   else if(_tab==='deliveries')base=deliveriesToday;
   else base=complete;
 
-  // Stage filter
-  if(_stageFilter&&_stageFilter!=='all')base=base.filter(r=>getStageVal(r)===_stageFilter);
+  // Event filter (matches raw event value)
+  if(_stageFilter&&_stageFilter!=='all')base=base.filter(r=>(getStatusVal(r).trim()||'Unknown')===_stageFilter);
 
   // Status filter
   if(_statusFilter==='on-time')base=base.filter(isOnTime);
@@ -1463,6 +1454,10 @@ function downloadPDF(){
 }
 
 // ── Init ──────────────────────────────────────────────────────────
+document.getElementById('stageList').addEventListener('click',function(e){
+  const item=e.target.closest('.stage-item');
+  if(item)setStage(item.dataset.stage);
+});
 loadData();
 </script>
 </body>
