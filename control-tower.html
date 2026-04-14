@@ -1161,9 +1161,21 @@ async function renderPerfChart(){
   console.log('[perf] all columns:', sampleKeys);
   console.log('[perf] detected:', {colOrigin,colDest,colArrived,colDate,colCompany,_company});
 
-  // Filter by selected company
+  // Log sample company values so we can verify name format
+  if(colCompany){
+    const sample=[...new Set(_perfRows.map(r=>r[colCompany]).filter(Boolean))].slice(0,10);
+    console.log('[perf] sample company values in PERFORMANCE_DASH:', sample);
+  }
+
+  // Filter by selected company — flexible partial match in both directions
   const companyRows=(_company&&colCompany)
-    ? _perfRows.filter(r=>{const v=r[colCompany];return v&&String(v).trim().toLowerCase()===_company.toLowerCase();})
+    ? _perfRows.filter(r=>{
+        const v=r[colCompany];
+        if(!v)return false;
+        const rv=String(v).trim().toLowerCase();
+        const cv=_company.toLowerCase();
+        return rv===cv||rv.includes(cv)||cv.includes(rv);
+      })
     : _perfRows;
   console.log('[perf] company rows after filter:', companyRows.length, 'of', _perfRows.length);
 
