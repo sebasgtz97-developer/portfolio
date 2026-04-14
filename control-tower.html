@@ -1140,6 +1140,7 @@ async function renderPerfChart(){
   if(!ctx)return;
   await ensureChartJs();
 
+  console.log('[perf] _perfRows count:', _perfRows.length);
   if(!_perfRows.length){
     // No perf data yet — clear the stat cards
     ['perfDelivered','perfOnTime','perfDelayed','perfRate'].forEach(id=>{
@@ -1238,8 +1239,10 @@ async function renderPerfChart(){
 async function loadPerfData(){
   try{
     const r=await fetch('/api/perf?t='+Date.now());
+    console.log('[perf] HTTP status:', r.status);
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
+    console.log('[perf] API response keys:', Object.keys(d), 'rows:', (d.rows||[]).length);
     if(d.error)throw new Error(d.error);
     _perfRows=d.rows||[];
   }catch(e){
