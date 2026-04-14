@@ -1155,9 +1155,11 @@ async function renderPerfChart(){
   const colDest    =findCol(/ON_TIME_AT_DESTINATION/i);
   const colArrived =findCol(/ACTUAL.*ARRIVED.*DEST|ACTUAL.*DEST.*ARRIVAL|ACTUAL_ARRIVAL|ARRIVED_TO_DEST/i)
                    ||findCol(/ACTUAL.*FINAL|FINAL.*ACTUAL/i);
-  const colDate    =findCol(/^DATE$|^DELIVERY_DATE$|^ACTUAL_DATE$|^PERIOD$|PICKUP_DATE|SHIP_DATE/i)
+  const colDate    =findCol(/ACTUAL_ARRIVED_TO_DESTINATION(?!_CST|_TIMEZONE)/i)
+                   ||findCol(/^DATE$|^DELIVERY_DATE$|^ACTUAL_DATE$|^PERIOD$|PICKUP_DATE|SHIP_DATE/i)
                    ||findCol(/DATE|PERIOD/i);
-  const colCompany =findCol(/SHIPPER|CUSTOMER|COMPANY|CLIENT|ACCOUNT/i);
+  const colCompany =findCol(/COMPANY_NAME|SHIPPER_NAME|CUSTOMER_NAME|CLIENT_NAME|ACCOUNT_NAME/i)
+                  ||findCol(/SHIPPER|CUSTOMER|COMPANY|CLIENT|ACCOUNT/i);
   console.log('[perf] all columns:', sampleKeys);
   console.log('[perf] detected:', {colOrigin,colDest,colArrived,colDate,colCompany,_company});
 
