@@ -2,7 +2,7 @@ const snowflake = require('snowflake-sdk');
 
 snowflake.configure({ logLevel: 'ERROR' });
 
-const SQL = 'SELECT * FROM DATA_OPS.PERFORMANCE_DASH';
+const SQL = 'SELECT * FROM ANALYTICS.DATA_OPS.PERFORMANCE_DASH';
 
 module.exports = async (req, res) => {
   const account = (process.env.SNOWFLAKE_ACCOUNT || '')
