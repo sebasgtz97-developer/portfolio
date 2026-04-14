@@ -178,7 +178,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .filter-to{font-size:12px;color:var(--text-4);}
 
 /* Ships Table */
-.ships-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.ships-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;}
 .ships-table{width:100%;border-collapse:collapse;font-size:13px;}
 .ships-table thead th{padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;background:var(--surface-2);border-bottom:1px solid var(--border);white-space:nowrap;}
 .ships-table tbody td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-2);white-space:nowrap;}
@@ -852,6 +852,7 @@ function getStatusVal(row){
 }
 function normalizeStatus(s){
   const l=s.toLowerCase();
+  if(!l||l==='unknown')return'Shipment Confirmed';
   if(l.includes('on time')||l==='ontime')return'On Time';
   if(l.includes('at risk')||l.includes('atrisk'))return'At Risk';
   if(l.includes('delay'))return'Delayed';
@@ -863,7 +864,7 @@ function normalizeStatus(s){
   if(l.includes('transit')||l.includes('departed'))return'In Transit';
   if(l.includes('request'))return'Requested';
   if(l.includes('pending'))return'Pending Pickup';
-  return s||'Unknown';
+  return s||'Shipment Confirmed';
 }
 function getStageVal(row){
   if(_cm.stage&&row[_cm.stage])return row[_cm.stage].trim();
@@ -979,7 +980,7 @@ function buildColDefs(allCols){
 function loadCols(){
   // Must be called after buildColDefs
   try{
-    const s=localStorage.getItem('ct_cols');
+    const s=localStorage.getItem('ct_cols_v2');
     if(s){
       const saved=JSON.parse(s);
       const allKeys=new Set(COL_DEFS.map(d=>d.key));
@@ -990,9 +991,10 @@ function loadCols(){
       _cols=merged;return;
     }
   }catch(e){}
-  _cols=COL_DEFS.map(d=>({key:d.key,visible:true}));
+  const semanticKeys=new Set(SEMANTIC_COLS.map(s=>s.key));
+  _cols=COL_DEFS.map(d=>({key:d.key,visible:semanticKeys.has(d.key)}));
 }
-function saveCols(){localStorage.setItem('ct_cols',JSON.stringify(_cols));}
+function saveCols(){localStorage.setItem('ct_cols_v2',JSON.stringify(_cols));}
 function openColPanel(){
   renderColPanel();
   document.getElementById('colPanelOverlay').classList.add('open');
@@ -1120,7 +1122,8 @@ function renderOverview(){
   // Build event counts from all rows (active + delivered)
   const evMap=new Map();
   rows.forEach(r=>{
-    const ev=(getStatusVal(r)||'Unknown').trim();
+    const rawEv=(getStatusVal(r)||'').trim();
+    const ev=(!rawEv||rawEv.toLowerCase()==='unknown')?'Shipment Confirmed':rawEv;
     evMap.set(ev,(evMap.get(ev)||0)+1);
   });
   const palette=['--brand','--blue','--amber','--purple','--green','--red','--text-2'];
@@ -1379,7 +1382,8 @@ function renderShipments(){
     if(s.includes('on time'))onTimeCnt++;
     else if(s.includes('at risk'))atRiskCnt++;
     else if(s.includes('delay'))delayedCnt++;
-    const ev=getStatusVal(r).trim()||'Unknown';
+    const rawEv=getStatusVal(r).trim();
+    const ev=(!rawEv||rawEv.toLowerCase()==='unknown')?'Shipment Confirmed':rawEv;
     eventCounts.set(ev,(eventCounts.get(ev)||0)+1);
   });
   document.getElementById('tabActiveCount').textContent=active.length;
@@ -1463,7 +1467,7 @@ function statusBadge(row){
     'On Time':'badge-ontime','Delayed':'badge-delayed','At Risk':'badge-atrisk',
     'Confirmed':'badge-confirmed','Delivered':'badge-delivered','In Transit':'badge-confirmed'
   }[norm]||'badge-default';
-  return`<span class="badge ${cls}">${eh(norm||raw||'Unknown')}</span>`;
+  return`<span class="badge ${cls}">${eh(norm||raw||'Shipment Confirmed')}</span>`;
 }
 
 function renderShipsTable(rows){
@@ -1524,6 +1528,30 @@ function applyCustomPeriod(){
   renderReports();
 }
 
+// Adapts PERFORMANCE_DASH rows into pseudo-rows that existing chart functions understand
+function buildPerfReportRows(perfRows){
+  const isT=v=>{
+    if(v==null||v==='')return false;
+    if(typeof v==='boolean')return v;
+    if(typeof v==='number')return v===1;
+    return String(v).trim().toUpperCase()==='Y'||String(v).trim().toUpperCase()==='TRUE'||String(v).trim()==='1';
+  };
+  return perfRows.map(r=>{
+    const delivered=!!(r['ACTUAL_ARRIVED_TO_DESTINATION_']);
+    const onTime=isT(r['ON_TIME_AT_DESTINATION_TABLE']);
+    const status=delivered
+      ?(onTime?'delivered on time':'delivered to final destination')
+      :(r['SHIPMENT_STATUS']||r['LATEST_ACTUAL_EVENT']||'in transit');
+    const row={};
+    if(_cm.status)row[_cm.status]=status;
+    if(_cm.pickup)row[_cm.pickup]=r['PICKUP_STARTS_AT'];
+    if(_cm.delivery)row[_cm.delivery]=r['ACTUAL_ARRIVED_TO_DESTINATION_'];
+    if(_cm.lastUpdate)row[_cm.lastUpdate]=r['ACTUAL_ARRIVED_TO_DESTINATION_']||r['PICKUP_STARTS_AT'];
+    row.__transit=r['TRANSIT_TIME_CAL'];
+    return row;
+  });
+}
+
 async function renderReports(){
   let from,now,fromStr,toStr,label;
   if(_customFrom&&_customTo){
@@ -1539,27 +1567,35 @@ async function renderReports(){
   }
   document.getElementById('periodRangeText').textContent=`Showing data from ${fromStr} to ${toStr} (${label})`;
 
-  // Filter rows by period (use pickup or update date)
-  const periodRows=_rows.filter(r=>{
-    const d=r[_cm.pickup]||r[_cm.delivery]||r[_cm.lastUpdate];
-    if(!d)return true; // include if no date
+  // Filter PERFORMANCE_DASH rows by company
+  const perfCompany=(_company&&_perfRows.length)
+    ? _perfRows.filter(r=>{const v=r['COMPANY_NAME'];if(!v)return false;const rv=String(v).trim().toLowerCase(),cv=_company.toLowerCase();return rv===cv||rv.includes(cv)||cv.includes(rv);})
+    : _perfRows;
+
+  // Filter by selected period using PICKUP_STARTS_AT
+  const periodRows=perfCompany.filter(r=>{
+    const d=r['PICKUP_STARTS_AT'];
+    if(!d)return true;
     try{const rd=new Date(d);return rd>=from&&rd<=now;}catch(e){return true;}
   });
 
-  // KPIs
-  const total=periodRows.length||_rows.length;
-  const delivered=periodRows.filter(isDelivered).length||_rows.filter(isDelivered).length;
-  const inTransit=periodRows.filter(r=>!isDelivered(r)).length;
-  const onTimeCount=periodRows.filter(r=>isDelivered(r)&&isOnTime(r)).length||_rows.filter(isOnTime).length;
-  const otRate=delivered?Math.round(onTimeCount/delivered*100):(_rows.length?Math.round(_rows.filter(isOnTime).length/Math.max(_rows.filter(r=>!isDelivered(r)).length,1)*100):0);
+  // KPIs directly from PERFORMANCE_DASH columns
+  const isT=v=>{
+    if(v==null||v==='')return false;
+    if(typeof v==='boolean')return v;
+    if(typeof v==='number')return v===1;
+    return String(v).trim().toUpperCase()==='Y'||String(v).trim().toUpperCase()==='TRUE'||String(v).trim()==='1';
+  };
+  const total=periodRows.length;
+  const delivered=periodRows.filter(r=>!!(r['ACTUAL_ARRIVED_TO_DESTINATION_'])).length;
+  const inTransit=total-delivered;
+  const onTimeCount=periodRows.filter(r=>isT(r['ON_TIME_AT_DESTINATION_TABLE'])).length;
+  const otRate=delivered?Math.round(onTimeCount/delivered*100):0;
 
-  // Avg transit time (days between pickup and delivery)
-  let totalDays=0,count=0;
-  periodRows.forEach(r=>{
-    const p=r[_cm.pickup],d=r[_cm.delivery];
-    if(p&&d){try{const diff=(new Date(d)-new Date(p))/86400000;if(diff>0&&diff<100){totalDays+=diff;count++;}}catch(e){}}
-  });
-  const avgTransit=count?Math.round(totalDays/count*10)/10:0;
+  // Avg transit from TRANSIT_TIME_CAL (already in days)
+  let totalDays=0,tCount=0;
+  periodRows.forEach(r=>{const t=+r['TRANSIT_TIME_CAL'];if(t>0&&t<100){totalDays+=t;tCount++;}});
+  const avgTransit=tCount?Math.round(totalDays/tCount*10)/10:0;
 
   document.getElementById('rKpiTotal').textContent=total;
   document.getElementById('rKpiDelivered').textContent=delivered;
@@ -1568,7 +1604,7 @@ async function renderReports(){
   document.getElementById('rKpiAvgTransit').textContent=(avgTransit||'—')+(avgTransit?' days':'');
 
   const effectivePeriod=_customFrom&&_customTo?Math.max(1,Math.round((now-from)/86400000)):_period;
-  await renderCharts(periodRows,effectivePeriod);
+  await renderCharts(buildPerfReportRows(periodRows),effectivePeriod);
 }
 
 async function renderCharts(rows,period){
