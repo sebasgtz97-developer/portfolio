@@ -816,6 +816,7 @@ function selectCompany(c){
   if(_currentView==='overview')renderOverview(),renderMap();
   if(_currentView==='shipments')renderShipments();
   if(_currentView==='reports')renderReports();
+  renderPerfChart();
 }
 function getCompanies(){
   if(!_allRows.length)return[];
@@ -1156,11 +1157,20 @@ async function renderPerfChart(){
                    ||findCol(/ACTUAL.*FINAL|FINAL.*ACTUAL/i);
   const colDate    =findCol(/^DATE$|^DELIVERY_DATE$|^ACTUAL_DATE$|^PERIOD$|PICKUP_DATE|SHIP_DATE/i)
                    ||findCol(/DATE|PERIOD/i);
+  const colCompany =findCol(/SHIPPER|CUSTOMER|COMPANY|CLIENT|ACCOUNT/i);
+  console.log('[perf] all columns:', sampleKeys);
+  console.log('[perf] detected:', {colOrigin,colDest,colArrived,colDate,colCompany,_company});
+
+  // Filter by selected company
+  const companyRows=(_company&&colCompany)
+    ? _perfRows.filter(r=>{const v=r[colCompany];return v&&String(v).trim().toLowerCase()===_company.toLowerCase();})
+    : _perfRows;
+  console.log('[perf] company rows after filter:', companyRows.length, 'of', _perfRows.length);
 
   // Only rows where "actual arrived to destination" is populated
   const arrived=colArrived
-    ? _perfRows.filter(r=>{const v=r[colArrived];return v!=null&&v!==''&&v!==false&&v!==0;})
-    : _perfRows;
+    ? companyRows.filter(r=>{const v=r[colArrived];return v!=null&&v!==''&&v!==false&&v!==0;})
+    : companyRows;
 
   // Helper: is a column value truthy (handles Y/N, 1/0, true/false, "true")
   const isTrue=v=>{
