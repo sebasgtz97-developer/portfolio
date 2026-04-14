@@ -35,7 +35,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .h-os-badge{width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:0.3px;flex-shrink:0;}
 .h-divider{width:1px;height:20px;background:var(--border);margin:0 16px;flex-shrink:0;}
 .h-app-title{font-size:13px;font-weight:600;color:var(--text-2);white-space:nowrap;flex-shrink:0;}
-.h-company{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s;font-size:13px;font-weight:500;color:var(--text-2);background:var(--surface);margin-left:16px;flex-shrink:0;max-width:280px;overflow:hidden;position:relative;}
+.h-company{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s;font-size:13px;font-weight:500;color:var(--text-2);background:var(--surface);margin-left:16px;flex-shrink:0;max-width:280px;position:relative;}
 .h-company:hover{border-color:var(--border-2);}
 .h-company-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .company-dropdown{position:absolute;top:calc(100%+6px);left:0;min-width:260px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:300;display:none;padding:4px 0;}
@@ -601,6 +601,11 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
         Custom
       </button>
     </div>
+    <div id="customDateRow" style="display:none;align-items:center;gap:8px;margin-top:10px;margin-bottom:4px;">
+      <input type="date" id="rDateFrom" class="filter-date" onchange="applyCustomPeriod()">
+      <span class="filter-to">to</span>
+      <input type="date" id="rDateTo" class="filter-date" onchange="applyCustomPeriod()">
+    </div>
     <div class="period-range-text" id="periodRangeText">Showing data from — to — (30 days)</div>
 
     <!-- Reports KPIs -->
@@ -800,7 +805,7 @@ let _cm={id:null,status:null,stage:null,shipper:null,shipper2:null,carrier:null,
 function detectCols(cols){
   const find=re=>cols.find(c=>re.test(c))||null;
   _cm.id       =find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$|^SH.?ID$|^LOAD.?ID$|^BOOKING.?ID$|^ORDER.?ID$|^REFERENCE$|^REF$/i);
-  _cm.status   =find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$|^STATUS$/i);
+  _cm.status   =find(/LATEST.?ACTUAL.?EVENT/i)||find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$|^STATUS$/i);
   _cm.stage    =find(/^STAGE$/i);
   _cm.shipper  =find(/SHIPPER|CONSIGNOR/i);
   _cm.shipper2 =find(/SHIP.FROM|ORIGIN.COMPANY|CUSTOMER.?NAME|CLIENT.?NAME/i);
@@ -880,6 +885,8 @@ let _displayRows=[];  // filtered by tab+stage+search
 let _tab='active';
 let _stageFilter='all';
 let _statusFilter=null;
+let _customFrom=null;
+let _customTo=null;
 let _map=null;
 let _charts={};
 let _period=30;
@@ -1196,19 +1203,49 @@ function exportCSV(){
 
 // ── REPORTS RENDER ────────────────────────────────────────────────
 function setPeriod(p,el){
-  if(p==='custom')return;
-  _period=p;
   document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));
   if(el)el.classList.add('active');
+  const customRow=document.getElementById('customDateRow');
+  if(p==='custom'){
+    customRow.style.display='flex';
+    // Pre-fill with a sensible default if empty
+    const rFrom=document.getElementById('rDateFrom');
+    const rTo=document.getElementById('rDateTo');
+    if(!rFrom.value||!rTo.value){
+      const to=new Date(),from=new Date();from.setDate(from.getDate()-30);
+      rTo.value=to.toISOString().slice(0,10);
+      rFrom.value=from.toISOString().slice(0,10);
+    }
+    applyCustomPeriod();
+    return;
+  }
+  customRow.style.display='none';
+  _period=p;
+  _customFrom=null;_customTo=null;
+  renderReports();
+}
+function applyCustomPeriod(){
+  const from=document.getElementById('rDateFrom').value;
+  const to=document.getElementById('rDateTo').value;
+  if(!from||!to)return;
+  _customFrom=from;_customTo=to;
   renderReports();
 }
 
 async function renderReports(){
-  const now=new Date();
-  const from=new Date(now);from.setDate(from.getDate()-_period);
-  const fromStr=from.toISOString().slice(0,10);
-  const toStr=now.toISOString().slice(0,10);
-  document.getElementById('periodRangeText').textContent=`Showing data from ${fromStr} to ${toStr} (${_period} days)`;
+  let from,now,fromStr,toStr,label;
+  if(_customFrom&&_customTo){
+    from=new Date(_customFrom);now=new Date(_customTo);now.setHours(23,59,59,999);
+    fromStr=_customFrom;toStr=_customTo;
+    const days=Math.round((now-from)/86400000);
+    label=`${days} days`;
+  }else{
+    now=new Date();
+    from=new Date(now);from.setDate(from.getDate()-_period);
+    fromStr=from.toISOString().slice(0,10);toStr=now.toISOString().slice(0,10);
+    label=`${_period} days`;
+  }
+  document.getElementById('periodRangeText').textContent=`Showing data from ${fromStr} to ${toStr} (${label})`;
 
   // Filter rows by period (use pickup or update date)
   const periodRows=_rows.filter(r=>{
@@ -1238,7 +1275,8 @@ async function renderReports(){
   document.getElementById('rKpiOnTimeRate').textContent=otRate+'%';
   document.getElementById('rKpiAvgTransit').textContent=(avgTransit||'—')+(avgTransit?' days':'');
 
-  await renderCharts(periodRows,_period);
+  const effectivePeriod=_customFrom&&_customTo?Math.max(1,Math.round((now-from)/86400000)):_period;
+  await renderCharts(periodRows,effectivePeriod);
 }
 
 async function renderCharts(rows,period){
