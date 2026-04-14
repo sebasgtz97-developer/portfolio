@@ -778,7 +778,13 @@ document.addEventListener('click',function(e){
 function buildCompanySelector(){
   const companies=getCompanies();
   const dd=document.getElementById('companyDropdown');
-  dd.innerHTML=companies.map(c=>`<div class="company-option${c===_company?' active':''}" onclick="selectCompany('${c.replace(/'/g,"\'")}');event.stopPropagation()">${c}</div>`).join('');
+  // Use data attributes instead of inline onclick to safely handle any company name
+  dd.innerHTML=companies.map((c,i)=>`<div class="company-option${c===_company?' active':''}" data-idx="${i}">${eh(c)}</div>`).join('');
+  dd._companies=companies;
+  dd.onclick=function(e){
+    const opt=e.target.closest('.company-option');
+    if(opt){selectCompany(dd._companies[+opt.dataset.idx]);e.stopPropagation();}
+  };
   if(companies.length>0&&!_company){
     _company=companies[0];
     document.getElementById('companyName').textContent=_company;
@@ -829,10 +835,14 @@ function normalizeStatus(s){
   if(l.includes('on time')||l==='ontime')return'On Time';
   if(l.includes('at risk')||l.includes('atrisk'))return'At Risk';
   if(l.includes('delay'))return'Delayed';
-  if(l.includes('confirm'))return'Confirmed';
+  if(l.includes('final destination'))return'Delivered';
   if(l.includes('deliver'))return'Delivered';
-  if(l.includes('transit'))return'In Transit';
+  if(l.includes('confirm'))return'Confirmed';
+  if(l.includes('arrived to origin')||l.includes('arrived at origin'))return'At Origin';
+  if(l.includes('border'))return'At Border';
+  if(l.includes('transit')||l.includes('departed'))return'In Transit';
   if(l.includes('request'))return'Requested';
+  if(l.includes('pending'))return'Pending Pickup';
   return s||'Unknown';
 }
 function getStageVal(row){
@@ -841,14 +851,35 @@ function getStageVal(row){
   if(s.includes('request'))return'Requested';
   if(s.includes('confirm')||s.includes('before pickup')||s.includes('scheduled'))return'Before Pickup';
   if(s.includes('pending'))return'Pending Pickup';
-  if(s.includes('transit')||s.includes('on time')||s.includes('delay')||s.includes('at risk')||s.includes('pickup confirmed'))return'In Transit';
-  if(s.includes('deliver'))return'Delivered';
+  // Event-style values: at origin = cargo hasn't been picked up yet
+  if(s.includes('arrived to origin')||s.includes('arrived at origin')||s.includes('at origin'))return'Before Pickup';
+  // En-route events
+  if(s.includes('transit')||s.includes('on time')||s.includes('delay')||s.includes('at risk')||
+     s.includes('pickup confirmed')||s.includes('departed')||s.includes('border')||
+     s.includes('arrived to final')||s.includes('arrived at final')||s.includes('out for delivery'))return'In Transit';
+  if(s.includes('deliver')||s.includes('final destination'))return'Delivered';
   return'Unknown';
 }
 function isDelivered(row){
   const s=getStatusVal(row).toLowerCase();
-  const st=getStageVal(row).toLowerCase();
-  return s.includes('deliver')||st.includes('deliver');
+  return s.includes('deliver')||s.includes('final destination');
+}
+// Pickup-type events: cargo is being picked up / departed origin
+function isPickupEvent(row){
+  const s=getStatusVal(row).toLowerCase();
+  return s.includes('pickup')||s.includes('picked up')||s.includes('departed origin')||s.includes('departed from origin');
+}
+// Delivery-type events: cargo arrived at destination
+function isDeliveryEvent(row){
+  return isDelivered(row);
+}
+function isPickupToday(row){
+  if(isToday(row[_cm.pickup]))return true;
+  return isPickupEvent(row)&&isToday(row[_cm.lastUpdate]);
+}
+function isDeliveryToday(row){
+  if(isToday(row[_cm.delivery]))return true;
+  return isDeliveryEvent(row)&&isToday(row[_cm.lastUpdate]);
 }
 function isOnTime(row){return getStatusVal(row).toLowerCase().includes('on time');}
 function isAtRisk(row){return getStatusVal(row).toLowerCase().includes('at risk');}
@@ -929,8 +960,8 @@ function processData(){
 function computeMetrics(rows){
   let activeCount=0,onTime=0,atRisk=0,delayed=0,pickupsToday=0,deliveriesToday=0;
   rows.forEach(r=>{
-    if(isToday(r[_cm.pickup]))pickupsToday++;
-    if(isToday(r[_cm.delivery]))deliveriesToday++;
+    if(isPickupToday(r))pickupsToday++;
+    if(isDeliveryToday(r))deliveriesToday++;
     if(isDelivered(r))return;
     activeCount++;
     const s=getStatusVal(r).toLowerCase();
@@ -1076,8 +1107,8 @@ function renderShipments(){
   let onTimeCnt=0,atRiskCnt=0,delayedCnt=0;
   const stageCounts={'Requested':0,'Before Pickup':0,'Pending Pickup':0,'In Transit':0,'Unknown':0};
   rows.forEach(r=>{
-    if(isToday(r[_cm.pickup]))pickupsToday.push(r);
-    if(isToday(r[_cm.delivery]))deliveriesToday.push(r);
+    if(isPickupToday(r))pickupsToday.push(r);
+    if(isDeliveryToday(r))deliveriesToday.push(r);
     if(isDelivered(r)){complete.push(r);return;}
     active.push(r);
     const s=getStatusVal(r).toLowerCase();
