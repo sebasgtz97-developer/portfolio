@@ -1844,7 +1844,7 @@ document.getElementById('quoteForm').addEventListener('submit',async function(e)
   try{
     const resp=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const json=await resp.json().catch(()=>({}));
-    if(!resp.ok)throw new Error(json.error||'Server returned '+resp.status);
+    if(!resp.ok)throw new Error(json.detail?json.error+' — '+json.detail:(json.error||'Server returned '+resp.status));
     clearStatus();
     document.getElementById('ssDetails').innerHTML=
       '<div class="ss-detail-row"><span class="ss-detail-label">Quote ID</span><span class="ss-detail-value">'+eh(_qrId)+'</span></div>'+
