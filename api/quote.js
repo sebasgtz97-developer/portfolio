@@ -54,19 +54,29 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const upstream = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 25000); // 25 s hard timeout
+
+    let upstream;
+    try {
+      upstream = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
 
     const text = await upstream.text();
     let json;
     try { json = JSON.parse(text); } catch (parseErr) {
       // Google Apps Script returns HTTP 200 with an HTML error page on uncaught exceptions.
       // If we can't parse JSON it means the script threw without returning ContentService output.
-      console.error('Apps Script returned non-JSON:', text.substring(0, 300));
-      throw new Error('Apps Script error — response was not JSON. Check the script deployment and try again.');
+      const snippet = text.substring(0, 300);
+      console.error('Apps Script returned non-JSON (HTTP', upstream.status + '):', snippet);
+      throw new Error(`Apps Script returned non-JSON (HTTP ${upstream.status}). First 300 chars: ${snippet}`);
     }
 
     if (!upstream.ok || json.status === 'error') {
