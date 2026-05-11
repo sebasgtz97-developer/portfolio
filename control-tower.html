@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control Tower — Nuvocargo</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{
   --bg:#EEEEE9;--surface:#FFFFFF;--surface-2:#F5F5F0;
@@ -37,11 +35,15 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .h-os-badge{width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:0.3px;flex-shrink:0;}
 .h-divider{width:1px;height:20px;background:var(--border);margin:0 16px;flex-shrink:0;}
 .h-app-title{font-size:13px;font-weight:600;color:var(--text-2);white-space:nowrap;flex-shrink:0;}
-.h-company{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s;font-size:13px;font-weight:500;color:var(--text-2);background:var(--surface);margin-left:16px;flex-shrink:0;max-width:280px;overflow:hidden;position:relative;}
+.h-company{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s;font-size:13px;font-weight:500;color:var(--text-2);background:var(--surface);margin-left:16px;flex-shrink:0;max-width:280px;position:relative;}
 .h-company:hover{border-color:var(--border-2);}
 .h-company-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.company-dropdown{position:absolute;top:calc(100%+6px);left:0;min-width:260px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:300;display:none;padding:4px 0;}
-.company-dropdown.open{display:block;}
+.company-dropdown{position:fixed;top:0;left:0;min-width:260px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:500;display:none;flex-direction:column;max-height:320px;padding:0;}
+.company-dropdown.open{display:flex;}
+.company-search-wrap{padding:8px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.company-search{width:100%;height:30px;padding:0 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;font-family:inherit;color:var(--text-1);background:var(--surface);outline:none;}
+.company-search:focus{border-color:var(--brand);}
+.company-options-list{overflow-y:auto;flex:1;}
 .company-option{padding:8px 14px;font-size:13px;color:var(--text-2);cursor:pointer;transition:background .1s;}
 .company-option:hover{background:var(--surface-2);}
 .company-option.active{font-weight:600;color:var(--brand);}
@@ -64,7 +66,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .page-subtitle{font-size:13px;color:var(--text-3);margin-top:3px;}
 
 /* ── KPI Cards ── */
-.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
 .kpi-value{font-size:32px;font-weight:700;line-height:1;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;margin-bottom:4px;}
 .kpi-label{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;}
@@ -120,6 +122,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .perf-stat-value{font-size:28px;font-weight:700;color:var(--text-1);letter-spacing:-0.03em;font-variant-numeric:tabular-nums;}
 .perf-stat-value.c-green{color:var(--green);}
 .perf-stat-value.c-red{color:var(--red);}
+.perf-stat-value.c-blue{color:var(--blue);}
 .perf-stat-label{font-size:12px;color:var(--text-3);margin-top:4px;}
 .perf-chart-wrap{height:120px;position:relative;}
 
@@ -175,7 +178,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .filter-to{font-size:12px;color:var(--text-4);}
 
 /* Ships Table */
-.ships-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.ships-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto;}
 .ships-table{width:100%;border-collapse:collapse;font-size:13px;}
 .ships-table thead th{padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;background:var(--surface-2);border-bottom:1px solid var(--border);white-space:nowrap;}
 .ships-table tbody td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text-2);white-space:nowrap;}
@@ -238,6 +241,27 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 .chart-sub{font-size:11px;color:var(--text-4);text-align:center;margin-top:8px;}
 .period-chg{font-size:13px;font-weight:700;color:var(--green);}
 
+/* ── Column Panel ── */
+.col-panel-overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.15);display:none;}
+.col-panel-overlay.open{display:block;}
+.col-panel{position:fixed;top:0;right:0;bottom:0;width:300px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .2s;z-index:401;}
+.col-panel-overlay.open .col-panel{transform:translateX(0);}
+.col-panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.col-panel-title{font-size:15px;font-weight:700;color:var(--text-1);}
+.col-panel-body{flex:1;overflow-y:auto;padding:8px 0;}
+.col-item{display:flex;align-items:center;gap:10px;padding:10px 20px;}
+.col-item-label{flex:1;font-size:13px;color:var(--text-1);}
+.col-toggle{width:36px;height:20px;border-radius:10px;border:none;background:var(--border-2);cursor:pointer;position:relative;transition:background .15s;flex-shrink:0;}
+.col-toggle.on{background:var(--brand);}
+.col-toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.col-toggle.on::after{left:18px;}
+.col-move{display:flex;flex-direction:column;gap:2px;}
+.col-move-btn{width:22px;height:16px;border:1px solid var(--border);border-radius:3px;background:var(--surface-2);cursor:pointer;color:var(--text-3);font-size:9px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;}
+.col-move-btn:hover:not(:disabled){background:var(--border-2);color:var(--text-1);}
+.col-move-btn:disabled{opacity:.3;cursor:default;}
+.btn-cols{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:var(--text-2);transition:all .15s;cursor:pointer;}
+.btn-cols:hover{background:var(--surface-2);border-color:var(--border-2);}
+
 /* ── Responsive ── */
 @media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr);}.r-kpi-row{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:900px){.overview-grid{grid-template-columns:1fr;}.ships-wrap{grid-template-columns:1fr;}.ships-sidebar{border-right:none;border-bottom:1px solid var(--border);}.charts-row{grid-template-columns:1fr;}}
@@ -246,6 +270,11 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 </head>
 <script>(function(){var t=localStorage.getItem('ct_theme');if(t)document.documentElement.dataset.theme=t;})()</script>
 <body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+  </symbol>
+</svg>
 
 <!-- HEADER -->
 <header class="ct-header">
@@ -265,8 +294,8 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
     <svg width="12" height="12" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
       <path d="M1 1l5 5 5-5"/>
     </svg>
-    <div class="company-dropdown" id="companyDropdown"></div>
   </div>
+  <div class="company-dropdown" id="companyDropdown"></div>
   <nav class="h-nav">
     <button class="nav-link active" onclick="showView('overview')">Overview</button>
     <button class="nav-link" onclick="showView('shipments')">Shipments</button>
@@ -293,38 +322,17 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
     </div>
 
     <!-- KPI Row -->
-    <div class="kpi-row">
-      <div class="kpi-card kpi-green">
-        <div class="kpi-value" id="kpiOnTime">—</div>
-        <div class="kpi-label">On Time</div>
-      </div>
-      <div class="kpi-card kpi-amber">
-        <div class="kpi-value" id="kpiAtRisk">—</div>
-        <div class="kpi-label">At Risk</div>
-      </div>
-      <div class="kpi-card kpi-red">
-        <div class="kpi-value" id="kpiDelayed">—</div>
-        <div class="kpi-label">Delayed</div>
-      </div>
-      <div class="kpi-card kpi-blue">
-        <div class="kpi-value" id="kpiPickups">—</div>
-        <div class="kpi-label">Pickups</div>
-      </div>
-      <div class="kpi-card kpi-purple">
-        <div class="kpi-value" id="kpiDeliveries">—</div>
-        <div class="kpi-label">Deliveries</div>
-      </div>
-    </div>
+    <div class="kpi-row" id="kpiRow"></div>
 
     <!-- Map + Right Panel -->
     <div class="overview-grid">
       <div class="map-card">
         <div id="overviewMap"></div>
         <div class="map-legend" id="mapLegend">
-          <div class="map-legend-item"><span class="map-dot" style="background:#16A34A"></span>On Time</div>
-          <div class="map-legend-item"><span class="map-dot" style="background:#D97706"></span>At Risk</div>
-          <div class="map-legend-item"><span class="map-dot" style="background:#DC2626"></span>Delayed</div>
-          <div class="map-legend-item"><span class="map-dot" style="background:#2563EB"></span>Confirmed</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:var(--green)"></span>On Time</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:var(--amber)"></span>At Risk</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:var(--red)"></span>Delayed</div>
+          <div class="map-legend-item"><span class="map-dot" style="background:var(--blue)"></span>Confirmed</div>
         </div>
         <div class="map-loading" id="mapLoading">
           <div class="spinner"></div>
@@ -397,26 +405,26 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
       <div class="perf-header">
         <div class="perf-title">Delivery Performance (Last 30 Days)</div>
         <div class="perf-legend">
-          <span><span class="legend-dot" style="background:#16A34A"></span>On Time</span>
-          <span><span class="legend-dot" style="background:#DC2626"></span>Delayed</span>
+          <span><span class="legend-dot" style="background:var(--brand)"></span>On-Time Pickup</span>
+          <span><span class="legend-dot" style="background:var(--blue)"></span>On-Time Delivery</span>
         </div>
       </div>
       <div class="perf-stats">
         <div class="perf-stat">
           <div class="perf-stat-value" id="perfDelivered">—</div>
-          <div class="perf-stat-label">Delivered</div>
+          <div class="perf-stat-label">Arrived</div>
         </div>
         <div class="perf-stat">
           <div class="perf-stat-value c-green" id="perfOnTime">—</div>
-          <div class="perf-stat-label">On Time</div>
+          <div class="perf-stat-label">On-Time Pickup</div>
         </div>
         <div class="perf-stat">
-          <div class="perf-stat-value c-red" id="perfDelayed">—</div>
-          <div class="perf-stat-label">Delayed</div>
+          <div class="perf-stat-value c-blue" id="perfDelayed">—</div>
+          <div class="perf-stat-label">On-Time Delivery</div>
         </div>
         <div class="perf-stat">
-          <div class="perf-stat-value" id="perfRate">—</div>
-          <div class="perf-stat-label">On-Time Rate</div>
+          <div class="perf-stat-value c-red" id="perfRate">—</div>
+          <div class="perf-stat-label">Late Deliveries</div>
         </div>
       </div>
       <div class="perf-chart-wrap">
@@ -430,32 +438,13 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
     <div class="ships-wrap">
       <!-- Sidebar -->
       <div class="ships-sidebar">
-        <div class="sidebar-section">Stages</div>
+        <div class="sidebar-section">Latest Event</div>
         <div id="stageList">
-          <div class="stage-item active" data-stage="all" onclick="setStage('all',this)">
+          <div class="stage-item active" data-stage="all">
             <span>All Shipments</span>
             <span class="stage-badge" id="stageAll">0</span>
           </div>
-          <div class="stage-item" data-stage="Requested" onclick="setStage('Requested',this)">
-            <span>Requested</span>
-            <span class="stage-badge" id="stageRequested">0</span>
-          </div>
-          <div class="stage-item" data-stage="Before Pickup" onclick="setStage('Before Pickup',this)">
-            <span>Before Pickup</span>
-            <span class="stage-badge" id="stageBeforePickup">0</span>
-          </div>
-          <div class="stage-item" data-stage="Pending Pickup" onclick="setStage('Pending Pickup',this)">
-            <span>Pending Pickup</span>
-            <span class="stage-badge" id="stagePendingPickup">0</span>
-          </div>
-          <div class="stage-item" data-stage="In Transit" onclick="setStage('In Transit',this)">
-            <span>In Transit</span>
-            <span class="stage-badge" id="stageInTransit">0</span>
-          </div>
-          <div class="stage-item" data-stage="Unknown" onclick="setStage('Unknown',this)">
-            <span>Unknown</span>
-            <span class="stage-badge" id="stageUnknown">0</span>
-          </div>
+          <!-- dynamically populated by renderShipments -->
         </div>
         <div class="sidebar-divider"></div>
         <div class="sidebar-section">Alerts</div>
@@ -473,12 +462,16 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
             <div class="ships-title">Shipments</div>
             <div class="ships-subtitle">Track and manage your shipment visibility</div>
           </div>
-          <button class="btn-export" onclick="exportCSV()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export CSV
-          </button>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-cols" onclick="openColPanel()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              Columns
+            </button>
+            <button class="btn-export" onclick="exportCSV()">
+              <svg width="14" height="14"><use href="#icon-download"/></svg>
+              Export CSV
+            </button>
+          </div>
         </div>
 
         <!-- Tabs -->
@@ -535,7 +528,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
         <!-- Table -->
         <div class="ships-table-wrap">
           <table class="ships-table">
-            <thead>
+            <thead id="shipsTableHead">
               <tr>
                 <th>Reference</th>
                 <th>Status</th>
@@ -582,9 +575,7 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
         <div class="page-subtitle">Comprehensive shipment performance insights</div>
       </div>
       <button class="btn-pdf" onclick="downloadPDF()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
+        <svg width="14" height="14"><use href="#icon-download"/></svg>
         Download PDF Report
       </button>
     </div>
@@ -602,28 +593,33 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
         Custom
       </button>
     </div>
+    <div id="customDateRow" style="display:none;align-items:center;gap:8px;margin-top:10px;margin-bottom:4px;">
+      <input type="date" id="rDateFrom" class="filter-date" onchange="applyCustomPeriod()">
+      <span class="filter-to">to</span>
+      <input type="date" id="rDateTo" class="filter-date" onchange="applyCustomPeriod()">
+    </div>
     <div class="period-range-text" id="periodRangeText">Showing data from — to — (30 days)</div>
 
     <!-- Reports KPIs -->
     <div class="r-kpi-row">
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#2563EB"></span>Total Shipments</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--blue)"></span>Total Shipments</div>
         <div class="r-kpi-value" id="rKpiTotal">—</div>
       </div>
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#16A34A"></span>Delivered</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--green)"></span>Delivered</div>
         <div class="r-kpi-value" id="rKpiDelivered">—</div>
       </div>
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#D97706"></span>In Transit</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--amber)"></span>In Transit</div>
         <div class="r-kpi-value" id="rKpiInTransit">—</div>
       </div>
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#16A34A"></span>On-Time Rate</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--green)"></span>On-Time Rate</div>
         <div class="r-kpi-value" id="rKpiOnTimeRate">—</div>
       </div>
       <div class="r-kpi-card">
-        <div class="r-kpi-label"><span class="r-dot" style="background:#7C3AED"></span>Avg Transit</div>
+        <div class="r-kpi-label"><span class="r-dot" style="background:var(--purple)"></span>Avg Transit</div>
         <div class="r-kpi-value" id="rKpiAvgTransit">—</div>
       </div>
     </div>
@@ -679,8 +675,8 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
           </div>
         </div>
         <div class="chart-legend" style="margin-bottom:12px">
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#3C6B4E"></span>Current Period</div>
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#9CA3AF"></span>Previous Period</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--brand)"></span>Current Period</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--text-4)"></span>Previous Period</div>
         </div>
         <div class="chart-wrap"><canvas id="chartPeriod"></canvas></div>
       </div>
@@ -694,10 +690,10 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
         </div>
         <div class="chart-wrap"><canvas id="chartDelivPerf"></canvas></div>
         <div class="chart-legend" style="margin-top:12px">
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#6B7280"></span>Scheduled</div>
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#16A34A"></span>Early</div>
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#2563EB"></span>On Time</div>
-          <div class="chart-legend-item"><span class="legend-sq" style="background:#DC2626"></span>Late</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--text-3)"></span>Scheduled</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--green)"></span>Early</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--blue)"></span>On Time</div>
+          <div class="chart-legend-item"><span class="legend-sq" style="background:var(--red)"></span>Late</div>
         </div>
       </div>
     </div>
@@ -706,8 +702,42 @@ button{font-family:inherit;cursor:pointer;}a{text-decoration:none;color:inherit;
 
 </div><!-- /ct-main -->
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<div class="col-panel-overlay" id="colPanelOverlay" onclick="closeColPanel(event)">
+  <div class="col-panel" onclick="event.stopPropagation()">
+    <div class="col-panel-head">
+      <span class="col-panel-title">Manage Columns</span>
+      <button class="btn-icon" onclick="closeColPanel()" style="border:none;background:none;font-size:16px;cursor:pointer;color:var(--text-3)">&#x2715;</button>
+    </div>
+    <div class="col-panel-body" id="colPanelBody"></div>
+  </div>
+</div>
+
 <script>
+// ── Lazy Library Loaders ─────────────────────────────────────────
+let _leafletReady=null;
+function ensureLeaflet(){
+  if(!_leafletReady)_leafletReady=new Promise((resolve,reject)=>{
+    const link=document.createElement('link');
+    link.rel='stylesheet';link.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+    const s=document.createElement('script');
+    s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload=resolve;s.onerror=reject;
+    document.head.appendChild(s);
+  });
+  return _leafletReady;
+}
+let _chartJsReady=null;
+function ensureChartJs(){
+  if(!_chartJsReady)_chartJsReady=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    s.onload=resolve;s.onerror=reject;
+    document.head.appendChild(s);
+  });
+  return _chartJsReady;
+}
+
 // ── Theme ─────────────────────────────────────────────────────────
 function toggleTheme(){
   const d=document.documentElement,cur=d.dataset.theme;
@@ -739,10 +769,26 @@ function showView(view, tab){
 // ── Company Dropdown ─────────────────────────────────────────────
 function toggleCompanyDropdown(){
   const dd=document.getElementById('companyDropdown');
-  dd.classList.toggle('open');
+  const btn=document.getElementById('companyBtn');
+  if(!dd.classList.contains('open')){
+    const rect=btn.getBoundingClientRect();
+    dd.style.top=(rect.bottom+4)+'px';
+    dd.style.left=rect.left+'px';
+    dd.classList.add('open');
+    const inp=dd.querySelector('.company-search');
+    if(inp){inp.value='';filterCompanyOptions('');setTimeout(()=>inp.focus(),50);}
+  }else{
+    dd.classList.remove('open');
+  }
+}
+function filterCompanyOptions(q){
+  const ql=q.toLowerCase();
+  document.querySelectorAll('#companyDropdown .company-option').forEach(o=>{
+    o.style.display=o.textContent.toLowerCase().includes(ql)?'':'none';
+  });
 }
 document.addEventListener('click',function(e){
-  if(!e.target.closest('.h-company')){
+  if(!e.target.closest('.h-company')&&!e.target.closest('#companyDropdown')){
     const dd=document.getElementById('companyDropdown');
     if(dd)dd.classList.remove('open');
   }
@@ -750,7 +796,13 @@ document.addEventListener('click',function(e){
 function buildCompanySelector(){
   const companies=getCompanies();
   const dd=document.getElementById('companyDropdown');
-  dd.innerHTML=companies.map(c=>`<div class="company-option${c===_company?' active':''}" onclick="selectCompany('${c.replace(/'/g,"\'")}');event.stopPropagation()">${c}</div>`).join('');
+  dd._companies=companies;
+  const opts=companies.map((c,i)=>`<div class="company-option${c===_company?' active':''}" data-idx="${i}">${eh(c)}</div>`).join('');
+  dd.innerHTML=`<div class="company-search-wrap"><input class="company-search" placeholder="Search company..." oninput="filterCompanyOptions(this.value)"></div><div class="company-options-list">${opts}</div>`;
+  dd.onclick=function(e){
+    const opt=e.target.closest('.company-option');
+    if(opt){selectCompany(dd._companies[+opt.dataset.idx]);e.stopPropagation();}
+  };
   if(companies.length>0&&!_company){
     _company=companies[0];
     document.getElementById('companyName').textContent=_company;
@@ -764,6 +816,7 @@ function selectCompany(c){
   if(_currentView==='overview')renderOverview(),renderMap();
   if(_currentView==='shipments')renderShipments();
   if(_currentView==='reports')renderReports();
+  renderPerfChart();
 }
 function getCompanies(){
   if(!_allRows.length)return[];
@@ -773,23 +826,24 @@ function getCompanies(){
 }
 
 // ── Column Detection ──────────────────────────────────────────────
-let _cm={id:null,status:null,stage:null,shipper:null,shipper2:null,carrier:null,origin:null,dest:null,pickup:null,delivery:null,lastUpdate:null,coords:null,locCity:null,ref:null};
+let _cm={id:null,status:null,stage:null,shipper:null,shipper2:null,carrier:null,origin:null,dest:null,pickup:null,delivery:null,lastUpdate:null,coords:null,originCoords:null,locCity:null,ref:null};
 function detectCols(cols){
   const find=re=>cols.find(c=>re.test(c))||null;
-  _cm.id       =find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$|^SH.?ID$|^LOAD.?ID$|^BOOKING.?ID$|^ORDER.?ID$|^REFERENCE$|^REF$/i);
-  _cm.status   =find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$|^STATUS$/i);
-  _cm.stage    =find(/^STAGE$/i);
-  _cm.shipper  =find(/SHIPPER|CONSIGNOR/i);
-  _cm.shipper2 =find(/SHIP.FROM|ORIGIN.COMPANY|CUSTOMER.?NAME|CLIENT.?NAME/i);
-  _cm.carrier  =find(/^CARRIER/i);
-  _cm.origin   =find(/^ORIGIN$/i);
-  _cm.dest     =find(/^DESTINATION$/i);
-  _cm.pickup   =find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
-  _cm.delivery =find(/DELIVERY|APPOINTMENT|APPT/i);
-  _cm.lastUpdate=find(/LAST.?UPDATE|UPDATED.?AT|^TIMESTAMP$|^LAST_STATUS_UPDATE$/i)||find(/DATE|TIME/i);
-  _cm.coords   =find(/^COORDINATES_P$|^COORDINATES$/i);
-  _cm.locCity  =find(/LOCATION_CITY/i);
-  _cm.ref      =find(/CUSTOMER.?REF|CUST.?REF|^PO.?NUM$|^PO$/i);
+  _cm.id          =find(/SHIPMENT.?ID|^SHIP\s*ID$|^SHIPMENT$|^SH.?ID$|^LOAD.?ID$|^BOOKING.?ID$|^ORDER.?ID$|^REFERENCE$|^REF$/i);
+  _cm.status      =find(/LATEST.?ACTUAL.?EVENT/i)||find(/LAST.?EVENT|LATEST.?EVENT|^EVENT$|^STATUS$/i);
+  _cm.stage       =find(/^STAGE$/i);
+  _cm.shipper     =find(/SHIPPER|CONSIGNOR/i);
+  _cm.shipper2    =find(/SHIP.FROM|ORIGIN.COMPANY|CUSTOMER.?NAME|CLIENT.?NAME/i);
+  _cm.carrier     =find(/^CARRIER/i);
+  _cm.origin      =find(/^ORIGIN$/i);
+  _cm.dest        =find(/^DESTINATION$/i);
+  _cm.pickup      =find(/PICKUP|PICK.UP|SHIP.DATE|LOAD.DATE|ORIGIN.DATE/i);
+  _cm.delivery    =find(/DELIVERY|APPOINTMENT|APPT/i);
+  _cm.lastUpdate  =find(/LAST.?UPDATE|UPDATED.?AT|^TIMESTAMP$|^LAST_STATUS_UPDATE$/i)||find(/DATE|TIME/i);
+  _cm.coords      =find(/^COORDINATES_P$|^COORDINATES$/i);
+  _cm.originCoords=find(/ORIGIN.?COORD|ORIGIN.?LAT/i);
+  _cm.locCity     =find(/LOCATION_CITY/i);
+  _cm.ref         =find(/CUSTOMER.?REF|CUST.?REF|^PO.?NUM$|^PO$/i);
 }
 
 // ── Status & Stage Helpers ────────────────────────────────────────
@@ -798,14 +852,19 @@ function getStatusVal(row){
 }
 function normalizeStatus(s){
   const l=s.toLowerCase();
+  if(!l||l==='unknown')return'Shipment Confirmed';
   if(l.includes('on time')||l==='ontime')return'On Time';
   if(l.includes('at risk')||l.includes('atrisk'))return'At Risk';
   if(l.includes('delay'))return'Delayed';
-  if(l.includes('confirm'))return'Confirmed';
+  if(l.includes('final destination'))return'Delivered';
   if(l.includes('deliver'))return'Delivered';
-  if(l.includes('transit'))return'In Transit';
+  if(l.includes('confirm'))return'Confirmed';
+  if(l.includes('arrived to origin')||l.includes('arrived at origin'))return'At Origin';
+  if(l.includes('border'))return'At Border';
+  if(l.includes('transit')||l.includes('departed'))return'In Transit';
   if(l.includes('request'))return'Requested';
-  return s||'Unknown';
+  if(l.includes('pending'))return'Pending Pickup';
+  return s||'Shipment Confirmed';
 }
 function getStageVal(row){
   if(_cm.stage&&row[_cm.stage])return row[_cm.stage].trim();
@@ -813,14 +872,35 @@ function getStageVal(row){
   if(s.includes('request'))return'Requested';
   if(s.includes('confirm')||s.includes('before pickup')||s.includes('scheduled'))return'Before Pickup';
   if(s.includes('pending'))return'Pending Pickup';
-  if(s.includes('transit')||s.includes('on time')||s.includes('delay')||s.includes('at risk')||s.includes('pickup confirmed'))return'In Transit';
-  if(s.includes('deliver'))return'Delivered';
+  // Event-style values: at origin = cargo hasn't been picked up yet
+  if(s.includes('arrived to origin')||s.includes('arrived at origin')||s.includes('at origin'))return'Before Pickup';
+  // En-route events
+  if(s.includes('transit')||s.includes('on time')||s.includes('delay')||s.includes('at risk')||
+     s.includes('pickup confirmed')||s.includes('departed')||s.includes('border')||
+     s.includes('arrived to final')||s.includes('arrived at final')||s.includes('out for delivery'))return'In Transit';
+  if(s.includes('deliver')||s.includes('final destination'))return'Delivered';
   return'Unknown';
 }
 function isDelivered(row){
   const s=getStatusVal(row).toLowerCase();
-  const st=getStageVal(row).toLowerCase();
-  return s.includes('deliver')||st.includes('deliver');
+  return s.includes('deliver')||s.includes('final destination');
+}
+// Pickup-type events: cargo is being picked up / departed origin
+function isPickupEvent(row){
+  const s=getStatusVal(row).toLowerCase();
+  return s.includes('pickup')||s.includes('picked up')||s.includes('departed origin')||s.includes('departed from origin');
+}
+// Delivery-type events: cargo arrived at destination
+function isDeliveryEvent(row){
+  return isDelivered(row);
+}
+function isPickupToday(row){
+  if(isToday(row[_cm.pickup]))return true;
+  return isPickupEvent(row)&&isToday(row[_cm.lastUpdate]);
+}
+function isDeliveryToday(row){
+  if(isToday(row[_cm.delivery]))return true;
+  return isDeliveryEvent(row)&&isToday(row[_cm.lastUpdate]);
 }
 function isOnTime(row){return getStatusVal(row).toLowerCase().includes('on time');}
 function isAtRisk(row){return getStatusVal(row).toLowerCase().includes('at risk');}
@@ -857,10 +937,128 @@ let _displayRows=[];  // filtered by tab+stage+search
 let _tab='active';
 let _stageFilter='all';
 let _statusFilter=null;
+let _customFrom=null;
+let _customTo=null;
+let _perfRows=[];  // rows from DATA_OPS.PERFORMANCE_DASH
 let _map=null;
 let _charts={};
 let _period=30;
 let _perfChart=null;
+
+// ── Column Management ─────────────────────────────────────────────
+// Semantic col keys that get special rendering — order = default display order
+const SEMANTIC_COLS=[
+  {key:'reference', label:'Reference'},
+  {key:'status',    label:'Status'},
+  {key:'stage',     label:'Stage'},
+  {key:'pickup',    label:'Pickup'},
+  {key:'delivery',  label:'Delivery'},
+  {key:'lastUpdate',label:'Last Update'},
+];
+let COL_DEFS=[];
+let _cols=null;
+
+function buildColDefs(allCols){
+  // Which raw columns are covered by semantic renderers
+  const semanticRaw=new Set([
+    _cm.id,_cm.status,_cm.stage,_cm.pickup,_cm.delivery,_cm.lastUpdate,
+    _cm.shipper,_cm.shipper2,_cm.coords,_cm.originCoords,_cm.locCity,_cm.ref,
+    _cm.origin,_cm.dest,_cm.carrier,
+  ].filter(Boolean));
+  COL_DEFS=[];
+  // Semantic columns first (only if the underlying raw column exists in data)
+  const semanticKeyToRaw={reference:_cm.id,status:_cm.status,stage:_cm.stage,pickup:_cm.pickup,delivery:_cm.delivery,lastUpdate:_cm.lastUpdate};
+  SEMANTIC_COLS.forEach(d=>{
+    if(semanticKeyToRaw[d.key])COL_DEFS.push({key:d.key,label:d.label});
+  });
+  // Then all raw data columns not covered by semantics
+  allCols.forEach(col=>{
+    if(!semanticRaw.has(col))COL_DEFS.push({key:col,label:col});
+  });
+}
+
+function loadCols(){
+  // Must be called after buildColDefs
+  try{
+    const s=localStorage.getItem('ct_cols_v2');
+    if(s){
+      const saved=JSON.parse(s);
+      const allKeys=new Set(COL_DEFS.map(d=>d.key));
+      const savedKeys=new Set(saved.map(c=>c.key));
+      // Keep saved order/visibility for cols that still exist, append new ones
+      const merged=saved.filter(c=>allKeys.has(c.key));
+      COL_DEFS.forEach(d=>{if(!savedKeys.has(d.key))merged.push({key:d.key,visible:true});});
+      _cols=merged;return;
+    }
+  }catch(e){}
+  const semanticKeys=new Set(SEMANTIC_COLS.map(s=>s.key));
+  _cols=COL_DEFS.map(d=>({key:d.key,visible:semanticKeys.has(d.key)}));
+}
+function saveCols(){localStorage.setItem('ct_cols_v2',JSON.stringify(_cols));}
+function openColPanel(){
+  renderColPanel();
+  document.getElementById('colPanelOverlay').classList.add('open');
+}
+function closeColPanel(e){
+  if(e&&e.target!==document.getElementById('colPanelOverlay'))return;
+  document.getElementById('colPanelOverlay').classList.remove('open');
+}
+function renderColPanel(){
+  const body=document.getElementById('colPanelBody');
+  body.innerHTML=_cols.map((c,i)=>{
+    const def=COL_DEFS.find(d=>d.key===c.key);
+    if(!def)return'';
+    return`<div class="col-item">
+      <span class="col-item-label">${def.label}</span>
+      <div class="col-move">
+        <button class="col-move-btn" onclick="moveCol(${i},-1)" ${i===0?'disabled':''}title="Move up">&#x25B2;</button>
+        <button class="col-move-btn" onclick="moveCol(${i},1)" ${i===_cols.length-1?'disabled':''}title="Move down">&#x25BC;</button>
+      </div>
+      <button class="col-toggle${c.visible?' on':''}" onclick="toggleCol(${i})" title="${c.visible?'Hide':'Show'}"></button>
+    </div>`;
+  }).join('');
+}
+function toggleCol(i){
+  _cols[i].visible=!_cols[i].visible;
+  saveCols();renderColPanel();renderShipments();
+}
+function moveCol(i,dir){
+  const j=i+dir;
+  if(j<0||j>=_cols.length)return;
+  [_cols[i],_cols[j]]=[_cols[j],_cols[i]];
+  saveCols();renderColPanel();renderShipments();
+}
+function renderCell(r,key){
+  switch(key){
+    case'reference':{
+      const id=r[_cm.id]||'—';
+      const shipper=_cm.shipper&&r[_cm.shipper]?r[_cm.shipper]:(_cm.shipper2&&r[_cm.shipper2]?r[_cm.shipper2]:'');
+      return`<td><div class="col-ref-main">${eh(id)}</div>${shipper?`<div class="col-ref-sub">${eh(shipper)}</div>`:''}</td>`;
+    }
+    case'status':return`<td>${statusBadge(r)}</td>`;
+    case'stage':return`<td>${eh(getStageVal(r))}</td>`;
+    case'pickup':{
+      const origin=r[_cm.origin]||'—';
+      const pickupDate=r[_cm.pickup]?fmtDate(r[_cm.pickup]):'—';
+      return`<td><div class="col-loc-main">${eh(origin)}</div><div class="col-loc-sub">${pickupDate}</div></td>`;
+    }
+    case'delivery':{
+      const dest=r[_cm.dest]||'—';
+      const deliveryDate=r[_cm.delivery]?fmtDate(r[_cm.delivery]):'—';
+      return`<td><div class="col-loc-main">${eh(dest)}</div><div class="col-loc-sub">${deliveryDate}</div></td>`;
+    }
+    case'lastUpdate':{
+      const upd=r[_cm.lastUpdate]||'';
+      const rel=fmtRelTime(upd);
+      return`<td><div class="col-upd-main">Status update</div>${rel?`<div class="col-upd-sub">${eh(rel)}</div>`:''}</td>`;
+    }
+    default:{
+      // Raw data column — just render the value
+      const val=r[key];
+      return val!=null&&val!==''?`<td>${eh(String(val))}</td>`:'<td>—</td>';
+    }
+  }
+}
 
 // ── Load Data ─────────────────────────────────────────────────────
 async function loadData(){
@@ -871,7 +1069,10 @@ async function loadData(){
     if(d.error)throw new Error(d.error);
     _allRows=d.rows||[];
     if(_allRows.length){
-      detectCols(Object.keys(_allRows[0]));
+      const allCols=Object.keys(_allRows[0]);
+      detectCols(allCols);
+      buildColDefs(allCols);
+      loadCols();
     }
     buildCompanySelector();
     processData();
@@ -880,9 +1081,7 @@ async function loadData(){
   }catch(e){
     console.error('[ct]',e);
     document.getElementById('shipsTableBody').innerHTML=
-      '<tr><td colspan="6"><div class="table-empty"><div class="table-empty-icon">&#9888;&#65039;</div><div class="table-empty-title">Unable to load data</div><div class="table-empty-sub">'+eh(e.message)+'</div></div></td></tr>';
-    // Show fallback UI
-    document.getElementById('kpiOnTime').textContent='—';
+      '<tr><td colspan="10"><div class="table-empty"><div class="table-empty-icon">&#9888;&#65039;</div><div class="table-empty-title">Unable to load data</div><div class="table-empty-sub">'+eh(e.message)+'</div></div></td></tr>';
   }
 }
 
@@ -897,109 +1096,250 @@ function processData(){
 
 // ── Compute Metrics ───────────────────────────────────────────────
 function computeMetrics(rows){
-  const active=rows.filter(r=>!isDelivered(r));
-  const onTime=active.filter(isOnTime).length;
-  const atRisk=active.filter(isAtRisk).length;
-  const delayed=active.filter(isDelayed).length;
-  const pickupsToday=rows.filter(r=>isToday(r[_cm.pickup])).length;
-  const deliveriesToday=rows.filter(r=>isToday(r[_cm.delivery])).length;
-  return{active:active.length,onTime,atRisk,delayed,pickupsToday,deliveriesToday};
+  let activeCount=0,onTime=0,atRisk=0,delayed=0,pickupsToday=0,deliveriesToday=0;
+  rows.forEach(r=>{
+    if(isPickupToday(r))pickupsToday++;
+    if(isDeliveryToday(r))deliveriesToday++;
+    if(isDelivered(r))return;
+    activeCount++;
+    const s=getStatusVal(r).toLowerCase();
+    if(s.includes('on time'))onTime++;
+    else if(s.includes('at risk'))atRisk++;
+    else if(s.includes('delay'))delayed++;
+  });
+  return{active:activeCount,onTime,atRisk,delayed,pickupsToday,deliveriesToday};
 }
 
 // ── OVERVIEW RENDER ───────────────────────────────────────────────
 function renderOverview(){
   const rows=_rows;
   const m=computeMetrics(rows);
-  document.getElementById('kpiOnTime').textContent=m.onTime;
-  document.getElementById('kpiAtRisk').textContent=m.atRisk;
-  document.getElementById('kpiDelayed').textContent=m.delayed;
-  document.getElementById('kpiPickups').textContent=m.pickupsToday;
-  document.getElementById('kpiDeliveries').textContent=m.deliveriesToday;
   document.getElementById('actPickups').textContent=m.pickupsToday;
   document.getElementById('actDeliveries').textContent=m.deliveriesToday;
   document.getElementById('pickupSub').textContent=m.pickupsToday===0?'No pickups scheduled':m.pickupsToday+' pickup(s) today';
   document.getElementById('deliverySub').textContent=m.deliveriesToday===0?'No deliveries scheduled':m.deliveriesToday+' delivery(ies) today';
 
-  // 30-day perf
-  const d30=rows.filter(r=>{
-    const dv=r[_cm.delivery]||r[_cm.lastUpdate];
-    if(!dv)return false;
-    try{const d=new Date(dv);return(Date.now()-d.getTime())<30*86400000;}catch(e){return false;}
+  // Build event counts from all rows (active + delivered)
+  const evMap=new Map();
+  rows.forEach(r=>{
+    const rawEv=(getStatusVal(r)||'').trim();
+    const ev=(!rawEv||rawEv.toLowerCase()==='unknown')?'Shipment Confirmed':rawEv;
+    evMap.set(ev,(evMap.get(ev)||0)+1);
   });
-  const delivered30=d30.filter(isDelivered).length;
-  const onTime30=d30.filter(r=>isDelivered(r)&&isOnTime(r)).length;
-  const delayed30=d30.filter(r=>isDelivered(r)&&isDelayed(r)).length;
-  const rate30=delivered30?Math.round(onTime30/delivered30*100):0;
-  document.getElementById('perfDelivered').textContent=delivered30||rows.filter(isDelivered).length;
-  document.getElementById('perfOnTime').textContent=onTime30||m.onTime;
-  document.getElementById('perfDelayed').textContent=delayed30||m.delayed;
-  document.getElementById('perfRate').textContent=(rate30||0)+'%';
-  renderPerfChart(rows);
+  const palette=['--brand','--blue','--amber','--purple','--green','--red','--text-2'];
+  const kpiRow=document.getElementById('kpiRow');
+  kpiRow.innerHTML=Array.from(evMap.entries())
+    .sort((a,b)=>b[1]-a[1])
+    .map(([ev,count],i)=>{
+      const c=`var(${palette[i%palette.length]})`;
+      return`<div class="kpi-card"><div class="kpi-value" style="color:${c}">${count}</div><div class="kpi-label">${eh(ev)}</div></div>`;
+    }).join('');
+
+  renderPerfChart();
 }
 
-function renderPerfChart(rows){
+async function renderPerfChart(){
   const ctx=document.getElementById('perfChart');
   if(!ctx)return;
-  // Generate last 30 days labels
-  const labels=[],onTimes=[],delayeds=[];
+  await ensureChartJs();
+
+  console.log('[perf] _perfRows count:', _perfRows.length);
+  if(!_perfRows.length){
+    // No perf data yet — clear the stat cards
+    ['perfDelivered','perfOnTime','perfDelayed','perfRate'].forEach(id=>{
+      document.getElementById(id).textContent='—';
+    });
+    return;
+  }
+
+  // Detect columns (case-insensitive)
+  const sampleKeys=Object.keys(_perfRows[0]);
+  const findCol=re=>sampleKeys.find(k=>re.test(k))||null;
+  const colOrigin  =findCol(/ON_TIME_AT_ORIGIN/i);
+  const colDest    =findCol(/ON_TIME_AT_DESTINATION/i);
+  const colArrived =findCol(/ACTUAL.*ARRIVED.*DEST|ACTUAL.*DEST.*ARRIVAL|ACTUAL_ARRIVAL|ARRIVED_TO_DEST/i)
+                   ||findCol(/ACTUAL.*FINAL|FINAL.*ACTUAL/i);
+  const colDate    =findCol(/ACTUAL_ARRIVED_TO_DESTINATION(?!_CST|_TIMEZONE)/i)
+                   ||findCol(/^DATE$|^DELIVERY_DATE$|^ACTUAL_DATE$|^PERIOD$|PICKUP_DATE|SHIP_DATE/i)
+                   ||findCol(/DATE|PERIOD/i);
+  const colCompany =findCol(/COMPANY_NAME|SHIPPER_NAME|CUSTOMER_NAME|CLIENT_NAME|ACCOUNT_NAME/i)
+                  ||findCol(/SHIPPER|CUSTOMER|COMPANY|CLIENT|ACCOUNT/i);
+  console.log('[perf] all columns:', sampleKeys);
+  console.log('[perf] detected:', {colOrigin,colDest,colArrived,colDate,colCompany,_company});
+
+  // Log sample company values so we can verify name format
+  if(colCompany){
+    const sample=[...new Set(_perfRows.map(r=>r[colCompany]).filter(Boolean))].slice(0,10);
+    console.log('[perf] sample company values in PERFORMANCE_DASH:', sample);
+  }
+
+  // Filter by selected company — flexible partial match in both directions
+  const companyRows=(_company&&colCompany)
+    ? _perfRows.filter(r=>{
+        const v=r[colCompany];
+        if(!v)return false;
+        const rv=String(v).trim().toLowerCase();
+        const cv=_company.toLowerCase();
+        return rv===cv||rv.includes(cv)||cv.includes(rv);
+      })
+    : _perfRows;
+  console.log('[perf] company rows after filter:', companyRows.length, 'of', _perfRows.length);
+
+  // Only rows where "actual arrived to destination" is populated
+  const arrived=colArrived
+    ? companyRows.filter(r=>{const v=r[colArrived];return v!=null&&v!==''&&v!==false&&v!==0;})
+    : companyRows;
+
+  // Helper: is a column value truthy (handles Y/N, 1/0, true/false, "true")
+  const isTrue=v=>{
+    if(v==null||v==='')return false;
+    if(typeof v==='boolean')return v;
+    if(typeof v==='number')return v===1;
+    return String(v).trim().toUpperCase()==='Y'||String(v).trim().toUpperCase()==='TRUE'||String(v).trim()==='1';
+  };
+
+  // Pre-group by date — O(n) single pass (used for both stats and chart)
+  const byDate={};
+  arrived.forEach(r=>{
+    const dv=colDate?r[colDate]:null;
+    if(!dv)return;
+    try{const k=new Date(dv).toDateString();(byDate[k]||(byDate[k]=[])).push(r);}catch(e){}
+  });
+
+  // Stat cards: only last 30 days by arrival date
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-29);cutoff.setHours(0,0,0,0);
+  const arrived30=arrived.filter(r=>{
+    const dv=colDate?r[colDate]:null;
+    if(!dv)return false;
+    try{return new Date(dv)>=cutoff;}catch(e){return false;}
+  });
+  const total=arrived30.length;
+  const onTimePickupCount=colOrigin?arrived30.filter(r=>isTrue(r[colOrigin])).length:0;
+  const onTimeDestCount  =colDest  ?arrived30.filter(r=>isTrue(r[colDest  ])).length:0;
+  const pickupRate=total?Math.round(onTimePickupCount/total*100):0;
+  const destRate  =total?Math.round(onTimeDestCount  /total*100):0;
+  document.getElementById('perfDelivered').textContent=total;
+  document.getElementById('perfOnTime').textContent=pickupRate+'%';
+  document.getElementById('perfDelayed').textContent=destRate+'%';
+  document.getElementById('perfRate').textContent=total-onTimeDestCount;
+
+  // Generate last 30 days
+  const labels=[],pickupData=[],destData=[];
   for(let i=29;i>=0;i--){
     const d=new Date();d.setDate(d.getDate()-i);
     labels.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
-    const day=rows.filter(r=>{
-      const dv=r[_cm.delivery]||r[_cm.lastUpdate];
-      if(!dv)return false;
-      try{const rd=new Date(dv);return rd.toDateString()===d.toDateString();}catch(e){return false;}
-    });
-    onTimes.push(day.filter(isOnTime).length);
-    delayeds.push(day.filter(isDelayed).length);
+    const day=byDate[d.toDateString()]||[];
+    pickupData.push(colOrigin?day.filter(r=>isTrue(r[colOrigin])).length:0);
+    destData.push(colDest  ?day.filter(r=>isTrue(r[colDest  ])).length:0);
   }
-  // Show every 7th label
+
   const shownLabels=labels.map((l,i)=>i%7===0?l:'');
   if(_perfChart)_perfChart.destroy();
   _perfChart=new Chart(ctx,{
     type:'line',
     data:{labels:shownLabels,datasets:[
-      {label:'On Time',data:onTimes,borderColor:'#16A34A',backgroundColor:'rgba(22,163,74,0.1)',tension:0.4,pointRadius:3,fill:true},
-      {label:'Delayed',data:delayeds,borderColor:'#DC2626',backgroundColor:'rgba(220,38,38,0.08)',tension:0.4,pointRadius:3,fill:true}
+      {label:'On-Time Pickup',data:pickupData,borderColor:'#3C6B4E',backgroundColor:'rgba(60,107,78,0.08)',tension:0.4,pointRadius:3,fill:true},
+      {label:'On-Time Delivery',data:destData,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.06)',tension:0.4,pointRadius:3,fill:true}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},scales:{x:{grid:{display:false},ticks:{maxRotation:0,font:{size:10}}},y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},precision:0}}}}
   });
 }
 
+// ── Perf Data Load ────────────────────────────────────────────────
+async function loadPerfData(){
+  try{
+    const r=await fetch('/api/perf?t='+Date.now());
+    console.log('[perf] HTTP status:', r.status);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    console.log('[perf] API response keys:', Object.keys(d), 'rows:', (d.rows||[]).length);
+    if(d.error)throw new Error(d.error);
+    _perfRows=d.rows||[];
+  }catch(e){
+    console.error('[perf]',e);
+    _perfRows=[];
+  }
+  renderPerfChart();
+}
+
+// ── Geocoding cache ───────────────────────────────────────────────
+const _geocodeCache={};
+async function geocodeCity(city){
+  if(!city)return null;
+  const k=city.trim().toLowerCase();
+  if(k in _geocodeCache)return _geocodeCache[k];
+  try{
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,{headers:{'Accept-Language':'en','User-Agent':'NuvocargoControlTower/1.0'}});
+    const data=await res.json();
+    _geocodeCache[k]=data.length?[parseFloat(data[0].lat),parseFloat(data[0].lon)]:null;
+  }catch(e){_geocodeCache[k]=null;}
+  return _geocodeCache[k];
+}
+
 // ── MAP RENDER ────────────────────────────────────────────────────
-function renderMap(){
+async function renderMap(){
+  await ensureLeaflet();
   const loading=document.getElementById('mapLoading');
   if(!document.getElementById('overviewMap'))return;
   if(!_map){
     _map=L.map('overviewMap',{zoomControl:true,scrollWheelZoom:false});
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors',maxZoom:18}).addTo(_map);
-    _map.setView([37.8,-96],4);
+    // CARTO light tiles — clean gray/white aesthetic
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains:'abcd',maxZoom:19
+    }).addTo(_map);
+    _map.setView([27,-100],5);
   }
-  // Clear existing markers
-  _map.eachLayer(l=>{if(l instanceof L.Marker||l instanceof L.Polyline)_map.removeLayer(l);});
+  // Clear existing markers and lines
+  _map.eachLayer(l=>{if(l instanceof L.Marker||l instanceof L.Polyline||l instanceof L.CircleMarker)_map.removeLayer(l);});
 
   const rows=_rows.filter(r=>!isDelivered(r));
   const bounds=[];
+  const BRAND='#3C6B4E';
+  const currentIcon=L.divIcon({
+    html:`<div style="width:12px;height:12px;border-radius:50%;background:${BRAND};border:2.5px solid #fff;box-shadow:0 1px 6px rgba(60,107,78,0.5)"></div>`,
+    className:'',iconSize:[12,12],iconAnchor:[6,6]
+  });
+  const originIcon=L.divIcon({
+    html:`<div style="width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid ${BRAND};box-shadow:0 1px 3px rgba(0,0,0,0.2)"></div>`,
+    className:'',iconSize:[8,8],iconAnchor:[4,4]
+  });
+
+  // Parse current-position coordinates for all rows first
+  const markerData=[];
   rows.forEach(r=>{
-    // Try GPS coordinates
     const coord=r[_cm.coords]||'';
     let lat=null,lng=null;
-    if(coord){
-      const m=coord.match(/(-?[\d.]+)[,\s]+(-?[\d.]+)/);
-      if(m){lat=parseFloat(m[1]);lng=parseFloat(m[2]);}
-    }
+    if(coord){const m=coord.match(/(-?[\d.]+)[,\s]+(-?[\d.]+)/);if(m){lat=parseFloat(m[1]);lng=parseFloat(m[2]);}}
     if(lat&&lng&&!isNaN(lat)&&!isNaN(lng)){
-      const status=normalizeStatus(getStatusVal(r));
-      const color=status==='On Time'?'#16A34A':status==='Delayed'?'#DC2626':status==='At Risk'?'#D97706':'#2563EB';
-      const icon=L.divIcon({html:`<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>`,className:'',iconSize:[12,12],iconAnchor:[6,6]});
-      const marker=L.marker([lat,lng],{icon}).addTo(_map);
-      marker.bindPopup(`<b>${r[_cm.id]||'—'}</b><br>${status}<br>${r[_cm.locCity]||''}`);
+      // Current-position marker
+      const ev=getStatusVal(r)||'—';
+      L.marker([lat,lng],{icon:currentIcon}).addTo(_map)
+        .bindPopup(`<b>${eh(r[_cm.id]||'—')}</b><br><span style="color:${BRAND}">${eh(ev)}</span><br>${eh(r[_cm.locCity]||'')}`);
       bounds.push([lat,lng]);
+      markerData.push({r,lat,lng});
     }
   });
-  if(bounds.length>1)_map.fitBounds(bounds,{padding:[30,30]});
+
+  if(bounds.length>1)_map.fitBounds(bounds,{padding:[40,40]});
   else if(bounds.length===1)_map.setView(bounds[0],8);
   if(loading)loading.style.display='none';
+
+  // Geocode origins and draw lines in the background (non-blocking)
+  const uniqueOrigins=[...new Set(markerData.map(d=>d.r[_cm.origin]||'').filter(Boolean))];
+  // Sequentially geocode to respect Nominatim rate limit
+  for(const city of uniqueOrigins){await geocodeCity(city);}
+  markerData.forEach(({r,lat,lng})=>{
+    const originCity=r[_cm.origin]||'';
+    if(!originCity)return;
+    const oc=_geocodeCache[originCity.trim().toLowerCase()];
+    if(!oc)return;
+    // Dashed line origin→current
+    L.polyline([oc,[lat,lng]],{color:BRAND,weight:1.5,opacity:0.45,dashArray:'5 6'}).addTo(_map);
+    // Origin dot
+    L.marker(oc,{icon:originIcon}).addTo(_map)
+      .bindPopup(`<b>Origin:</b> ${eh(originCity)}`);
+  });
 }
 
 // ── SHIPMENTS RENDER ──────────────────────────────────────────────
@@ -1017,10 +1357,8 @@ function setTab(tab,el){
   renderShipments();
 }
 
-function setStage(stage,el){
+function setStage(stage){
   _stageFilter=stage;
-  document.querySelectorAll('.stage-item').forEach(s=>s.classList.remove('active'));
-  if(el)el.classList.add('active');
   renderShipments();
 }
 
@@ -1031,29 +1369,48 @@ function toggleStatusFilter(status){
 
 function renderShipments(){
   const rows=_rows;
-  // Tab counts
-  const active=rows.filter(r=>!isDelivered(r));
-  const complete=rows.filter(isDelivered);
-  const pickupsToday=rows.filter(r=>isToday(r[_cm.pickup]));
-  const deliveriesToday=rows.filter(r=>isToday(r[_cm.delivery]));
+  // Single pass: build all groups and counts at once
+  const active=[],complete=[],pickupsToday=[],deliveriesToday=[];
+  let onTimeCnt=0,atRiskCnt=0,delayedCnt=0;
+  const eventCounts=new Map();
+  rows.forEach(r=>{
+    if(isPickupToday(r))pickupsToday.push(r);
+    if(isDeliveryToday(r))deliveriesToday.push(r);
+    if(isDelivered(r)){complete.push(r);return;}
+    active.push(r);
+    const s=getStatusVal(r).toLowerCase();
+    if(s.includes('on time'))onTimeCnt++;
+    else if(s.includes('at risk'))atRiskCnt++;
+    else if(s.includes('delay'))delayedCnt++;
+    const rawEv=getStatusVal(r).trim();
+    const ev=(!rawEv||rawEv.toLowerCase()==='unknown')?'Shipment Confirmed':rawEv;
+    eventCounts.set(ev,(eventCounts.get(ev)||0)+1);
+  });
   document.getElementById('tabActiveCount').textContent=active.length;
   document.getElementById('tabPickupsCount').textContent=pickupsToday.length;
   document.getElementById('tabDeliveriesCount').textContent=deliveriesToday.length;
   document.getElementById('tabCompleteCount').textContent=complete.length;
-
-  // Status pill counts (from active)
-  document.getElementById('pillOnTimeCount').textContent=active.filter(isOnTime).length;
-  document.getElementById('pillAtRiskCount').textContent=active.filter(isAtRisk).length;
-  document.getElementById('pillDelayedCount').textContent=active.filter(isDelayed).length;
-
-  // Stage counts (from active)
-  document.getElementById('stageAll').textContent=active.length;
-  const countStage=s=>active.filter(r=>getStageVal(r)===s).length;
-  document.getElementById('stageRequested').textContent=countStage('Requested');
-  document.getElementById('stageBeforePickup').textContent=countStage('Before Pickup');
-  document.getElementById('stagePendingPickup').textContent=countStage('Pending Pickup');
-  document.getElementById('stageInTransit').textContent=countStage('In Transit');
-  document.getElementById('stageUnknown').textContent=countStage('Unknown');
+  document.getElementById('pillOnTimeCount').textContent=onTimeCnt;
+  document.getElementById('pillAtRiskCount').textContent=atRiskCnt;
+  document.getElementById('pillDelayedCount').textContent=delayedCnt;
+  // Rebuild event sidebar dynamically
+  const stageList=document.getElementById('stageAll');
+  stageList.textContent=active.length;
+  const listEl=document.getElementById('stageList');
+  // Restore active state on the "All" row and remove old dynamic rows
+  listEl.querySelectorAll('[data-stage]').forEach(el=>{
+    if(el.dataset.stage==='all'){el.classList.toggle('active',_stageFilter==='all');}
+    else el.remove();
+  });
+  Array.from(eventCounts.entries())
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .forEach(([ev,count])=>{
+      const div=document.createElement('div');
+      div.className='stage-item'+(_stageFilter===ev?' active':'');
+      div.dataset.stage=ev;
+      div.innerHTML=`<span>${eh(ev)}</span><span class="stage-badge">${count}</span>`;
+      listEl.appendChild(div);
+    });
 
   // Select base by tab
   let base;
@@ -1062,8 +1419,8 @@ function renderShipments(){
   else if(_tab==='deliveries')base=deliveriesToday;
   else base=complete;
 
-  // Stage filter
-  if(_stageFilter&&_stageFilter!=='all')base=base.filter(r=>getStageVal(r)===_stageFilter);
+  // Event filter (matches raw event value)
+  if(_stageFilter&&_stageFilter!=='all')base=base.filter(r=>(getStatusVal(r).trim()||'Unknown')===_stageFilter);
 
   // Status filter
   if(_statusFilter==='on-time')base=base.filter(isOnTime);
@@ -1110,36 +1467,21 @@ function statusBadge(row){
     'On Time':'badge-ontime','Delayed':'badge-delayed','At Risk':'badge-atrisk',
     'Confirmed':'badge-confirmed','Delivered':'badge-delivered','In Transit':'badge-confirmed'
   }[norm]||'badge-default';
-  return`<span class="badge ${cls}">${eh(norm||raw||'Unknown')}</span>`;
+  return`<span class="badge ${cls}">${eh(norm||raw||'Shipment Confirmed')}</span>`;
 }
 
 function renderShipsTable(rows){
   const tbody=document.getElementById('shipsTableBody');
+  const vis=_cols.filter(c=>c.visible);
+  // Update header
+  const thead=document.getElementById('shipsTableHead');
+  if(thead)thead.innerHTML='<tr>'+vis.map(c=>{const d=COL_DEFS.find(x=>x.key===c.key);return`<th>${d?d.label:c.key}</th>`;}).join('')+'</tr>';
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="6"><div class="table-empty"><div class="table-empty-icon">&#128230;</div><div class="table-empty-title">No shipments match</div><div class="table-empty-sub">Try adjusting your search or filters.</div></div></td></tr>';
+    tbody.innerHTML=`<tr><td colspan="${vis.length}"><div class="table-empty"><div class="table-empty-icon">&#128230;</div><div class="table-empty-title">No shipments match</div><div class="table-empty-sub">Try adjusting your search or filters.</div></div></td></tr>`;
     return;
   }
-  // Limit to 200 rows for performance
   const display=rows.slice(0,200);
-  tbody.innerHTML=display.map(r=>{
-    const id=r[_cm.id]||'—';
-    const shipper=_cm.shipper&&r[_cm.shipper]?r[_cm.shipper]:(_cm.shipper2&&r[_cm.shipper2]?r[_cm.shipper2]:'');
-    const stage=getStageVal(r);
-    const origin=r[_cm.origin]||'—';
-    const pickupDate=r[_cm.pickup]?fmtDate(r[_cm.pickup]):'—';
-    const dest=r[_cm.dest]||'—';
-    const deliveryDate=r[_cm.delivery]?fmtDate(r[_cm.delivery]):'—';
-    const upd=r[_cm.lastUpdate]||'';
-    const rel=fmtRelTime(upd);
-    return`<tr>
-      <td><div class="col-ref-main">${eh(id)}</div>${shipper?`<div class="col-ref-sub">${eh(shipper)}</div>`:''}</td>
-      <td>${statusBadge(r)}</td>
-      <td>${eh(stage)}</td>
-      <td><div class="col-loc-main">${eh(origin)}</div><div class="col-loc-sub">${pickupDate}</div></td>
-      <td><div class="col-loc-main">${eh(dest)}</div><div class="col-loc-sub">${deliveryDate}</div></td>
-      <td><div class="col-upd-main">Status update</div>${rel?`<div class="col-upd-sub">${eh(rel)}</div>`:''}</td>
-    </tr>`;
-  }).join('');
+  tbody.innerHTML=display.map(r=>'<tr>'+vis.map(c=>renderCell(r,c.key)).join('')+'</tr>').join('');
 }
 
 function exportCSV(){
@@ -1157,41 +1499,103 @@ function exportCSV(){
 
 // ── REPORTS RENDER ────────────────────────────────────────────────
 function setPeriod(p,el){
-  if(p==='custom')return;
-  _period=p;
   document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));
   if(el)el.classList.add('active');
+  const customRow=document.getElementById('customDateRow');
+  if(p==='custom'){
+    customRow.style.display='flex';
+    // Pre-fill with a sensible default if empty
+    const rFrom=document.getElementById('rDateFrom');
+    const rTo=document.getElementById('rDateTo');
+    if(!rFrom.value||!rTo.value){
+      const to=new Date(),from=new Date();from.setDate(from.getDate()-30);
+      rTo.value=to.toISOString().slice(0,10);
+      rFrom.value=from.toISOString().slice(0,10);
+    }
+    applyCustomPeriod();
+    return;
+  }
+  customRow.style.display='none';
+  _period=p;
+  _customFrom=null;_customTo=null;
+  renderReports();
+}
+function applyCustomPeriod(){
+  const from=document.getElementById('rDateFrom').value;
+  const to=document.getElementById('rDateTo').value;
+  if(!from||!to)return;
+  _customFrom=from;_customTo=to;
   renderReports();
 }
 
-function renderReports(){
-  const now=new Date();
-  const from=new Date(now);from.setDate(from.getDate()-_period);
-  const fromStr=from.toISOString().slice(0,10);
-  const toStr=now.toISOString().slice(0,10);
-  document.getElementById('periodRangeText').textContent=`Showing data from ${fromStr} to ${toStr} (${_period} days)`;
+// Adapts PERFORMANCE_DASH rows into pseudo-rows that existing chart functions understand
+function buildPerfReportRows(perfRows){
+  const isT=v=>{
+    if(v==null||v==='')return false;
+    if(typeof v==='boolean')return v;
+    if(typeof v==='number')return v===1;
+    return String(v).trim().toUpperCase()==='Y'||String(v).trim().toUpperCase()==='TRUE'||String(v).trim()==='1';
+  };
+  return perfRows.map(r=>{
+    const delivered=!!(r['ACTUAL_ARRIVED_TO_DESTINATION_']);
+    const onTime=isT(r['ON_TIME_AT_DESTINATION_TABLE']);
+    const status=delivered
+      ?(onTime?'delivered on time':'delivered to final destination')
+      :(r['SHIPMENT_STATUS']||r['LATEST_ACTUAL_EVENT']||'in transit');
+    const row={};
+    if(_cm.status)row[_cm.status]=status;
+    if(_cm.pickup)row[_cm.pickup]=r['PICKUP_STARTS_AT'];
+    if(_cm.delivery)row[_cm.delivery]=r['ACTUAL_ARRIVED_TO_DESTINATION_'];
+    if(_cm.lastUpdate)row[_cm.lastUpdate]=r['ACTUAL_ARRIVED_TO_DESTINATION_']||r['PICKUP_STARTS_AT'];
+    row.__transit=r['TRANSIT_TIME_CAL'];
+    return row;
+  });
+}
 
-  // Filter rows by period (use pickup or update date)
-  const periodRows=_rows.filter(r=>{
-    const d=r[_cm.pickup]||r[_cm.delivery]||r[_cm.lastUpdate];
-    if(!d)return true; // include if no date
+async function renderReports(){
+  let from,now,fromStr,toStr,label;
+  if(_customFrom&&_customTo){
+    from=new Date(_customFrom);now=new Date(_customTo);now.setHours(23,59,59,999);
+    fromStr=_customFrom;toStr=_customTo;
+    const days=Math.round((now-from)/86400000);
+    label=`${days} days`;
+  }else{
+    now=new Date();
+    from=new Date(now);from.setDate(from.getDate()-_period);
+    fromStr=from.toISOString().slice(0,10);toStr=now.toISOString().slice(0,10);
+    label=`${_period} days`;
+  }
+  document.getElementById('periodRangeText').textContent=`Showing data from ${fromStr} to ${toStr} (${label})`;
+
+  // Filter PERFORMANCE_DASH rows by company
+  const perfCompany=(_company&&_perfRows.length)
+    ? _perfRows.filter(r=>{const v=r['COMPANY_NAME'];if(!v)return false;const rv=String(v).trim().toLowerCase(),cv=_company.toLowerCase();return rv===cv||rv.includes(cv)||cv.includes(rv);})
+    : _perfRows;
+
+  // Filter by selected period using PICKUP_STARTS_AT
+  const periodRows=perfCompany.filter(r=>{
+    const d=r['PICKUP_STARTS_AT'];
+    if(!d)return true;
     try{const rd=new Date(d);return rd>=from&&rd<=now;}catch(e){return true;}
   });
 
-  // KPIs
-  const total=periodRows.length||_rows.length;
-  const delivered=periodRows.filter(isDelivered).length||_rows.filter(isDelivered).length;
-  const inTransit=periodRows.filter(r=>!isDelivered(r)).length;
-  const onTimeCount=periodRows.filter(r=>isDelivered(r)&&isOnTime(r)).length||_rows.filter(isOnTime).length;
-  const otRate=delivered?Math.round(onTimeCount/delivered*100):(_rows.length?Math.round(_rows.filter(isOnTime).length/Math.max(_rows.filter(r=>!isDelivered(r)).length,1)*100):0);
+  // KPIs directly from PERFORMANCE_DASH columns
+  const isT=v=>{
+    if(v==null||v==='')return false;
+    if(typeof v==='boolean')return v;
+    if(typeof v==='number')return v===1;
+    return String(v).trim().toUpperCase()==='Y'||String(v).trim().toUpperCase()==='TRUE'||String(v).trim()==='1';
+  };
+  const total=periodRows.length;
+  const delivered=periodRows.filter(r=>!!(r['ACTUAL_ARRIVED_TO_DESTINATION_'])).length;
+  const inTransit=total-delivered;
+  const onTimeCount=periodRows.filter(r=>isT(r['ON_TIME_AT_DESTINATION_TABLE'])).length;
+  const otRate=delivered?Math.round(onTimeCount/delivered*100):0;
 
-  // Avg transit time (days between pickup and delivery)
-  let totalDays=0,count=0;
-  periodRows.forEach(r=>{
-    const p=r[_cm.pickup],d=r[_cm.delivery];
-    if(p&&d){try{const diff=(new Date(d)-new Date(p))/86400000;if(diff>0&&diff<100){totalDays+=diff;count++;}}catch(e){}}
-  });
-  const avgTransit=count?Math.round(totalDays/count*10)/10:0;
+  // Avg transit from TRANSIT_TIME_CAL (already in days)
+  let totalDays=0,tCount=0;
+  periodRows.forEach(r=>{const t=+r['TRANSIT_TIME_CAL'];if(t>0&&t<100){totalDays+=t;tCount++;}});
+  const avgTransit=tCount?Math.round(totalDays/tCount*10)/10:0;
 
   document.getElementById('rKpiTotal').textContent=total;
   document.getElementById('rKpiDelivered').textContent=delivered;
@@ -1199,10 +1603,12 @@ function renderReports(){
   document.getElementById('rKpiOnTimeRate').textContent=otRate+'%';
   document.getElementById('rKpiAvgTransit').textContent=(avgTransit||'—')+(avgTransit?' days':'');
 
-  renderCharts(periodRows,_period);
+  const effectivePeriod=_customFrom&&_customTo?Math.max(1,Math.round((now-from)/86400000)):_period;
+  await renderCharts(buildPerfReportRows(periodRows),effectivePeriod);
 }
 
-function renderCharts(rows,period){
+async function renderCharts(rows,period){
+  await ensureChartJs();
   renderStatusChart(rows);
   renderStageChart(rows);
   renderVolumeChart(rows,period);
@@ -1268,22 +1674,31 @@ function renderVolumeChart(rows,period){
 
 function renderOTDRChart(rows,period){
   destroyChart('otdr');
-  const weeks=[];const weekData=[];
-  // Group by week
-  for(let i=Math.ceil(period/7)-1;i>=0;i--){
-    const wend=new Date();wend.setDate(wend.getDate()-i*7);
-    const wstart=new Date(wend);wstart.setDate(wstart.getDate()-6);
-    const label=wend.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    weeks.push(label);
-    const wrows=rows.filter(r=>{
-      const d=r[_cm.delivery]||r[_cm.lastUpdate];
-      if(!d)return false;
-      try{const rd=new Date(d);return rd>=wstart&&rd<=wend;}catch(e){return false;}
-    });
+  const weekCount=Math.ceil(period/7);
+  const now=new Date();
+  const msPerWeek=7*86400000;
+  // Build week labels
+  const weeks=[];
+  for(let i=weekCount-1;i>=0;i--){
+    const wend=new Date(now);wend.setDate(wend.getDate()-i*7);
+    weeks.push(wend.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+  }
+  // Single O(n) pass: bucket rows into weeks by arithmetic
+  const buckets=Array.from({length:weekCount},()=>[]);
+  rows.forEach(r=>{
+    const d=r[_cm.delivery]||r[_cm.lastUpdate];
+    if(!d)return;
+    try{
+      const weeksAgo=Math.floor((now-new Date(d))/msPerWeek);
+      if(weeksAgo>=0&&weeksAgo<weekCount)buckets[weekCount-1-weeksAgo].push(r);
+    }catch(e){}
+  });
+  // Compute OTDR per week bucket
+  const weekData=buckets.map(wrows=>{
     const delivered=wrows.filter(isDelivered);
     const onTimeW=delivered.filter(isOnTime);
-    weekData.push(delivered.length?Math.round(onTimeW.length/delivered.length*100):null);
-  }
+    return delivered.length?Math.round(onTimeW.length/delivered.length*100):null;
+  });
   const validData=weekData.filter(v=>v!==null);
   const avg=validData.length?Math.round(validData.reduce((a,b)=>a+b,0)/validData.length):0;
   document.getElementById('chartOTDRAvg').textContent=avg+'%';
@@ -1345,7 +1760,13 @@ function downloadPDF(){
 }
 
 // ── Init ──────────────────────────────────────────────────────────
+document.getElementById('stageList').addEventListener('click',function(e){
+  const item=e.target.closest('.stage-item');
+  if(item)setStage(item.dataset.stage);
+});
+document.body.appendChild(document.getElementById('companyDropdown'));
 loadData();
+loadPerfData();
 </script>
 </body>
 </html>

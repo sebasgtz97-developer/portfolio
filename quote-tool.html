@@ -153,6 +153,10 @@ button,input,select,textarea{font-family:inherit;}
 .zip-hint{font-size:10px;color:var(--green);font-weight:600;margin-top:2px;min-height:14px;display:flex;align-items:center;gap:3px;}
 .zip-hint.err{color:var(--red);}
 .zip-hint.loading{color:var(--text-4);font-style:italic;}
+.zip-hint.zip-pick{flex-direction:column;align-items:flex-start;gap:3px;}
+.zip-opt{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;color:var(--text);font-weight:600;transition:all .12s;line-height:1.4;}
+.zip-opt:hover{border-color:var(--blue-border);background:var(--blue-bg);color:var(--blue);}
+.zip-opt-country{color:var(--text-4);font-weight:400;}
 .lane-card-body{padding:14px;}
 .lane-section-sep{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-4);padding:8px 0 4px;border-top:1px solid var(--border);margin-top:8px;}
 .lane-section-sep:first-child{border-top:none;padding-top:0;margin-top:0;}
@@ -923,7 +927,7 @@ const US_STATES=['Alabama','Alaska','Arizona','Arkansas','California','Colorado'
 const CA_PROVINCES=['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon'];
 const ALL_CITIES=[...new Set([...MX_CITIES,...US_CITIES,...CA_CITIES])].sort();
 const ALL_STATES=[...new Set([...MX_STATES,...US_STATES,...CA_PROVINCES])].sort();
-const BC_CITIES=['Laredo / Nuevo Laredo','El Paso / Ciudad Ju\u00e1rez','McAllen / Reynosa','Eagle Pass / Piedras Negras','Del Rio / Ciudad Acuna','Brownsville / Matamoros','San Diego / Tijuana','Douglas / Agua Prieta','Nogales / Nogales','Calexico / Mexicali','Presidio / Ojinaga','Hidalgo / Reynosa'];
+const BC_CITIES=['Intra US shipment','Intra MX shipment','Laredo / Nuevo Laredo','El Paso / Ciudad Ju\u00e1rez','McAllen / Reynosa','Eagle Pass / Piedras Negras','Del Rio / Ciudad Acuna','Brownsville / Matamoros','San Diego / Tijuana','Douglas / Agua Prieta','Nogales / Nogales','Calexico / Mexicali','Presidio / Ojinaga','Hidalgo / Reynosa'];
 
 // ─── City Coordinates (for 50km radius search) ───────────────────────────────
 // lat/lng + state for each city in our static lists
@@ -1101,7 +1105,9 @@ function getQrPrefix(requester){
 function generateQRId(requester){
   const prefix=getQrPrefix(requester||'');
   const seqKey='qt_qr_seq_'+prefix;
-  let seq=parseInt(localStorage.getItem(seqKey)||'0')+1;
+  // Use a random 4-digit seed on fresh devices so different machines never start at the same value
+  const dflt=String(Math.floor(Math.random()*9000)+1000);
+  let seq=parseInt(localStorage.getItem(seqKey)??dflt)+1;
   localStorage.setItem(seqKey,String(seq));
   return ''+prefix+String(seq).padStart(2,'0');
 }
@@ -1131,7 +1137,9 @@ let _laneSeq=0;
 let _lanes=[];   // array of { id, rateId }
 
 function generateRateId(){
-  let seq=parseInt(localStorage.getItem('qt_rate_seq')||'2899')+1;
+  // Use a random 5-digit seed on fresh devices so different machines never start at the same value
+  const dflt=String(Math.floor(Math.random()*90000)+10000);
+  let seq=parseInt(localStorage.getItem('qt_rate_seq')??dflt)+1;
   localStorage.setItem('qt_rate_seq',String(seq));
   return String(seq);
 }
@@ -1331,6 +1339,18 @@ function renderLaneCard(id,rateId,num){
   initLaneCombo(id+'_destCity', id+'_destCityDrop', ALL_CITIES);
   initLaneCombo(id+'_destState', id+'_destStateDrop', ALL_STATES);
 
+  // Auto-set border crossing for domestic lanes
+  function autoSetBcCity(){
+    const orig=document.getElementById(id+'_originCountry')?.value;
+    const dest=document.getElementById(id+'_destCountry')?.value;
+    const bc=document.getElementById(id+'_bcCity');
+    if(!bc)return;
+    const intraValues=['Intra US shipment','Intra MX shipment'];
+    if(orig==='United States'&&dest==='United States'){bc.value='Intra US shipment';}
+    else if(orig==='Mexico'&&dest==='Mexico'){bc.value='Intra MX shipment';}
+    else if(intraValues.includes(bc.value)){bc.value='';}
+  }
+
   // Auto-sync countries
   const oc=document.getElementById(id+'_originCity');
   const dc=document.getElementById(id+'_destCity');
@@ -1338,12 +1358,20 @@ function renderLaneCard(id,rateId,num){
     const v=oc.value.trim();
     const el=document.getElementById(id+'_originCountry');
     if(el){if(MX_CITIES.includes(v))el.value='Mexico';else if(US_CITIES.includes(v))el.value='United States';}
+    autoSetBcCity();
   });
   if(dc)dc.addEventListener('input',()=>{
     const v=dc.value.trim();
     const el=document.getElementById(id+'_destCountry');
     if(el){if(US_CITIES.includes(v))el.value='United States';else if(MX_CITIES.includes(v))el.value='Mexico';}
+    autoSetBcCity();
   });
+
+  // Also fire when country dropdowns are changed manually
+  const oCtr=document.getElementById(id+'_originCountry');
+  const dCtr=document.getElementById(id+'_destCountry');
+  if(oCtr)oCtr.addEventListener('change',autoSetBcCity);
+  if(dCtr)dCtr.addEventListener('change',autoSetBcCity);
 
   // ZIP auto-lookup
   const oZip=document.getElementById(id+'_originZip');
@@ -1392,13 +1420,38 @@ async function tryZipCc(clean,cc){
   if(_zipCache[key])return{..._zipCache[key],cc};
   try{
     if(cc==='mx'){
-      const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=5',{headers:{'Accept-Language':'es'}});
-      if(!r.ok)throw new Error('not found');
-      const data=await r.json();
-      if(!data.length)throw new Error('no place');
-      const addr=data[0].address;
-      const city=addr.city||addr.town||addr.county||addr.municipality||addr.state_district||'';
-      const state=addr.state||'';
+      // Primary: IcaliaLabs SEPOMEX API — official SEPOMEX data, returns d_ciudad / D_mnpio
+      try{
+        const rs=await fetch('https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code='+clean);
+        if(rs.ok){
+          const ds=await rs.json();
+          const z=(ds.zip_codes||[])[0];
+          const city=z&&(z.D_mnpio||z.d_ciudad)||'';
+          const state=z&&z.d_estado||'';
+          if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
+        }
+      }catch{}
+      // Fallback 2: Nominatim — prioritise city over municipality (MX OSM municipality data is unreliable)
+      try{
+        const r=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes=mx&format=json&addressdetails=1&limit=1',{headers:{'Accept-Language':'es'}});
+        if(r.ok){
+          const data=await r.json();
+          if(data.length){
+            const addr=data[0].address;
+            const city=addr.city||addr.town||addr.municipality||addr.county||addr.state_district||'';
+            const state=addr.state||'';
+            if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
+          }
+        }
+      }catch{}
+      // Fallback 3: zippopotam.us — may return colonia as city but confirms ZIP is valid
+      const rz=await fetch('https://api.zippopotam.us/mx/'+clean);
+      if(!rz.ok)throw new Error('not found');
+      const dz=await rz.json();
+      const place=dz.places&&dz.places[0];
+      if(!place)throw new Error('no place');
+      const city=place['place name']||'';
+      const state=place['state']||place['state abbreviation']||'';
       if(!city)throw new Error('no city');
       _zipCache[key]={city,state};
       return{city,state,cc};
@@ -1424,39 +1477,64 @@ function lookupZip(zip,preferredCc,cityId,stateId,hintId,countryId){
   clearTimeout(_zipTimers[hintId]);
   _zipTimers[hintId]=setTimeout(()=>{
     const clean=zip.replace(/\D/g,'');
-    if(clean.length<4){hint.textContent='';hint.className='zip-hint';return;}
+    if(clean.length<4){
+      hint.textContent='';hint.className='zip-hint';
+      const cityEl=document.getElementById(cityId);
+      const stateEl=document.getElementById(stateId);
+      if(cityEl)cityEl.value='';
+      if(stateEl)stateEl.value='';
+      return;
+    }
     // Bump generation — any older async that resolves later will be ignored
     const gen=(_zipGen[hintId]=(_zipGen[hintId]||0)+1);
     hint.textContent='Looking up…';
     hint.className='zip-hint loading';
     const order=[preferredCc]; // strictly use the selected country — no cross-country fallback
     (async()=>{
-      let result=null;
-      for(const cc of order){
-        result=await tryZipCc(clean,cc);
-        if(result)break;
-      }
+      const results=await Promise.all(order.map(cc=>tryZipCc(clean,cc)));
       if(_zipGen[hintId]!==gen)return; // stale — a newer lookup already ran
-      if(!result){
+      const found=results.filter(Boolean);
+      if(!found.length){
         hint.textContent='ZIP not found';
         hint.className='zip-hint err';
         return;
       }
-      const{city,state,cc}=result;
-      const cityEl=document.getElementById(cityId);
-      const stateEl=document.getElementById(stateId);
-      if(cityEl&&!cityEl.value)cityEl.value=city;
-      if(stateEl&&!stateEl.value)stateEl.value=state;
-      if(countryId){
-        const countryEl=document.getElementById(countryId);
-        if(countryEl){
-          if(cc==='us')countryEl.value='United States';
-          else if(cc==='mx')countryEl.value='Mexico';
-          else if(cc==='ca')countryEl.value='Canada';
+      const flagMap={us:'🇺🇸',mx:'🇲🇽',ca:'🇨🇦'};
+      const countryName={us:'United States',mx:'Mexico',ca:'Canada'};
+      function applyResult(res){
+        const{city,state,cc}=res;
+        const cityEl=document.getElementById(cityId);
+        const stateEl=document.getElementById(stateId);
+        // Always overwrite — if ZIP changed, city/state should update too
+        if(cityEl)cityEl.value=city;
+        if(stateEl)stateEl.value=state;
+        if(countryId){
+          const countryEl=document.getElementById(countryId);
+          if(countryEl){
+            if(cc==='us')countryEl.value='United States';
+            else if(cc==='mx')countryEl.value='Mexico';
+            else if(cc==='ca')countryEl.value='Canada';
+            countryEl.dispatchEvent(new Event('change'));
+          }
         }
+        hint.innerHTML='&#10003; '+city+', '+state;
+        hint.className='zip-hint';
       }
-      hint.innerHTML='&#10003; '+city+', '+state;
-      hint.className='zip-hint';
+      if(found.length===1){
+        applyResult(found[0]);
+        return;
+      }
+      // Multiple countries match this ZIP — show picker so user can choose
+      hint.innerHTML='';
+      hint.className='zip-hint zip-pick';
+      found.forEach(res=>{
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.className='zip-opt';
+        btn.innerHTML=(flagMap[res.cc]||'')+' '+res.city+', '+res.state+' <span class="zip-opt-country">('+countryName[res.cc]+')</span>';
+        btn.addEventListener('click',()=>applyResult(res));
+        hint.appendChild(btn);
+      });
     })();
   },350);
 }
@@ -1853,6 +1931,8 @@ document.getElementById('quoteForm').addEventListener('submit',async function(e)
       '<div class="ss-detail-row"><span class="ss-detail-label">Lanes</span><span class="ss-detail-value">'+lanes.length+'</span></div>'+
       lanes.map((l,i)=>'<div class="ss-detail-row"><span class="ss-detail-label">'+eh(l.rateId)+'</span><span class="ss-detail-value">'+eh((l.originCity||'?')+' \u2192 '+(l.destCity||'?'))+'</span></div>').join('');
     saveToHistory(global,lanes);
+    // Invalidate current QR/rate IDs so a re-submit (e.g. via Go Back) always generates new ones
+    _qrId='—';_qrLastRequester='';
     const si=document.getElementById('successInner');
     si.classList.remove('animate');
     void si.offsetWidth; // reflow to restart animation
