@@ -2,66 +2,12 @@
 // each lane as a separate row to the Google Sheet via a Google Apps Script webhook.
 //
 // ─── GOOGLE APPS SCRIPT SETUP ───────────────────────────────────────────────
-// 1. Open your Google Sheet: https://docs.google.com/spreadsheets/d/18QrUBOPT6NQjtoTwhNgtH4zaSvTPPwar6syoJS661ic
-// 2. Click Extensions → Apps Script
-// 3. Replace everything with the code below, then click Save (Ctrl+S)
-// 4. Click Deploy → New deployment → Web app
-//    - Execute as: Me
-//    - Who has access: Anyone
-// 5. Copy the Web App URL → add it as QUOTE_WEBHOOK_URL in Vercel environment vars
-//
-// ─────────────────────────────────────────────────────────────────────────────
-//  function doPost(e) {
-//    try {
-//      var ss = SpreadsheetApp.openById('18QrUBOPT6NQjtoTwhNgtH4zaSvTPPwar6syoJS661ic');
-//      var sheet = ss.getSheets()[0];
-//      var d = JSON.parse(e.postData.contents);
-//      var lanes = d.lanes || [];
-//      lanes.forEach(function(lane) {
-//        // Columns match the sheet header exactly:
-//        // Date | Requester | Shipper | Commodity Description |
-//        // Origin City | Origin State | Origin Country | BC City |
-//        // Destination City | Destination State | Destination Country |
-//        // Equipment Type | Service Type |
-//        // Fuel Included? | Nuvo BC? | # of Straps | Load/Unload Hrs | Days at Border |
-//        // Food Grade? | Fumigation? | Team Driver Required? |
-//        // Target Rate | Potential LPM (Lane) | Notes
-//        sheet.appendRow([
-//          d.date,
-//          d.requester,
-//          d.shipperName,
-//          d.commodity,
-//          lane.originCity,
-//          lane.originState,
-//          lane.originCountry,
-//          lane.bcCity,
-//          lane.destCity,
-//          lane.destState,
-//          lane.destCountry,
-//          lane.equipType  || '',
-//          lane.serviceType || '',
-//          lane.fuelIncluded || 'YES',
-//          lane.nuvoBC      || 'YES',
-//          lane.numStraps   || 2,
-//          lane.loadUnloadHrs || 4,
-//          lane.daysAtBorder  || 3,
-//          lane.foodGrade   || 'NO',
-//          lane.fumigation  || 'NO',
-//          lane.teamDriver  || 'NO',
-//          lane.targetRate  || '',
-//          lane.potentialLPM || '',
-//          d.notes || ''
-//        ]);
-//      });
-//      return ContentService
-//        .createTextOutput(JSON.stringify({ status: 'ok', lanes: lanes.length }))
-//        .setMimeType(ContentService.MimeType.JSON);
-//    } catch(err) {
-//      return ContentService
-//        .createTextOutput(JSON.stringify({ status: 'error', message: err.message }))
-//        .setMimeType(ContentService.MimeType.JSON);
-//    }
-//  }
+// The canonical Apps Script source lives in APPS_SCRIPT.gs at the repo root.
+// 1. Open script.google.com, paste the full contents of APPS_SCRIPT.gs
+// 2. Save (Ctrl+S)
+// 3. Deploy → Manage deployments → edit existing → New version → Deploy
+//    - Execute as: Me  |  Who has access: Anyone
+// 4. Copy the Web App URL → set as QUOTE_WEBHOOK_URL in Vercel environment vars
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Set QUOTE_WEBHOOK_URL in Vercel environment variables.

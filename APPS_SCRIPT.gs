@@ -8,6 +8,7 @@ function doPost(e) {
   try {
     var ss = SpreadsheetApp.openById('11qEMtIFWxyQNw-1kfqesCFOWdAkDWIEQSulgCQoJd_I');
     var sheet = ss.getSheetByName('QR_RAW2.0');
+    if (!sheet) throw new Error("Sheet 'QR_RAW2.0' not found — check the tab name in the spreadsheet.");
     var d = JSON.parse(e.postData.contents);
     var lanes = d.lanes || [];
 
