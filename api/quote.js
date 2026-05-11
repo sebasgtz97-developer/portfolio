@@ -57,14 +57,26 @@ module.exports = async function handler(req, res) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 25000); // 25 s hard timeout
 
+    // Google Apps Script /exec returns a 302 redirect. Standard fetch downgrades
+    // POST→GET on 302, which never reaches doPost. We follow the redirect manually
+    // to keep the POST method.
     let upstream;
     try {
-      upstream = await fetch(webhookUrl, {
+      const bodyJson = JSON.stringify(body);
+      const postOpts = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: bodyJson,
         signal: controller.signal,
-      });
+      };
+      const initial = await fetch(webhookUrl, { ...postOpts, redirect: 'manual' });
+      if (initial.status >= 300 && initial.status < 400) {
+        const location = initial.headers.get('location');
+        if (!location) throw new Error('Redirect with no Location header from Apps Script URL');
+        upstream = await fetch(location, postOpts);
+      } else {
+        upstream = initial;
+      }
     } finally {
       clearTimeout(timer);
     }
