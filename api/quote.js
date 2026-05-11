@@ -1,16 +1,67 @@
-// Vercel serverless function — receives a multi-lane quote request and appends
-// each lane as a separate row to the Google Sheet via a Google Apps Script webhook.
+// Vercel serverless function — appends quote lanes directly to Google Sheets
+// via the Sheets API using a service account. No Apps Script web app needed.
 //
-// ─── GOOGLE APPS SCRIPT SETUP ───────────────────────────────────────────────
-// The canonical Apps Script source lives in APPS_SCRIPT.gs at the repo root.
-// 1. Open script.google.com, paste the full contents of APPS_SCRIPT.gs
-// 2. Save (Ctrl+S)
-// 3. Deploy → Manage deployments → edit existing → New version → Deploy
-//    - Execute as: Me  |  Who has access: Anyone
-// 4. Copy the Web App URL → set as QUOTE_WEBHOOK_URL in Vercel environment vars
+// ─── SETUP ───────────────────────────────────────────────────────────────────
+// 1. Go to console.cloud.google.com → create/select a project
+// 2. Enable the "Google Sheets API"
+// 3. Create a Service Account (IAM & Admin → Service Accounts → Create)
+// 4. Generate a JSON key for it (Actions → Manage keys → Add key → JSON)
+// 5. Open the Google Sheet and share it (Editor) with the service account email
+//    (looks like: name@project.iam.gserviceaccount.com)
+// 6. In Vercel: add env var GOOGLE_SERVICE_ACCOUNT_JSON = <full contents of JSON key>
 // ─────────────────────────────────────────────────────────────────────────────
-//
-// Set QUOTE_WEBHOOK_URL in Vercel environment variables.
+
+const { google } = require('googleapis');
+
+const SPREADSHEET_ID = '11qEMtIFWxyQNw-1kfqesCFOWdAkDWIEQSulgCQoJd_I';
+const SHEET_NAME     = 'QR_RAW2.0';
+
+// Columns match APPS_SCRIPT.gs exactly (40 cols + stops = 41 total)
+function laneToRow(d, lane) {
+  return [
+    d.qrId,                        // 1  QR ID
+    lane.rateId        || '',       // 2  Rate ID
+    d.date,                        // 3  Date
+    d.requester,                   // 4  Requester
+    d.shipperName,                 // 5  Shipper Name
+    d.commodity,                   // 6  Commodity
+    lane.originZip     || '',       // 7  Origin ZIP
+    lane.originCity,               // 8  Origin City
+    lane.originState,              // 9  Origin State
+    lane.originCountry || '',       // 10 Origin Country
+    lane.bcCity,                   // 11 BC City
+    lane.destZip       || '',       // 12 Dest ZIP
+    lane.destCity,                 // 13 Dest City
+    lane.destState,                // 14 Dest State
+    lane.destCountry   || '',       // 15 Dest Country
+    lane.equipType     || '',       // 16 Equip Type
+    lane.serviceType   || '',       // 17 Service Type
+    lane.fuelIncluded  || 'YES',    // 18 Fuel Included
+    lane.nuvoBC        || 'YES',    // 19 Nuvo BC
+    lane.foodGrade     || 'NO',     // 20 Food Grade
+    lane.fumigation    || 'NO',     // 21 Fumigation
+    lane.teamDriver    || 'NO',     // 22 Team Driver
+    lane.leakproof     || 'NO',     // 23 Leakproof
+    lane.liftGate      || 'NO',     // 24 Lift Gate
+    lane.airRide       || 'NO',     // 25 Air Ride
+    lane.modernUnit    || 'NO',     // 26 Modern Unit
+    lane.swingDoor     || 'NO',     // 27 Swing Door
+    lane.twicCard      || 'NO',     // 28 TWIC Card
+    lane.tankerEndorsed || 'NO',    // 29 Tanker Endorsed
+    lane.hazmatEndorsed || 'NO',    // 30 Hazmat Endorsed
+    lane.numStraps     || 2,        // 31 # of Straps
+    lane.loadUnloadHrs || 4,        // 32 Load/Unload Hrs
+    lane.daysAtBorder  || 3,        // 33 Days at Border
+    lane.numLoadBars   || 0,        // 34 # of Load Bars
+    lane.numTarps      || 0,        // 35 # of Tarps
+    lane.targetRate    || '',       // 36 Target Rate
+    lane.potentialLPM  || '',       // 37 Potential LPM
+    lane.shipmentValue || 100000,   // 38 Shipment Value (USD)
+    lane.shipmentWeight || 45000,   // 39 Shipment Weight (lbs)
+    d.notes            || '',       // 40 Notes
+    lane.stops         || '',       // 41 Stop ZIPs
+  ];
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -20,10 +71,10 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const webhookUrl = process.env.QUOTE_WEBHOOK_URL;
-  if (!webhookUrl) {
+  const saJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!saJson) {
     return res.status(503).json({
-      error: 'Quote submission is not configured. Set QUOTE_WEBHOOK_URL in environment variables.',
+      error: 'Quote submission is not configured. Set GOOGLE_SERVICE_ACCOUNT_JSON in environment variables.',
     });
   }
 
@@ -54,51 +105,22 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 25000); // 25 s hard timeout
+    const credentials = JSON.parse(saJson);
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
 
-    // Google Apps Script /exec returns a 302 redirect. Standard fetch downgrades
-    // POST→GET on 302, which never reaches doPost. We follow the redirect manually
-    // to keep the POST method.
-    let upstream;
-    try {
-      const bodyJson = JSON.stringify(body);
-      const postOpts = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: bodyJson,
-        signal: controller.signal,
-      };
-      const initial = await fetch(webhookUrl, { ...postOpts, redirect: 'manual' });
-      if (initial.status >= 300 && initial.status < 400) {
-        const location = initial.headers.get('location');
-        if (!location) throw new Error('Redirect with no Location header from Apps Script URL');
-        upstream = await fetch(location, postOpts);
-      } else {
-        upstream = initial;
-      }
-    } finally {
-      clearTimeout(timer);
-    }
+    const sheets = google.sheets({ version: 'v4', auth });
+    const rows = lanes.map(lane => laneToRow(body, lane));
 
-    const text = await upstream.text();
-    let json;
-    try { json = JSON.parse(text); } catch (parseErr) {
-      // Google Apps Script returns HTTP 200 with an HTML error page on uncaught exceptions.
-      // If we can't parse JSON it means the script threw without returning ContentService output.
-      const snippet = text.substring(0, 300);
-      console.error('Apps Script returned non-JSON (HTTP', upstream.status + '):', snippet);
-      throw new Error(`Apps Script returned non-JSON (HTTP ${upstream.status}). First 300 chars: ${snippet}`);
-    }
-
-    if (!upstream.ok || json.status === 'error') {
-      throw new Error(json.message || json.error || `Upstream error ${upstream.status}`);
-    }
-
-    // Apps Script must return { status: 'ok' } — anything else is treated as failure
-    if (json.status !== 'ok') {
-      throw new Error(`Unexpected response from Apps Script: ${JSON.stringify(json)}`);
-    }
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${SHEET_NAME}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: { values: rows },
+    });
 
     return res.status(200).json({
       status: 'ok',
@@ -107,7 +129,7 @@ module.exports = async function handler(req, res) {
       lanes: lanes.length,
     });
   } catch (err) {
-    console.error('Quote webhook error:', err.message);
+    console.error('Sheets API error:', err.message);
     return res.status(502).json({ error: 'Failed to submit to Google Sheets', detail: err.message });
   }
 };
