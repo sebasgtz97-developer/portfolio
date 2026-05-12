@@ -1387,8 +1387,10 @@ function renderLaneCard(id,rateId,num){
     const cc=countryToCode(dCountry?.value||'');
     lookupZip(dZip.value.trim(),cc,id+'_destCity',id+'_destState',id+'_destZipHint',id+'_destCountry');
   });
-  // Re-run zip lookup when country changes so the city/state refresh for the new country
+  // Re-run zip lookup when country changes so the city/state refresh for the new country.
+  // Skip when the change was fired by applyResult (ZIP autofill already set city/state).
   if(oCountry)oCountry.addEventListener('change',()=>{
+    if(oCountry.dataset.fromZip)return;
     if(oZip&&oZip.value.trim()){
       const cc=countryToCode(oCountry.value);
       const cityEl=document.getElementById(id+'_originCity');
@@ -1399,6 +1401,7 @@ function renderLaneCard(id,rateId,num){
     }
   });
   if(dCountry)dCountry.addEventListener('change',()=>{
+    if(dCountry.dataset.fromZip)return;
     if(dZip&&dZip.value.trim()){
       const cc=countryToCode(dCountry.value);
       const cityEl=document.getElementById(id+'_destCity');
@@ -1514,7 +1517,9 @@ function lookupZip(zip,preferredCc,cityId,stateId,hintId,countryId){
             if(cc==='us')countryEl.value='United States';
             else if(cc==='mx')countryEl.value='Mexico';
             else if(cc==='ca')countryEl.value='Canada';
+            countryEl.dataset.fromZip='1';
             countryEl.dispatchEvent(new Event('change'));
+            delete countryEl.dataset.fromZip;
           }
         }
         hint.innerHTML='&#10003; '+city+', '+state;
