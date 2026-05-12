@@ -1460,14 +1460,27 @@ async function tryZipCc(clean,cc){
       return{city,state,cc};
     }
     const r=await fetch('https://api.zippopotam.us/'+cc+'/'+clean);
-    if(!r.ok)throw new Error('not found');
-    const data=await r.json();
-    const place=data.places&&data.places[0];
-    if(!place)throw new Error('no place');
-    const city=place['place name']||'';
-    const state=place['state']||place['state abbreviation']||'';
-    _zipCache[key]={city,state};
-    return{city,state,cc};
+    if(r.ok){
+      const data=await r.json();
+      const place=data.places&&data.places[0];
+      const city=place&&(place['place name']||'');
+      const state=place&&(place['state']||place['state abbreviation']||'');
+      if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
+    }
+    // Fallback: Nominatim (OpenStreetMap) — broader coverage than zippopotam.us
+    const countryCode=cc==='us'?'us':cc==='ca'?'ca':'us';
+    const rn=await fetch('https://nominatim.openstreetmap.org/search?postalcode='+clean+'&countrycodes='+countryCode+'&format=json&addressdetails=1&limit=1',{headers:{'Accept-Language':'en'}});
+    if(rn.ok){
+      const nd=await rn.json();
+      if(nd.length){
+        const addr=nd[0].address;
+        const city=addr.city||addr.town||addr.village||addr.county||addr.state_district||'';
+        const state=addr.state||addr['state abbreviation']||'';
+        if(city&&state){_zipCache[key]={city,state};return{city,state,cc};}
+      }
+    }
+    _zipCache[key]=null;
+    return null;
   }catch{
     _zipCache[key]=null;
     return null;
